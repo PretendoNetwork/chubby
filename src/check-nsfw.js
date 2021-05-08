@@ -1,6 +1,7 @@
 const got = require('got');
 const tensorflow = require('@tensorflow/tfjs-node');
 const nsfw = require('nsfwjs');
+const config = require('../config.json');
 const Discord = require('discord.js');
 
 let model;
@@ -10,10 +11,17 @@ async function checkNSFW(message, urls) {
 	if (message.channel.nsfw) {
 		return; // Do not check if the channel is NSFW
 	}
+
 	if (!model) {
-		//const modelPath = 'file://' + __dirname + '/mobilenet_v2_140_224/web_model_quantized/'; // BROKEN???
-		//model = await nsfw.load(modelPath);
-		model = await nsfw.load();
+		let modelPath;
+
+		if (config.quantized_nsfw_model) {
+			modelPath = 'file://' + __dirname + '/nsfw_model/quantized/';
+		} else {
+			modelPath = 'file://' + __dirname + '/nsfw_model/normal/';
+		}
+		
+		model = await nsfw.load(modelPath, { type: 'graph' });
 	}
 
 	const suspectedUrls = [];
