@@ -1,0 +1,24 @@
+{
+  "name": "chubby",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "lint": "./node_modules/.bin/eslint .",
+    "start": "node .",
+    "start:dev": "NODE_ENV=development node ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tensorflow/tfjs-node": "^3.6.1",
+    "discord.js": "^12.5.1",
+    "got": "^11.8.2",
+    "nedb-promises": "^4.1.1",
+    "nsfwjs": "^2.4.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.18.0"
+  }
+}
