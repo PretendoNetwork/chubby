@@ -27,6 +27,7 @@ async function checkNSFW(message, urls) {
 	}
 
 	const suspectedUrls = [];
+	let predictions;
 
 	for (const url of urls) {
 		// Check the headers before requesting data
@@ -40,7 +41,6 @@ async function checkNSFW(message, urls) {
 
 		// request the image data
 		const data = await got(url).buffer();
-		let predictions;
 		
 		// handle GIF frames
 		if (data.subarray(0, 4).equals(GIF_MAGIC)) {
@@ -94,11 +94,11 @@ async function checkNSFW(message, urls) {
 
 	// if ANY suspected URLs, punish
 	if (suspectedUrls.length > 0) {
-		punishUserNSFW(message, suspectedUrls);
+		punishUserNSFW(message, suspectedUrls, predictions);
 	}
 }
 
-async function punishUserNSFW(message, suspectedUrls) {
+async function punishUserNSFW(message, suspectedUrls, predictions) {
 	await message.delete(); // remove message
 
 	// get the punishment roles
@@ -115,7 +115,45 @@ async function punishUserNSFW(message, suspectedUrls) {
 	const embed = new Discord.MessageEmbed();
 	embed.setTitle(`Suspected NSFW Material sent by ${message.author.tag}`);
 	embed.setColor(0xffa500);
-	embed.setDescription(suspectedUrls.join('\n'));
+	embed.addFields([
+		{
+			name: 'Suspected URLs',
+			value: suspectedUrls.join('\n')
+		},
+		{
+			name: 'Message author',
+			value: `<@${message.author.id}>`
+		},
+		{
+			name: 'Sent on',
+			value: new Date().toISOString()
+		},
+		{
+			name: predictions[0].className,
+			value: predictions[0].probability,
+			inline: true
+		},
+		{
+			name: predictions[1].className,
+			value: predictions[1].probability,
+			inline: true
+		},
+		{
+			name: predictions[2].className,
+			value: predictions[2].probability,
+			inline: true
+		},
+		{
+			name: predictions[3].className,
+			value: predictions[3].probability,
+			inline: true
+		},
+		{
+			name: predictions[4].className,
+			value: predictions[4].probability,
+			inline: true
+		}
+	]);
 
 	NSFWPunishedLogsChannel.send(embed);
 }
