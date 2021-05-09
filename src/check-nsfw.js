@@ -1,8 +1,10 @@
 const got = require('got');
 const tensorflow = require('@tensorflow/tfjs-node');
 const nsfw = require('nsfwjs');
-const config = require('../config.json');
+const decodeGif = require('decode-gif');
+const jpeg = require('jpeg-js');
 const Discord = require('discord.js');
+const config = require('../config.json');
 
 let model;
 const GIF_MAGIC = Buffer.from([0x47, 0x49, 0x46, 0x38]);
@@ -42,49 +44,51 @@ async function checkNSFW(message, urls) {
 		
 		// handle GIF frames
 		if (data.subarray(0, 4).equals(GIF_MAGIC)) {
-			predictions = [];
+			// model.classifyGif is too slow and doesn't let us break out of the classifcation loop
+			// reimplement the GIF exploding and frame classification
+			const decodedGif = decodeGif(data);
+			const { width, height, frames } = decodedGif;
+			for (const frame of frames) {
+				const frameData = Buffer.from(frame.data);
+				const rawImageData = {
+					data: frameData,
+					width: width,
+					height: height,
+				};
 
-			// total GIF predictions
-			const totalPredictions = {
-				Neutral: 0,
-				Drawing: 0,
-				Sexy: 0,
-				Hentai: 0,
-				Porn: 0
-			};
+				// decodeGif returns frames as RGB data
+				// need to convert each frame to an image that TensorFlow can understand
+				const jpegImageData = jpeg.encode(rawImageData);
+				const image = await tensorflow.node.decodeImage(jpegImageData.data, 3);
+				const framePredictions = await model.classify(image);
+				image.dispose(); // do not let this image float around memory
+				const frameClassification = framePredictions.reduce((previous, current) => {
+					return (previous.probability > current.probability) ? previous : current;
+				});
 
-			// start classifying the frames
-			const framePredictions = await model.classifyGif(data, { topk: 1 });
-
-			// loop over all the frames and add the frame probabilities to the total GIF predictions probabilities
-			for (let framePrediction of framePredictions) {
-				framePrediction = framePrediction[0];
-				totalPredictions[framePrediction.className] += framePrediction.probability;
+				// aggressive NSFW check
+				// flag the GIF if ANY NSFW frame is found
+				if (frameClassification.className === 'Porn' || frameClassification.className === 'Hentai' || frameClassification.className === 'Sexy') {
+					predictions = framePredictions;
+					suspectedUrls.push(url); // if suspected as NSFW then track it
+					break; // end the loop if ANY NSFW frame is found
+				}
 			}
-
-			// convert into the format the "classify" method returns
-			predictions = [
-				{ className: 'Neutral', probability: totalPredictions.Neutral },
-				{ className: 'Drawing', probability: totalPredictions.Drawing },
-				{ className: 'Sexy', probability: totalPredictions.Sexy },
-				{ className: 'Hentai', probability: totalPredictions.Hentai },
-				{ className: 'Porn', probability: totalPredictions.Porn }
-			];
 		} else {
 			// handle normal images
 			const image = await tensorflow.node.decodeImage(data, 3);
 			predictions = await model.classify(image);
 			image.dispose(); // do not let this image float around memory
-		}
-		
-		// find the highest prediction
-		const classification = predictions.reduce((previous, current) => {
-			return (previous.probability > current.probability) ? previous : current;
-		});
 
-		// check if the prediction is black listed
-		if (classification.className === 'Porn' || classification.className === 'Hentai' || classification.className === 'Sexy') {
-			suspectedUrls.push(url); // if suspected as NSFW then track it
+			// find the highest prediction
+			const classification = predictions.reduce((previous, current) => {
+				return (previous.probability > current.probability) ? previous : current;
+			});
+
+			// check if the prediction is black listed
+			if (classification.className === 'Porn' || classification.className === 'Hentai' || classification.className === 'Sexy') {
+				suspectedUrls.push(url); // if suspected as NSFW then track it
+			}
 		}
 	}
 

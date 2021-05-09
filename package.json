@@ -13,8 +13,10 @@
   "license": "ISC",
   "dependencies": {
     "@tensorflow/tfjs-node": "^3.6.1",
+    "decode-gif": "^1.0.1",
     "discord.js": "^12.5.1",
     "got": "^11.8.2",
+    "jpeg-js": "^0.3.7",
     "nedb-promises": "^4.1.1",
     "nsfwjs": "^2.4.0"
   },
