@@ -66,6 +66,9 @@ async function checkNSFW(message, urls) {
 					return (previous.probability > current.probability) ? previous : current;
 				});
 
+				// if low confidence then do nothing
+				if (frameClassification.probability < 0.8) continue;
+
 				// aggressive NSFW check
 				// flag the GIF if ANY NSFW frame is found
 				if (frameClassification.className === 'Porn' || frameClassification.className === 'Hentai' || frameClassification.className === 'Sexy') {
@@ -84,6 +87,9 @@ async function checkNSFW(message, urls) {
 			const classification = predictions.reduce((previous, current) => {
 				return (previous.probability > current.probability) ? previous : current;
 			});
+
+			// if low confidence then do nothing
+			if (classification.probability < 0.8) continue;
 
 			// check if the prediction is black listed
 			if (classification.className === 'Porn' || classification.className === 'Hentai' || classification.className === 'Sexy') {
