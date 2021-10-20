@@ -136,32 +136,32 @@ async function punishUserNSFW(message, suspectedUrls, predictions) {
 		},
 		{
 			name: predictions[0].className,
-			value: predictions[0].probability,
+			value: predictions[0].probability.toString(),
 			inline: true
 		},
 		{
 			name: predictions[1].className,
-			value: predictions[1].probability,
+			value: predictions[1].probability.toString(),
 			inline: true
 		},
 		{
 			name: predictions[2].className,
-			value: predictions[2].probability,
+			value: predictions[2].probability.toString(),
 			inline: true
 		},
 		{
 			name: predictions[3].className,
-			value: predictions[3].probability,
+			value: predictions[3].probability.toString(),
 			inline: true
 		},
 		{
 			name: predictions[4].className,
-			value: predictions[4].probability,
+			value: predictions[4].probability.toString(),
 			inline: true
 		}
 	]);
 
-	NSFWPunishedLogsChannel.send(embed);
+	NSFWPunishedLogsChannel.send({ embeds: [embed] });
 }
 
 module.exports = checkNSFW;
