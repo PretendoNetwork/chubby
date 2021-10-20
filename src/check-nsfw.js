@@ -163,8 +163,11 @@ async function punishUserNSFW(message, suspectedUrls, suspectedFiles, prediction
 			inline: true
 		}
 	]);
-
-	NSFWPunishedLogsChannel.send({ embeds: [embed], files: suspectedFiles });
+	
+	NSFWPunishedLogsChannel.send({ embeds: [embed], files: suspectedFiles }).catch(err => {
+		NSFWPunishedLogsChannel.send({ content: '`Unable to attach image`', embeds: [embed] });
+		console.log(err);
+	});
 }
 
 module.exports = checkNSFW;
