@@ -27,6 +27,7 @@ async function checkNSFW(message, urls) {
 	}
 
 	const suspectedUrls = [];
+	const suspectedFiles = [];
 	let predictions;
 
 	for (const url of urls) {
@@ -73,7 +74,8 @@ async function checkNSFW(message, urls) {
 				// flag the GIF if ANY NSFW frame is found
 				if (frameClassification.className === 'Porn' || frameClassification.className === 'Hentai' || frameClassification.className === 'Sexy') {
 					predictions = framePredictions;
-					suspectedUrls.push(url); // if suspected as NSFW then track it
+					suspectedUrls.push(url); // if suspected as NSFW then track the url
+					suspectedFiles.push(data); // if suspected as NSFW then track the GIF
 					break; // end the loop if ANY NSFW frame is found
 				}
 			}
@@ -93,18 +95,19 @@ async function checkNSFW(message, urls) {
 
 			// check if the prediction is black listed
 			if (classification.className === 'Porn' || classification.className === 'Hentai' || classification.className === 'Sexy') {
-				suspectedUrls.push(url); // if suspected as NSFW then track it
+				suspectedUrls.push(url); // if suspected as NSFW then track the url
+				suspectedFiles.push(data); // // if suspected as NSFW then track the image
 			}
 		}
 	}
 
 	// if ANY suspected URLs, punish
 	if (suspectedUrls.length > 0) {
-		punishUserNSFW(message, suspectedUrls, predictions);
+		punishUserNSFW(message, suspectedUrls, suspectedFiles, predictions);
 	}
 }
 
-async function punishUserNSFW(message, suspectedUrls, predictions) {
+async function punishUserNSFW(message, suspectedUrls, suspectedFiles, predictions) {
 	await message.delete(); // remove message
 
 	// get the punishment roles
@@ -161,7 +164,7 @@ async function punishUserNSFW(message, suspectedUrls, predictions) {
 		}
 	]);
 
-	NSFWPunishedLogsChannel.send({ embeds: [embed] });
+	NSFWPunishedLogsChannel.send({ embeds: [embed], files: suspectedFiles });
 }
 
 module.exports = checkNSFW;
