@@ -73,7 +73,7 @@ async function setupMutedRole(guild) {
 	}
 
 	guild.channels.cache.forEach(async channel => {
-		await channel.permissionOverwrites.create(mutedRole, {
+		await channel.permissionOverwrites?.create(mutedRole, {
 			SEND_MESSAGES: false,
 			MANAGE_MESSAGES: false,
 			ADD_REACTIONS: false,
@@ -108,7 +108,7 @@ async function setupNSFWPunishedRole(guild) {
 			permissions.VIEW_CHANNEL = true;
 		}
 
-		await channel.permissionOverwrites.create(NSFWPunishedRole, permissions);
+		await channel.permissionOverwrites?.create(NSFWPunishedRole, permissions);
 	});
 }
 
