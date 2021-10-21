@@ -2,7 +2,7 @@ const Discord = require('discord.js');
 
 async function setupGuild(guild) {
 	// do nothing if the bot does not have the correct permissions
-	if (!guild.me.hasPermission(['MANAGE_ROLES', 'MANAGE_CHANNELS'])) {
+	if (!guild.me.permissions.has([Discord.Permissions.FLAGS.MANAGE_ROLES, Discord.Permissions.FLAGS.MANAGE_CHANNELS])) {
 		console.log('Bot does not have permissions to set up in guild', guild.name);
 		return;
 	}
@@ -21,7 +21,7 @@ async function setupNSFWPunishedRoomChannel(guild) {
 			permissionOverwrites: [
 				{
 					id: guild.roles.everyone.id,
-					deny: new Discord.Permissions(Discord.Permissions.ALL)
+					deny: Discord.Permissions.ALL
 				}
 			]
 		});
@@ -43,7 +43,7 @@ async function setupNSFWPunishedRoomChannel(guild) {
 			}
 		]);
 
-		channel.send(embed);
+		channel.send({ embeds: [embed] });
 	}
 }
 
@@ -53,7 +53,7 @@ async function setupNSFWPunishedLogChannel(guild) {
 			permissionOverwrites: [
 				{
 					id: guild.roles.everyone.id,
-					deny: new Discord.Permissions(Discord.Permissions.ALL)
+					deny: Discord.Permissions.ALL
 				}
 			]
 		});
@@ -65,17 +65,15 @@ async function setupMutedRole(guild) {
 
 	if (!mutedRole) {
 		mutedRole = await guild.roles.create({
-			data: {
-				name: 'Muted',
-				mentionable: false,
-				color: 0xFFFFFF
-			},
+			name: 'Muted',
+			mentionable: false,
+			color: 0xFFFFFF,
 			reason: 'Role for muting users with Chubby'
 		});
 	}
 
 	guild.channels.cache.forEach(async channel => {
-		await channel.createOverwrite(mutedRole, {
+		await channel.permissionOverwrites?.create(mutedRole, {
 			SEND_MESSAGES: false,
 			MANAGE_MESSAGES: false,
 			ADD_REACTIONS: false,
@@ -89,11 +87,9 @@ async function setupNSFWPunishedRole(guild) {
 
 	if (!NSFWPunishedRole) {
 		NSFWPunishedRole = await guild.roles.create({
-			data: {
-				name: 'NSFW Punished',
-				mentionable: false,
-				color: 0xFFFFFF
-			},
+			name: 'NSFW Punished',
+			mentionable: false,
+			color: 0xFFFFFF,
 			reason: 'Role for punishing NSFW users with Chubby'
 		});
 	}
@@ -112,7 +108,7 @@ async function setupNSFWPunishedRole(guild) {
 			permissions.VIEW_CHANNEL = true;
 		}
 
-		await channel.createOverwrite(NSFWPunishedRole, permissions);
+		await channel.permissionOverwrites?.create(NSFWPunishedRole, permissions);
 	});
 }
 

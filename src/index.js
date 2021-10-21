@@ -3,7 +3,7 @@ const setupGuild = require('./setup-guild');
 const messageHandler = require('./message-handler');
 const config = require('../config.json');
 
-const bot = new Discord.Client();
+const bot = new Discord.Client({ intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MESSAGES] });
 
 bot.on('ready', () => {
 	bot.guilds.cache.forEach(setupGuild);
@@ -11,6 +11,6 @@ bot.on('ready', () => {
 	console.log(`Logged in as ${bot.user.tag}!`);
 });
 
-bot.on('message', messageHandler);
+bot.on('messageCreate', messageHandler);
 
 bot.login(config.bot_token);

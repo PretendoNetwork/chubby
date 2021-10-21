@@ -27,6 +27,7 @@ async function checkNSFW(message, urls) {
 	}
 
 	const suspectedUrls = [];
+	const suspectedFiles = [];
 	let predictions;
 
 	for (const url of urls) {
@@ -73,7 +74,8 @@ async function checkNSFW(message, urls) {
 				// flag the GIF if ANY NSFW frame is found
 				if (frameClassification.className === 'Porn' || frameClassification.className === 'Hentai' || frameClassification.className === 'Sexy') {
 					predictions = framePredictions;
-					suspectedUrls.push(url); // if suspected as NSFW then track it
+					suspectedUrls.push(url); // if suspected as NSFW then track the url
+					suspectedFiles.push(data); // if suspected as NSFW then track the GIF
 					break; // end the loop if ANY NSFW frame is found
 				}
 			}
@@ -93,18 +95,19 @@ async function checkNSFW(message, urls) {
 
 			// check if the prediction is black listed
 			if (classification.className === 'Porn' || classification.className === 'Hentai' || classification.className === 'Sexy') {
-				suspectedUrls.push(url); // if suspected as NSFW then track it
+				suspectedUrls.push(url); // if suspected as NSFW then track the url
+				suspectedFiles.push(data); // // if suspected as NSFW then track the image
 			}
 		}
 	}
 
 	// if ANY suspected URLs, punish
 	if (suspectedUrls.length > 0) {
-		punishUserNSFW(message, suspectedUrls, predictions);
+		punishUserNSFW(message, suspectedUrls, suspectedFiles, predictions);
 	}
 }
 
-async function punishUserNSFW(message, suspectedUrls, predictions) {
+async function punishUserNSFW(message, suspectedUrls, suspectedFiles, predictions) {
 	await message.delete(); // remove message
 
 	// get the punishment roles
@@ -136,32 +139,35 @@ async function punishUserNSFW(message, suspectedUrls, predictions) {
 		},
 		{
 			name: predictions[0].className,
-			value: predictions[0].probability,
+			value: predictions[0].probability.toString(),
 			inline: true
 		},
 		{
 			name: predictions[1].className,
-			value: predictions[1].probability,
+			value: predictions[1].probability.toString(),
 			inline: true
 		},
 		{
 			name: predictions[2].className,
-			value: predictions[2].probability,
+			value: predictions[2].probability.toString(),
 			inline: true
 		},
 		{
 			name: predictions[3].className,
-			value: predictions[3].probability,
+			value: predictions[3].probability.toString(),
 			inline: true
 		},
 		{
 			name: predictions[4].className,
-			value: predictions[4].probability,
+			value: predictions[4].probability.toString(),
 			inline: true
 		}
 	]);
-
-	NSFWPunishedLogsChannel.send(embed);
+	
+	NSFWPunishedLogsChannel.send({ embeds: [embed], files: suspectedFiles }).catch(err => {
+		NSFWPunishedLogsChannel.send({ content: '`Unable to attach image`', embeds: [embed] });
+		console.log(err);
+	});
 }
 
 module.exports = checkNSFW;
