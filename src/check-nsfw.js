@@ -63,9 +63,7 @@ async function checkNSFW(message, urls) {
 				const image = await tensorflow.node.decodeImage(jpegImageData.data, 3);
 				const framePredictions = await model.classify(image);
 				image.dispose(); // do not let this image float around memory
-				const frameClassification = framePredictions.reduce((previous, current) => {
-					return (previous.probability > current.probability) ? previous : current;
-				});
+				const frameClassification = framePredictions.sort((a, b) => b.probability - a.probability)[0];
 
 				// if low confidence then do nothing
 				if (frameClassification.probability < 0.8) continue;
@@ -86,9 +84,7 @@ async function checkNSFW(message, urls) {
 			image.dispose(); // do not let this image float around memory
 
 			// find the highest prediction
-			const classification = predictions.reduce((previous, current) => {
-				return (previous.probability > current.probability) ? previous : current;
-			});
+			const classification = predictions.sort((a, b) => b.probability - a.probability)[0];
 
 			// if low confidence then do nothing
 			if (classification.probability < 0.8) continue;
