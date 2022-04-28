@@ -12,15 +12,19 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@discordjs/builders": "^0.13.0",
+    "@discordjs/rest": "^0.4.1",
     "@tensorflow/tfjs-node": "^3.6.1",
     "decode-gif": "^1.0.1",
-    "discord.js": "^13.2.0",
+    "discord-api-types": "^0.31.2",
+    "discord.js": "^13.6.0",
     "got": "^11.8.2",
     "jpeg-js": "^0.3.7",
-    "nedb-promises": "^4.1.1",
-    "nsfwjs": "^2.4.0"
+    "nsfwjs": "^2.4.0",
+    "sequelize": "^6.19.0"
   },
   "devDependencies": {
-    "eslint": "^7.18.0"
+    "eslint": "^7.18.0",
+    "eslint-plugin-jsdoc": "^39.2.9"
   }
 }

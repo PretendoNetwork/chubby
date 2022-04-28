@@ -1,54 +1,189 @@
-const { MessageEmbed } = require('discord.js');
-const datastore = require('../datastore');
+const Discord = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
+const Warnings = require('../models/warnings');
+const Kicks = require('../models/kicks');
+const Bans = require('../models/bans');
+const utility = require('../utility');
+/**
+ *
+ * @param {Discord.Interaction} interaction
+ */
+async function warnHandler(interaction) {
+	interaction.deferReply({
+		ephemeral: true
+	});
 
+	const guild = await interaction.guild.fetch();
+	const executingMember = await interaction.member.fetch();
+	const users = interaction.options.getString('users');
+	const reason = interaction.options.getString('reason');
 
-// /warn user [, user2, user3, ...] reason
-async function warnCommand(message, tokens) {
-	const mentions = message.mentions;
+	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
 
-	const embed = new MessageEmbed();
-	embed.setTitle('User Warnings :thumbsdown:');
-	embed.setColor(0xffa500);
+	const warningListEmbed = new Discord.MessageEmbed();
+	warningListEmbed.setTitle('User Warnings :thumbsdown:');
+	warningListEmbed.setColor(0xFFA500);
 
-	// Parse out the warned users
-	// We don't use `message.mentions` directly in order to support @mentions in the "reason"
-	// For example "/warn @User1 @User2 Don't spam @UserAdmin with offtopic"
-	// We would only want to warn users @User1 and @User2 and NOT warn @UserAdmin
+	for (const userId of userIds) {
+		const member = await interaction.guild.members.fetch(userId);
+		const { count, rows } = await Warnings.findAndCountAll({
+			where: {
+				user_id: member.id
+			}
+		});
 
-	while (tokens[0].startsWith('<@') && tokens[0].endsWith('>')) {
-		const token = tokens.shift();
-		const id = parseUserID(token);
-		const user = mentions.users.get(id);
+		let punishmentEmbed;
+		let isKick;
+		let isBan;
 
-		// TODO: Improve this
-		if (user) {
-			let userData = await datastore.findOne({ id: user.id });
-			if (!userData) {
-				userData = await datastore.insert({ id: user.id, warnings: 1});
-			} else {
-				userData = await datastore.update({ id: user.id }, { $set: { warnings: userData.warnings+1 } }, {returnUpdatedDocs: true});
+		if (count == 2) { // 2 previous warnings, this would be the 3rd strike
+			punishmentEmbed = new Discord.MessageEmbed();
+
+			punishmentEmbed.setTitle('Punishment Details');
+			punishmentEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
+			punishmentEmbed.setColor(0xEF7F31);
+			punishmentEmbed.setTimestamp(Date.now());
+			punishmentEmbed.setAuthor({
+				name: `Kicked by: ${executingMember.user.tag}`,
+				iconURL: executingMember.user.avatarURL()
+			});
+			punishmentEmbed.setFooter({
+				text: 'Pretendo Network',
+				iconURL: guild.iconURL()
+			});
+			punishmentEmbed.setFields(
+				{
+					name: 'Kick Reason',
+					value: reason
+				},
+				{
+					name: 'From warnings',
+					value: 'This kick was the result of being warned 3 times. Be aware that a 4th warning will result in a ban'
+				}
+			);
+
+			isKick = true;
+		}
+
+		if (count >= 3) { // At least 3 previous warnings. They were kicked already, this is a ban
+			punishmentEmbed = new Discord.MessageEmbed();
+
+			punishmentEmbed.setTitle('Punishment Details');
+			punishmentEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
+			punishmentEmbed.setColor(0xF24E43);
+			punishmentEmbed.setTimestamp(Date.now());
+			punishmentEmbed.setAuthor({
+				name: `Banned by: ${executingMember.user.tag}`,
+				iconURL: executingMember.user.avatarURL()
+			});
+			punishmentEmbed.setFooter({
+				text: 'Pretendo Network',
+				iconURL: guild.iconURL()
+			});
+			punishmentEmbed.setFields(
+				{
+					name: 'Ban Reason',
+					value: reason
+				},
+				{
+					name: 'From warnings',
+					value: 'This ban was the result of being warned 4 times. Below is a list of all previous warnings'
+				}
+			);
+
+			isBan = true;
+		}
+
+		if (punishmentEmbed) {
+			const pastWarningsEmbed = new Discord.MessageEmbed();
+			pastWarningsEmbed.setTitle('Past Warnings');
+			pastWarningsEmbed.setDescription('For clarifty purposes here is a list of your past warnings');
+			pastWarningsEmbed.setColor(0xEF7F31);
+			pastWarningsEmbed.setTimestamp(Date.now());
+			pastWarningsEmbed.setFooter({
+				text: 'Pretendo Network',
+				iconURL: guild.iconURL()
+			});
+
+			for (let i = 0; i < rows.length; i++) {
+				const warning = rows[i];
+				const warningBy = await interaction.client.users.fetch(warning.admin_user_id);
+
+				pastWarningsEmbed.addFields(
+					{
+						name: `${utility.ordinal(i + 1)} Warning`,
+						value: warning.reason
+					},
+					{
+						name: 'Punished By',
+						value: warningBy.tag,
+						inline: true
+					},
+					{
+						name: 'Date',
+						value: warning.timestamp.toLocaleDateString(),
+						inline: true
+					}
+				);
 			}
 
-			embed.addField(`${user.username}'s warnings`, userData.warnings, true);
+			await member.send({
+				embeds: [punishmentEmbed, pastWarningsEmbed]
+			});
+
+			if (isKick) {
+				await member.kick(reason);
+
+				await Kicks.create({
+					user_id: member.id,
+					admin_user_id: executingMember.id,
+					reason: reason,
+					from_warning: true
+				});
+			} else if (isBan) {
+				await member.ban({
+					reason
+				});
+
+				await Bans.create({
+					user_id: member.id,
+					admin_user_id: executingMember.id,
+					reason: reason,
+					from_warning: true
+				});
+			} else {
+				// ???
+			}
 		}
+
+		await Warnings.create({
+			user_id: member.id,
+			admin_user_id: executingMember.id,
+			reason: reason
+		});
+
+		warningListEmbed.addField(`${member.user.username}'s warnings`, (count + 1).toString(), true);
 	}
 
-	// After parsing the users the tokens array should be left with the warn reason
-	const reason = tokens.join(' ');
-	
-	embed.setDescription(`Warning users for "${reason}"`);
-
-	message.channel.send('Warning users', embed);
+	await interaction.editReply({ embeds: [warningListEmbed], ephemeral: true });
 }
 
-module.exports = warnCommand;
+const command = new SlashCommandBuilder()
+	.setDefaultPermission(false)
+	.setName('warn')
+	.setDescription('Warn user(s)')
+	.addStringOption(option => {
+		return option.setName('users')
+			.setDescription('User(s) to warn')
+			.setRequired(true);
+	})
+	.addStringOption(option => {
+		return option.setName('reason')
+			.setDescription('Reason for the warning')
+			.setRequired(true);
+	});
 
-function parseUserID(id) {
-	if (id.startsWith('<@!')) {
-		return id.substring(3, id.length - 1);
-	} else if (id.startsWith('<@')) {
-		return id.substring(2, id.length - 1);
-	}
-
-	return id;
-}
+module.exports = {
+	handler: warnHandler,
+	deploy: command.toJSON()
+};

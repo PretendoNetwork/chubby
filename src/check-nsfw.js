@@ -9,6 +9,11 @@ const config = require('../config.json');
 let model;
 const GIF_MAGIC = Buffer.from([0x47, 0x49, 0x46, 0x38]);
 
+/**
+ * 
+ * @param {Discord.Message} message 
+ * @param {Array} urls
+ */
 async function checkNSFW(message, urls) {
 	if (message.channel.nsfw) {
 		return; // Do not check if the channel is NSFW
@@ -103,6 +108,13 @@ async function checkNSFW(message, urls) {
 	}
 }
 
+/**
+ * 
+ * @param {Discord.Message} message 
+ * @param {Array} suspectedUrls 
+ * @param {Array} suspectedFiles 
+ * @param {Array} predictions 
+ */
 async function punishUserNSFW(message, suspectedUrls, suspectedFiles, predictions) {
 	await message.delete(); // remove message
 

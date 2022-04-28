@@ -1,29 +1,32 @@
-const warnCommand = require('./commands/warn');
+// eslint-disable-next-line
+const Discord = require('discord.js'); // Disable ESLint since this is used only for JSDoc
+const warnHandler = require('./commands/warn').handler;
+const kickHandler = require('./commands/kick').handler;
+const banHandler = require('./commands/ban').handler;
 
 const commands = {
-	'/warn': warnCommand
+	warn: warnHandler,
+	kick: kickHandler,
+	ban: banHandler
 };
 
-function commandHandler(message) {
-	// get the command parts
-	const tokens = message.content.split(' ');
-	const command = tokens.shift();
+/**
+ * 
+ * @param {Discord.Interaction} interaction
+ */
+async function commandHandler(interaction) {
+	if (!interaction.isCommand()) return;
 
-	// Only checking moderation permissions
-	// Admins will have these permissions anyway so no need to check for ADMINISTRATOR
-	if (!message.member.hasPermission(['KICK_MEMBERS', 'BAN_MEMBERS'])) {
-		// Do nothing if the user can't moderate users
-		return;
-	}
+	const { commandName } = interaction;
 
 	// do nothing if no command
-	if (!commands[command]) {
-		message.reply(`Unknown command \`${command}\``);
+	if (!commands[commandName]) {
+		interaction.reply(`Missing command handler for \`${commandName}\``);
 		return;
 	}
 
 	// run the command
-	commands[command](message, tokens);
+	commands[commandName](interaction);
 }
 
 module.exports = commandHandler;

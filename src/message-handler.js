@@ -1,7 +1,12 @@
-const commandHandler = require('./command-handler');
+const Discord = require('discord.js');
+
 const checkNSFW = require('./check-nsfw');
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 
+/**
+ *
+ * @param {Discord.Message} message
+ */
 function messageHandler(message) {
 	// Ignore bot messages
 	if (message.author.bot) return;
@@ -19,12 +24,6 @@ function messageHandler(message) {
 		}
 
 		checkNSFW(message, urls);
-	}
-
-	// Check if the message is a command and handle it
-	if (message.content.charAt(0) === '/') {
-		commandHandler(message);
-		return;
 	}
 }
 

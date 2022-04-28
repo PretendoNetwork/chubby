@@ -1,11 +1,32 @@
 const Discord = require('discord.js');
+const { REST } = require('@discordjs/rest');
+const { Routes } = require('discord-api-types/v9');
+const { bot_token: botToken } = require('../config.json');
+const warnCommand = require('./commands/warn');
+const kickCommand = require('./commands/kick');
+const banCommand = require('./commands/ban');
 
+const rest = new REST({ version: '9' }).setToken(botToken);
+
+const commandsDeploy = [
+	warnCommand.deploy,
+	kickCommand.deploy,
+	banCommand.deploy
+];
+
+/**
+ * 
+ * @param {Discord.Guild} guild
+ */
 async function setupGuild(guild) {
 	// do nothing if the bot does not have the correct permissions
 	if (!guild.me.permissions.has([Discord.Permissions.FLAGS.MANAGE_ROLES, Discord.Permissions.FLAGS.MANAGE_CHANNELS])) {
 		console.log('Bot does not have permissions to set up in guild', guild.name);
 		return;
 	}
+
+	// Setup commands
+	await deployCommands(guild);
 
 	// If anyone has a better way of doing this I'm all ears
 	// names should explain what they do
@@ -15,6 +36,18 @@ async function setupGuild(guild) {
 	await setupNSFWPunishedRole(guild);
 }
 
+/**
+ *
+ * @param {Discord.Guild} guild
+ */
+async function deployCommands(guild) {
+	await rest.put(Routes.applicationGuildCommands(guild.me.id, guild.id), { body: commandsDeploy });
+}
+
+/**
+ *
+ * @param {Discord.Guild} guild
+ */
 async function setupNSFWPunishedRoomChannel(guild) {
 	if (!guild.channels.cache.find((channel) => channel.name === 'nsfw-punished-room')) {
 		const channel = await guild.channels.create('nsfw-punished-room', {
@@ -47,6 +80,10 @@ async function setupNSFWPunishedRoomChannel(guild) {
 	}
 }
 
+/**
+ *
+ * @param {Discord.Guild} guild
+ */
 async function setupNSFWPunishedLogChannel(guild) {
 	if (!guild.channels.cache.find((channel) => channel.name === 'nsfw-punished-logs')) {
 		await guild.channels.create('nsfw-punished-logs', {
@@ -60,6 +97,10 @@ async function setupNSFWPunishedLogChannel(guild) {
 	}
 }
 
+/**
+ *
+ * @param {Discord.Guild} guild
+ */
 async function setupMutedRole(guild) {
 	let mutedRole = guild.roles.cache.find((role) => role.name === 'Muted');
 
@@ -82,6 +123,10 @@ async function setupMutedRole(guild) {
 	});
 }
 
+/**
+ *
+ * @param {Discord.Guild} guild
+ */
 async function setupNSFWPunishedRole(guild) {
 	let NSFWPunishedRole = guild.roles.cache.find((role) => role.name === 'NSFW Punished');
 
