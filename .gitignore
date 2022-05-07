@@ -58,10 +58,5 @@ typings/
 .env
 
 # custom
-sign.js
-t.js
 config.json
-servers.json
-certs
-mobilenet_v2_140_224
 database
