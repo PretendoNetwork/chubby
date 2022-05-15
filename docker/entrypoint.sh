@@ -9,4 +9,4 @@ for file in $files; do
     fi
 done
 
-exec node src/index.js
+exec npm start
