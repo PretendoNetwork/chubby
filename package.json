@@ -2,7 +2,7 @@
   "name": "chubby",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "main": "src/bot.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint .",
     "start": "node .",

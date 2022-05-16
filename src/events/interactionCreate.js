@@ -1,6 +1,6 @@
 // eslint-disable-next-line
 const Discord = require('discord.js'); // Disable ESLint since this is used only for JSDoc
-const commandHandler = require('./command-handler');
+const commandHandler = require('../command-handler');
 
 /**
  * 

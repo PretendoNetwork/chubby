@@ -6,7 +6,7 @@ const Bans = require('../models/bans');
 const utility = require('../utility');
 /**
  *
- * @param {Discord.Interaction} interaction
+ * @param {Discord.CommandInteraction} interaction
  */
 async function warnHandler(interaction) {
 	interaction.deferReply({

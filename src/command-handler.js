@@ -1,22 +1,11 @@
-// eslint-disable-next-line
-const Discord = require('discord.js'); // Disable ESLint since this is used only for JSDoc
-const warnHandler = require('./commands/warn').handler;
-const kickHandler = require('./commands/kick').handler;
-const banHandler = require('./commands/ban').handler;
-
-const commands = {
-	warn: warnHandler,
-	kick: kickHandler,
-	ban: banHandler
-};
+const Discord = require('discord.js');
+const commands = require('./commands-manager');
 
 /**
  * 
- * @param {Discord.Interaction} interaction
+ * @param {Discord.CommandInteraction} interaction
  */
 async function commandHandler(interaction) {
-	if (!interaction.isCommand()) return;
-
 	const { commandName } = interaction;
 
 	// do nothing if no command
@@ -26,7 +15,7 @@ async function commandHandler(interaction) {
 	}
 
 	// run the command
-	commands[commandName](interaction);
+	commands[commandName].handler(interaction);
 }
 
 module.exports = commandHandler;

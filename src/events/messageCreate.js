@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
 
-const checkNSFW = require('./check-nsfw');
+const checkNSFW = require('../check-nsfw');
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 
 /**

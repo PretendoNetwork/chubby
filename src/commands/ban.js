@@ -5,7 +5,7 @@ const utility = require('../utility');
 
 /**
  *
- * @param {Discord.Interaction} interaction
+ * @param {Discord.CommandInteraction} interaction
  */
 async function banHandler(interaction) {
 	interaction.deferReply({

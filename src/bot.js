@@ -1,8 +1,8 @@
 const Discord = require('discord.js');
 const setupGuild = require('./setup-guild');
-const messageHandler = require('./message-handler');
-const interactionHandler = require('./interaction-handler');
-const { sequelize } = require('./database');
+const messageCreateHandler = require('./events/messageCreate');
+const interactionCreateHandler = require('./events/interactionCreate');
+const sequelize = require('./sequelize');
 const config = require('../config.json');
 
 const client = new Discord.Client({
@@ -13,7 +13,7 @@ const client = new Discord.Client({
 });
 
 client.on('ready', async () => {
-	await sequelize.sync({ force: config.sequelize_force, alter: true });
+	await sequelize.sync(config.sequelize);
 
 	const guilds = await client.guilds.fetch();
 
@@ -25,7 +25,7 @@ client.on('ready', async () => {
 	console.log(`Logged in as ${client.user.tag}!`);
 });
 
-client.on('messageCreate', messageHandler);
-client.on('interactionCreate', interactionHandler);
+client.on('messageCreate', messageCreateHandler);
+client.on('interactionCreate', interactionCreateHandler);
 
 client.login(config.bot_token);

@@ -1,18 +1,12 @@
 const Discord = require('discord.js');
 const { REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v9');
+const { Routes } = require('discord-api-types/v10');
 const { bot_token: botToken } = require('../config.json');
-const warnCommand = require('./commands/warn');
-const kickCommand = require('./commands/kick');
-const banCommand = require('./commands/ban');
+const commands = require('./commands-manager');
 
-const rest = new REST({ version: '9' }).setToken(botToken);
+const rest = new REST({ version: '10' }).setToken(botToken);
 
-const commandsDeploy = [
-	warnCommand.deploy,
-	kickCommand.deploy,
-	banCommand.deploy
-];
+const commandsDeploy = Object.keys(commands).map(name => commands[name].deploy);
 
 /**
  * 
@@ -30,10 +24,8 @@ async function setupGuild(guild) {
 
 	// If anyone has a better way of doing this I'm all ears
 	// names should explain what they do
-	await setupNSFWPunishedRoomChannel(guild);
-	await setupNSFWPunishedLogChannel(guild);
-	await setupMutedRole(guild);
-	await setupNSFWPunishedRole(guild);
+	await setupRoles(guild);
+	await setupTextChannels(guild);
 }
 
 /**
@@ -42,6 +34,24 @@ async function setupGuild(guild) {
  */
 async function deployCommands(guild) {
 	await rest.put(Routes.applicationGuildCommands(guild.me.id, guild.id), { body: commandsDeploy });
+}
+
+/**
+ * 
+ * @param {Discord.Guild} guild
+ */
+async function setupRoles(guild) {
+	await setupMutedRole(guild);
+	await setupNSFWPunishedRole(guild);
+}
+
+/**
+ * 
+ * @param {Discord.Guild} guild
+ */
+async function setupTextChannels(guild) {
+	await setupNSFWPunishedRoomChannel(guild);
+	await setupNSFWPunishedLogChannel(guild);
 }
 
 /**
@@ -102,7 +112,8 @@ async function setupNSFWPunishedLogChannel(guild) {
  * @param {Discord.Guild} guild
  */
 async function setupMutedRole(guild) {
-	let mutedRole = guild.roles.cache.find((role) => role.name === 'Muted');
+	const roles = await guild.roles.fetch();
+	let mutedRole = roles.find((role) => role.name === 'Muted');
 
 	if (!mutedRole) {
 		mutedRole = await guild.roles.create({
@@ -128,7 +139,8 @@ async function setupMutedRole(guild) {
  * @param {Discord.Guild} guild
  */
 async function setupNSFWPunishedRole(guild) {
-	let NSFWPunishedRole = guild.roles.cache.find((role) => role.name === 'NSFW Punished');
+	const roles = await guild.roles.fetch();
+	let NSFWPunishedRole = roles.find((role) => role.name === 'NSFW Punished');
 
 	if (!NSFWPunishedRole) {
 		NSFWPunishedRole = await guild.roles.create({

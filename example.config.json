@@ -1,5 +1,8 @@
 {
 	"bot_token": "TOKEN",
 	"quantized_nsfw_model": false,
-	"sequelize_force": false
+	"sequelize": {
+		"force": false,
+		"alter": false
+	}
 }
