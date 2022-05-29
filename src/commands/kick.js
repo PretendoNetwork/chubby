@@ -2,7 +2,7 @@ const Discord = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const Kicks = require('../models/kicks');
 const Bans = require('../models/bans');
-const utility = require('../utility');
+const util = require('../util');
 
 /**
  *
@@ -15,6 +15,7 @@ async function kickHandler(interaction) {
 
 	const guild = await interaction.guild.fetch();
 	const executingMember = await interaction.member.fetch();
+	const executor = executingMember.user;
 	const users = interaction.options.getString('users');
 	const reason = interaction.options.getString('reason');
 
@@ -26,6 +27,43 @@ async function kickHandler(interaction) {
 
 	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
+		const user = member.user;
+
+		const eventLogEmbed = new Discord.MessageEmbed();
+
+		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+		eventLogEmbed.setTimestamp(Date.now());
+		eventLogEmbed.setFields(
+			{
+				name: 'User',
+				value: `<@${user.id}>`
+			},
+			{
+				name: 'User ID',
+				value: user.id
+			},
+			{
+				name: 'Executor',
+				value: `<@${executor.id}>`
+			},
+			{
+				name: 'Executor User ID',
+				value: executor.id
+			},
+			{
+				name: 'Reason',
+				value: reason
+			},
+			{
+				name: 'From bot /kick command',
+				value: 'true'
+			}
+		);
+		eventLogEmbed.setFooter({
+			text: 'Pretendo Network',
+			iconURL: guild.iconURL()
+		});
+
 		const { count, rows } = await Kicks.findAndCountAll({
 			where: {
 				user_id: member.id
@@ -38,6 +76,9 @@ async function kickHandler(interaction) {
 		const sendMemberEmbeds = [];
 
 		if (count >= 2) { // Atleast 2 previous kicks, this would be the 3rd strike. Ban
+			eventLogEmbed.setColor(0xF24E43);
+			eventLogEmbed.setTitle('Event Type: _Member Banned_');
+			
 			const banEmbed = new Discord.MessageEmbed();
 
 			banEmbed.setTitle('Punishment Details');
@@ -67,6 +108,9 @@ async function kickHandler(interaction) {
 
 			sendMemberEmbeds.push(banEmbed);
 		} else { // Just kick
+			eventLogEmbed.setColor(0xEF7F31);
+			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
+
 			const kickEmbed = new Discord.MessageEmbed();
 
 			kickEmbed.setTitle('Punishment Details');
@@ -91,7 +135,7 @@ async function kickHandler(interaction) {
 			sendMemberEmbeds.push(kickEmbed);
 		}
 
-		
+		await util.sendEventLogMessage(guild, eventLogEmbed);
 
 		if (count > 0) {
 			const pastKicksEmbed = new Discord.MessageEmbed();
@@ -110,7 +154,7 @@ async function kickHandler(interaction) {
 
 				pastKicksEmbed.addFields(
 					{
-						name: `${utility.ordinal(i + 1)} Kick`,
+						name: `${util.ordinal(i + 1)} Kick`,
 						value: kick.reason
 					},
 					{

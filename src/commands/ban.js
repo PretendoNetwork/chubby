@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const Bans = require('../models/bans');
-const utility = require('../utility');
+const util = require('../util');
 
 /**
  *
@@ -14,6 +14,7 @@ async function banHandler(interaction) {
 
 	const guild = await interaction.guild.fetch();
 	const executingMember = await interaction.member.fetch();
+	const executor = executingMember.user;
 	const users = interaction.options.getString('users');
 	const reason = interaction.options.getString('reason');
 
@@ -23,8 +24,49 @@ async function banHandler(interaction) {
 	bansListEmbed.setTitle('User Bans :thumbsdown:');
 	bansListEmbed.setColor(0xFFA500);
 
-	for (const userId of userIds) {
+	for (const userId of userIds) { 
 		const member = await interaction.guild.members.fetch(userId);
+		const user = member.user;
+
+		const eventLogEmbed = new Discord.MessageEmbed();
+
+		eventLogEmbed.setColor(0xF24E43);
+		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+		eventLogEmbed.setTimestamp(Date.now());
+		eventLogEmbed.setTitle('Event Type: _Member Banned_');
+		eventLogEmbed.setFields(
+			{
+				name: 'User',
+				value: `<@${user.id}>`
+			},
+			{
+				name: 'User ID',
+				value: user.id
+			},
+			{
+				name: 'Executor',
+				value: `<@${executor.id}>`
+			},
+			{
+				name: 'Executor User ID',
+				value: executor.id
+			},
+			{
+				name: 'Reason',
+				value: reason
+			},
+			{
+				name: 'From bot /ban command',
+				value: 'true'
+			}
+		);
+		eventLogEmbed.setFooter({
+			text: 'Pretendo Network',
+			iconURL: guild.iconURL()
+		});
+
+		await util.sendEventLogMessage(guild, eventLogEmbed);
+		
 		const { count, rows } = await Bans.findAndCountAll({
 			where: {
 				user_id: member.id
@@ -71,7 +113,7 @@ async function banHandler(interaction) {
 
 				pastBansEmbed.addFields(
 					{
-						name: `${utility.ordinal(i + 1)} Ban`,
+						name: `${util.ordinal(i + 1)} Ban`,
 						value: ban.reason
 					},
 					{

@@ -78,7 +78,10 @@ async function checkNSFW(message, urls) {
 				if (frameClassification.className === 'Porn' || frameClassification.className === 'Hentai' || frameClassification.className === 'Sexy') {
 					predictions = framePredictions;
 					suspectedUrls.push(url); // if suspected as NSFW then track the url
-					suspectedFiles.push(data); // if suspected as NSFW then track the GIF
+					suspectedFiles.push({ // if suspected as NSFW then track the GIF
+						file: data,
+						name: 'SPOILER_FILE.jpg'
+					});
 					break; // end the loop if ANY NSFW frame is found
 				}
 			}
@@ -97,7 +100,10 @@ async function checkNSFW(message, urls) {
 			// check if the prediction is black listed
 			if (classification.className === 'Porn' || classification.className === 'Hentai' || classification.className === 'Sexy') {
 				suspectedUrls.push(url); // if suspected as NSFW then track the url
-				suspectedFiles.push(data); // // if suspected as NSFW then track the image
+				suspectedFiles.push({ // if suspected as NSFW then track the image
+					attachment: data,
+					name: 'SPOILER_FILE.jpg'
+				});
 			}
 		}
 	}

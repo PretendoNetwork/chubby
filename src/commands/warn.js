@@ -3,7 +3,8 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const Warnings = require('../models/warnings');
 const Kicks = require('../models/kicks');
 const Bans = require('../models/bans');
-const utility = require('../utility');
+const util = require('../util');
+
 /**
  *
  * @param {Discord.CommandInteraction} interaction
@@ -15,6 +16,7 @@ async function warnHandler(interaction) {
 
 	const guild = await interaction.guild.fetch();
 	const executingMember = await interaction.member.fetch();
+	const executor = executingMember.user;
 	const users = interaction.options.getString('users');
 	const reason = interaction.options.getString('reason');
 
@@ -26,6 +28,44 @@ async function warnHandler(interaction) {
 
 	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
+		const user = member.user;
+
+		const eventLogEmbed = new Discord.MessageEmbed();
+
+		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+		eventLogEmbed.setTimestamp(Date.now());
+		eventLogEmbed.setTitle('Event Type: _Member Warned_'); // Default type
+		eventLogEmbed.setFields( // Default fields
+			{
+				name: 'User',
+				value: `<@${user.id}>`
+			},
+			{
+				name: 'User ID',
+				value: user.id
+			},
+			{
+				name: 'Executor',
+				value: `<@${executor.id}>`
+			},
+			{
+				name: 'Executor User ID',
+				value: executor.id
+			},
+			{
+				name: 'Reason',
+				value: reason
+			},
+			{
+				name: 'From bot /warn command',
+				value: 'true'
+			}
+		);
+		eventLogEmbed.setFooter({
+			text: 'Pretendo Network',
+			iconURL: guild.iconURL()
+		});
+
 		const { count, rows } = await Warnings.findAndCountAll({
 			where: {
 				user_id: member.id
@@ -37,6 +77,9 @@ async function warnHandler(interaction) {
 		let isBan;
 
 		if (count == 2) { // 2 previous warnings, this would be the 3rd strike
+			eventLogEmbed.setColor(0xEF7F31);
+			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
+
 			punishmentEmbed = new Discord.MessageEmbed();
 
 			punishmentEmbed.setTitle('Punishment Details');
@@ -66,6 +109,9 @@ async function warnHandler(interaction) {
 		}
 
 		if (count >= 3) { // At least 3 previous warnings. They were kicked already, this is a ban
+			eventLogEmbed.setColor(0xF24E43);
+			eventLogEmbed.setTitle('Event Type: _Member Banned_');
+
 			punishmentEmbed = new Discord.MessageEmbed();
 
 			punishmentEmbed.setTitle('Punishment Details');
@@ -94,6 +140,8 @@ async function warnHandler(interaction) {
 			isBan = true;
 		}
 
+		await util.sendEventLogMessage(guild, eventLogEmbed);
+
 		if (punishmentEmbed) {
 			const pastWarningsEmbed = new Discord.MessageEmbed();
 			pastWarningsEmbed.setTitle('Past Warnings');
@@ -111,7 +159,7 @@ async function warnHandler(interaction) {
 
 				pastWarningsEmbed.addFields(
 					{
-						name: `${utility.ordinal(i + 1)} Warning`,
+						name: `${util.ordinal(i + 1)} Warning`,
 						value: warning.reason
 					},
 					{
