@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const db = require('./db');
 
 const ordinalRules = new Intl.PluralRules('en', {
 	type: 'ordinal'
@@ -23,10 +24,14 @@ function ordinal(number) {
  * @param {Discord.MessageEmbed} embed
  */
 async function sendEventLogMessage(guild, embed) {
-	const channels = await guild.channels.fetch();
-	const logChannel = channels.find(channel => channel.type === 'GUILD_TEXT' && channel.name === 'event-log');
+	const logChannelId = db.getDB().get('channels.event-logs');
+	const logChannel = logChannelId && await guild.channels.fetch(logChannelId);
 
-	await logChannel.send({ embeds: [embed] });
+	if (!logChannel) {
+		console.log('Missing log channel!');
+	} else {
+		await logChannel.send({ embeds: [embed] });
+	}
 }
 
 module.exports = {

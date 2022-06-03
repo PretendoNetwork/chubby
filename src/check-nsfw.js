@@ -4,6 +4,7 @@ const nsfw = require('nsfwjs');
 const decodeGif = require('decode-gif');
 const jpeg = require('jpeg-js');
 const Discord = require('discord.js');
+const db = require('./db');
 const config = require('../config.json');
 
 let model;
@@ -124,64 +125,78 @@ async function checkNSFW(message, urls) {
 async function punishUserNSFW(message, suspectedUrls, suspectedFiles, predictions) {
 	await message.delete(); // remove message
 
-	// get the punishment roles
-	const mutedRole = message.guild.roles.cache.find((role) => role.name === 'Muted');
-	const NSFWPunishedRole = message.guild.roles.cache.find((role) => role.name === 'NSFW Punished');
-	
-	// add the punishment roles to user
-	message.member.roles.add(mutedRole);
-	message.member.roles.add(NSFWPunishedRole);
+	const mutedRoleId = db.getDB().get('roles.muted');
+	const nsfwPunishedRoleId = db.getDB().get('roles.nsfw-punished');
+	const mutedRole = mutedRoleId && await message.guild.roles.fetch(mutedRoleId);
+	const nsfwPunishedRole = nsfwPunishedRoleId && await message.guild.roles.fetch(nsfwPunishedRoleId);
+
+	if (!mutedRole) {
+		console.log('Missing muted role!');
+	} else {
+		message.member.roles.add(mutedRole);
+	}
+
+	if (!nsfwPunishedRole) {
+		console.log('Missing NSFW punished role!');
+	} else {
+		message.member.roles.add(nsfwPunishedRole);
+	}
 
 	// log the punisment to the log channel
-	const NSFWPunishedLogsChannel = message.guild.channels.cache.find((channel) => channel.name === 'nsfw-punished-logs');
-
-	const embed = new Discord.MessageEmbed();
-	embed.setTitle(`Suspected NSFW Material sent by ${message.author.tag}`);
-	embed.setColor(0xffa500);
-	embed.addFields([
-		{
-			name: 'Suspected URLs',
-			value: suspectedUrls.join('\n')
-		},
-		{
-			name: 'Message author',
-			value: `<@${message.author.id}>`
-		},
-		{
-			name: 'Sent on',
-			value: new Date().toISOString()
-		},
-		{
-			name: predictions[0].className,
-			value: predictions[0].probability.toString(),
-			inline: true
-		},
-		{
-			name: predictions[1].className,
-			value: predictions[1].probability.toString(),
-			inline: true
-		},
-		{
-			name: predictions[2].className,
-			value: predictions[2].probability.toString(),
-			inline: true
-		},
-		{
-			name: predictions[3].className,
-			value: predictions[3].probability.toString(),
-			inline: true
-		},
-		{
-			name: predictions[4].className,
-			value: predictions[4].probability.toString(),
-			inline: true
-		}
-	]);
+	const nsfwLogChannelId = db.getDB().get('channels.nsfw-logs');
+	const nsfwLogChannel = nsfwLogChannelId && await message.guild.channels.fetch(nsfwLogChannelId);
 	
-	NSFWPunishedLogsChannel.send({ embeds: [embed], files: suspectedFiles }).catch(err => {
-		NSFWPunishedLogsChannel.send({ content: '`Unable to attach image`', embeds: [embed] });
-		console.log(err);
-	});
+	if (!nsfwLogChannel) {
+		console.log('Missing NSFW log channel!');
+	} else {
+		const embed = new Discord.MessageEmbed();
+		embed.setTitle(`Suspected NSFW Material sent by ${message.author.tag}`);
+		embed.setColor(0xffa500);
+		embed.addFields([
+			{
+				name: 'Suspected URLs',
+				value: suspectedUrls.join('\n')
+			},
+			{
+				name: 'Message author',
+				value: `<@${message.author.id}>`
+			},
+			{
+				name: 'Sent on',
+				value: new Date().toISOString()
+			},
+			{
+				name: predictions[0].className,
+				value: predictions[0].probability.toString(),
+				inline: true
+			},
+			{
+				name: predictions[1].className,
+				value: predictions[1].probability.toString(),
+				inline: true
+			},
+			{
+				name: predictions[2].className,
+				value: predictions[2].probability.toString(),
+				inline: true
+			},
+			{
+				name: predictions[3].className,
+				value: predictions[3].probability.toString(),
+				inline: true
+			},
+			{
+				name: predictions[4].className,
+				value: predictions[4].probability.toString(),
+				inline: true
+			}
+		]);
+
+		nsfwLogChannel.send({ embeds: [embed], files: suspectedFiles }).catch(err => {
+			nsfwLogChannel.send({ content: '`Unable to attach image`', embeds: [embed] });
+			console.log(err);
+		});
+	}
 }
 
 module.exports = checkNSFW;

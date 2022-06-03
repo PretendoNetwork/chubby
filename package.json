@@ -22,6 +22,7 @@
     "jpeg-js": "^0.3.7",
     "nsfwjs": "^2.4.0",
     "sequelize": "^6.19.0",
+    "simple-json-db": "^2.0.0",
     "sqlite3": "^5.0.8"
   },
   "devDependencies": {
