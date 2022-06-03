@@ -1,12 +1,11 @@
 const Discord = require('discord.js');
-const setupGuild = require('./setup-guild');
 const guildMemberRemoveHandler = require('./events/guildMemberRemove');
 const guildMemberUpdateHandler = require('./events/guildMemberUpdate');
 const interactionCreateHandler = require('./events/interactionCreate');
 const messageCreateHandler = require('./events/messageCreate');
 const messageDeleteHandler = require('./events/messageDelete');
 const messageUpdateHandler = require('./events/messageUpdate');
-const sequelize = require('./sequelize');
+const readyHandler = require('./events/ready');
 const config = require('../config.json');
 
 const client = new Discord.Client({
@@ -17,20 +16,7 @@ const client = new Discord.Client({
 	]
 });
 
-client.on('ready', async () => {
-	await sequelize.sync(config.sequelize);
-
-	const guilds = await client.guilds.fetch();
-
-	for (const id of guilds.keys()) {
-		const guild = await guilds.get(id).fetch();
-		
-		await setupGuild(guild);
-	}
-
-	console.log(`Logged in as ${client.user.tag}!`);
-});
-
+client.on('ready', readyHandler);
 client.on('guildMemberRemove', guildMemberRemoveHandler);
 client.on('guildMemberUpdate', guildMemberUpdateHandler);
 client.on('interactionCreate', interactionCreateHandler);
