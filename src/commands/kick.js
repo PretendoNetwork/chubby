@@ -9,7 +9,7 @@ const util = require('../util');
  * @param {Discord.CommandInteraction} interaction
  */
 async function kickHandler(interaction) {
-	interaction.deferReply({
+	await interaction.deferReply({
 		ephemeral: true
 	});
 

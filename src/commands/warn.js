@@ -10,7 +10,7 @@ const util = require('../util');
  * @param {Discord.CommandInteraction} interaction
  */
 async function warnHandler(interaction) {
-	interaction.deferReply({
+	await interaction.deferReply({
 		ephemeral: true
 	});
 

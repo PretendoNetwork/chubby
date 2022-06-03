@@ -8,7 +8,7 @@ const util = require('../util');
  * @param {Discord.CommandInteraction} interaction
  */
 async function banHandler(interaction) {
-	interaction.deferReply({
+	await interaction.deferReply({
 		ephemeral: true
 	});
 
@@ -24,7 +24,7 @@ async function banHandler(interaction) {
 	bansListEmbed.setTitle('User Bans :thumbsdown:');
 	bansListEmbed.setColor(0xFFA500);
 
-	for (const userId of userIds) { 
+	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
 		const user = member.user;
 
