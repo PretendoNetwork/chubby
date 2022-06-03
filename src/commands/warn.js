@@ -232,6 +232,7 @@ const command = new SlashCommandBuilder()
 	});
 
 module.exports = {
+	name: command.name,
 	handler: warnHandler,
 	deploy: command.toJSON()
 };

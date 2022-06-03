@@ -168,6 +168,7 @@ const command = new SlashCommandBuilder()
 	});
 
 module.exports = {
+	name: command.name,
 	handler: banHandler,
 	deploy: command.toJSON()
 };

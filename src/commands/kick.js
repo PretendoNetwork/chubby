@@ -223,6 +223,7 @@ const command = new SlashCommandBuilder()
 
 
 module.exports = {
+	name: command.name,
 	handler: kickHandler,
 	deploy: command.toJSON()
 };

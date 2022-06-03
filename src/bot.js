@@ -16,6 +16,8 @@ const client = new Discord.Client({
 	]
 });
 
+client.commands = new Discord.Collection();
+
 client.on('ready', readyHandler);
 client.on('guildMemberRemove', guildMemberRemoveHandler);
 client.on('guildMemberUpdate', guildMemberUpdateHandler);

@@ -1,5 +1,4 @@
 const Discord = require('discord.js');
-const commands = require('./commands-manager');
 
 /**
  * 
@@ -8,14 +7,17 @@ const commands = require('./commands-manager');
 async function commandHandler(interaction) {
 	const { commandName } = interaction;
 
+	/** @type {Discord.Collection} */
+	const commands = interaction.client.commands;
+	const command = commands.get(commandName);
+
 	// do nothing if no command
-	if (!commands[commandName]) {
-		interaction.reply(`Missing command handler for \`${commandName}\``);
-		return;
+	if (!command) {
+		throw new Error(`Missing command handler for \`${commandName}\``);
 	}
 
 	// run the command
-	commands[commandName].handler(interaction);
+	await command.handler(interaction);
 }
 
 module.exports = commandHandler;
