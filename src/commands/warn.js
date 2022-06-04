@@ -72,11 +72,13 @@ async function warnHandler(interaction) {
 			}
 		});
 
+		const totalWarnings = count+1;
+
 		let punishmentEmbed;
 		let isKick;
 		let isBan;
 
-		if (count == 2) { // 2 previous warnings, this would be the 3rd strike
+		if (totalWarnings === 3) { // 2 previous warnings, this would be the 3rd strike
 			eventLogEmbed.setColor(0xEF7F31);
 			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
 
@@ -108,7 +110,7 @@ async function warnHandler(interaction) {
 			isKick = true;
 		}
 
-		if (count >= 3) { // At least 3 previous warnings. They were kicked already, this is a ban
+		if (totalWarnings >= 4) { // At least 3 previous warnings. They were kicked already, this is a ban
 			eventLogEmbed.setColor(0xF24E43);
 			eventLogEmbed.setTitle('Event Type: _Member Banned_');
 
@@ -202,6 +204,43 @@ async function warnHandler(interaction) {
 			} else {
 				// ???
 			}
+		} else {
+			punishmentEmbed = new Discord.MessageEmbed();
+
+			punishmentEmbed.setTitle('Warning');
+			punishmentEmbed.setDescription('You have been issued a warning.\nYou may review the details of your warning below');
+			punishmentEmbed.setColor(0xF24E43);
+			punishmentEmbed.setTimestamp(Date.now());
+			punishmentEmbed.setAuthor({
+				name: `Warned by: ${executingMember.user.tag}`,
+				iconURL: executingMember.user.avatarURL()
+			});
+			punishmentEmbed.setFooter({
+				text: 'Pretendo Network',
+				iconURL: guild.iconURL()
+			});
+			punishmentEmbed.setFields(
+				{
+					name: 'Reason',
+					value: reason
+				},
+				{
+					name: 'Total Warnings',
+					value: totalWarnings.toString()
+				},
+				{
+					name: 'Warnings Left Until Kick',
+					value: Math.max(0, totalWarnings - 3)
+				},
+				{
+					name: 'Warnings Left Until Ban',
+					value: Math.max(0, totalWarnings - 4)
+				}
+			);
+
+			await member.send({
+				embeds: [punishmentEmbed]
+			});
 		}
 
 		await Warnings.create({
@@ -210,7 +249,7 @@ async function warnHandler(interaction) {
 			reason: reason
 		});
 
-		warningListEmbed.addField(`${member.user.username}'s warnings`, (count + 1).toString(), true);
+		warningListEmbed.addField(`${member.user.username}'s warnings`, totalWarnings.toString(), true);
 	}
 
 	await interaction.editReply({ embeds: [warningListEmbed], ephemeral: true });
