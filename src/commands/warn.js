@@ -230,11 +230,11 @@ async function warnHandler(interaction) {
 				},
 				{
 					name: 'Warnings Left Until Kick',
-					value: Math.max(0, totalWarnings - 3)
+					value: Math.max(0, totalWarnings - 3).toString()
 				},
 				{
 					name: 'Warnings Left Until Ban',
-					value: Math.max(0, totalWarnings - 4)
+					value: Math.max(0, totalWarnings - 4).toString()
 				}
 			);
 
