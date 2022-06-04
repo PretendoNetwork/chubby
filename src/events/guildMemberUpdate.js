@@ -13,6 +13,15 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 	const guild = member.guild;
 	const user = member.user;
 
+	const auditLogs = await guild.fetchAuditLogs({
+		limit: 1,
+		type: 'MEMBER_UPDATE'
+	});
+
+	const latestLog = auditLogs.entries.first();
+
+	const { executor } = latestLog;
+
 	const eventLogEmbed = new Discord.MessageEmbed();
 
 	eventLogEmbed.setColor(0xC0C0C0);
@@ -24,15 +33,6 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 
 	if (oldMember.communicationDisabledUntilTimestamp !== newMember.communicationDisabledUntilTimestamp) {
 		eventLogEmbed.setTitle('Event Type: _Member Timedout_');
-
-		const auditLogs = await guild.fetchAuditLogs({
-			limit: 1,
-			type: 'MEMBER_UPDATE'
-		});
-
-		const latestLog = auditLogs.entries.first();
-
-		const { executor } = latestLog;
 
 		eventLogEmbed.setFields(
 			{
@@ -75,6 +75,14 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 			{
 				name: 'User ID',
 				value: user.id
+			},
+			{
+				name: 'Executor',
+				value: `<@${executor.id}>`
+			},
+			{
+				name: 'Executor User ID',
+				value: executor.id
 			},
 			{
 				name: 'Old Nickname',
