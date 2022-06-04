@@ -31,6 +31,14 @@ async function messageDeleteHandler(message) {
 			value: user.id
 		},
 		{
+			name: 'Author',
+			value: `<@${message.author.id}>`
+		},
+		{
+			name: 'Author ID',
+			value: message.author.id
+		},
+		{
 			name: 'Channel Tag',
 			value: `<#${message.channelId}>`
 		},
