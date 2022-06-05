@@ -61,7 +61,7 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 			}
 		);
 
-		await util.sendEventLogMessage(guild, eventLogEmbed);
+		await util.sendEventLogMessage(guild, null, eventLogEmbed);
 	}
 
 	if (oldMember.nickname !== newMember.nickname) {
@@ -96,7 +96,7 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 			}
 		);
 
-		await util.sendEventLogMessage(guild, eventLogEmbed);
+		await util.sendEventLogMessage(guild, null, eventLogEmbed);
 	}
 }
 

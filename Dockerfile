@@ -19,6 +19,6 @@ RUN npm install
 
 COPY . ./
 
-VOLUME [ "/app/config.json", "/app/database" ]
+VOLUME [ "/app/config.json", "/app/database", "/app/db.json" ]
 
 CMD ["sh", "entrypoint.sh"]

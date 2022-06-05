@@ -21,11 +21,17 @@ function ordinal(number) {
 /**
  * 
  * @param {Discord.Guild} guild
+ * @param {string|null} originId origin channel id
  * @param {Discord.MessageEmbed} embed
  */
-async function sendEventLogMessage(guild, embed) {
+async function sendEventLogMessage(guild, originId, embed) {
 	const logChannelId = db.getDB().get('channels.event-logs');
 	const logChannel = logChannelId && await guild.channels.fetch(logChannelId);
+	
+	const blacklistedIds = db.getDBList('channels.event-logs.blacklist');
+	if (blacklistedIds.includes(originId)) {
+		return;
+	}
 
 	if (!logChannel) {
 		console.log('Missing log channel!');
