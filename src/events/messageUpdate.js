@@ -55,7 +55,7 @@ async function messageUpdateHandler(oldMessage, newMessage) {
 			iconURL: guild.iconURL()
 		});
 
-		await util.sendEventLogMessage(guild, eventLogEmbed);
+		await util.sendEventLogMessage(guild, newMessage.channelId, eventLogEmbed);
 	}
 	
 }
