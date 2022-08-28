@@ -134,7 +134,7 @@ async function banHandler(interaction) {
 
 		await member.send({
 			embeds: sendMemberEmbeds
-		});
+		}).catch(() => console.log('Failed to DM user'));
 
 		await member.ban({
 			reason

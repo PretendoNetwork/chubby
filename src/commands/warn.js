@@ -179,7 +179,7 @@ async function warnHandler(interaction) {
 
 			await member.send({
 				embeds: [punishmentEmbed, pastWarningsEmbed]
-			});
+			}).catch(() => console.log('Failed to DM user'));
 
 			if (isKick) {
 				await member.kick(reason);
@@ -240,7 +240,7 @@ async function warnHandler(interaction) {
 
 			await member.send({
 				embeds: [punishmentEmbed]
-			});
+			}).catch(() => console.log('Failed to DM user'));
 		}
 
 		await Warnings.create({

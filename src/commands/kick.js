@@ -175,7 +175,7 @@ async function kickHandler(interaction) {
 
 		await member.send({
 			embeds: sendMemberEmbeds
-		});
+		}).catch(() => console.log('Failed to DM user'));
 
 		if (isKick) {
 			await member.kick(reason);
