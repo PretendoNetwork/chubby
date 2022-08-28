@@ -43,7 +43,7 @@ async function guildMemberRemoveHandler(member) {
 		((Date.now() - latestLog.createdTimestamp) > 2000) // log is too old, older than a couple seconds ago
 	) {
 		// User probably just left on their own
-		await util.sendEventLogMessage(guild, eventLogEmbed);
+		await util.sendEventLogMessage(guild, null, eventLogEmbed);
 		return;
 	}
 
@@ -58,7 +58,7 @@ async function guildMemberRemoveHandler(member) {
 	if (target.id !== member.id) {
 		// Log target does not match current user
 		// Probably just left on their own
-		await util.sendEventLogMessage(guild, eventLogEmbed);
+		await util.sendEventLogMessage(guild, null, eventLogEmbed);
 		return;
 	}
 	
@@ -97,7 +97,7 @@ async function guildMemberRemoveHandler(member) {
 		}
 	);
 
-	await util.sendEventLogMessage(guild, eventLogEmbed);
+	await util.sendEventLogMessage(guild, null, eventLogEmbed);
 }
 
 module.exports = guildMemberRemoveHandler;

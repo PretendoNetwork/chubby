@@ -65,7 +65,7 @@ async function banHandler(interaction) {
 			iconURL: guild.iconURL()
 		});
 
-		await util.sendEventLogMessage(guild, eventLogEmbed);
+		await util.sendEventLogMessage(guild, null, eventLogEmbed);
 		
 		const { count, rows } = await Bans.findAndCountAll({
 			where: {

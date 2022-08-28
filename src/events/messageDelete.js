@@ -56,7 +56,7 @@ async function messageDeleteHandler(message) {
 		iconURL: guild.iconURL()
 	});
 
-	await util.sendEventLogMessage(guild, eventLogEmbed);
+	await util.sendEventLogMessage(guild, message.channelId, eventLogEmbed);
 	
 }
 

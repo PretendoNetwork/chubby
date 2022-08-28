@@ -135,7 +135,7 @@ async function kickHandler(interaction) {
 			sendMemberEmbeds.push(kickEmbed);
 		}
 
-		await util.sendEventLogMessage(guild, eventLogEmbed);
+		await util.sendEventLogMessage(guild, null, eventLogEmbed);
 
 		if (count > 0) {
 			const pastKicksEmbed = new Discord.MessageEmbed();

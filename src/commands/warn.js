@@ -142,7 +142,7 @@ async function warnHandler(interaction) {
 			isBan = true;
 		}
 
-		await util.sendEventLogMessage(guild, eventLogEmbed);
+		await util.sendEventLogMessage(guild, null, eventLogEmbed);
 
 		if (punishmentEmbed) {
 			const pastWarningsEmbed = new Discord.MessageEmbed();
