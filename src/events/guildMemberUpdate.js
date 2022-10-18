@@ -6,6 +6,7 @@ const util = require('../util');
  * @param {Discord.GuildMember} oldMember
  * @param {Discord.GuildMember} newMember
  */
+
 async function guildMemberUpdateHandler(oldMember, newMember) {
 	if (oldMember.user.bot) return;
 
@@ -19,6 +20,11 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 	});
 
 	const latestLog = auditLogs.entries.first();
+
+	if (latestLog == guild.fetchAuditLogs({
+		limit: 1,
+		type: 'MEMBER_ROLE_UPDATE'
+	})) return;
 
 	const { executor } = latestLog;
 
