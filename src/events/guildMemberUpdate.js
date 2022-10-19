@@ -21,6 +21,7 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 
 	const latestLog = auditLogs.entries.first();
 
+	// Ignore Member Role Updates
 	if (latestLog == guild.fetchAuditLogs({
 		limit: 1,
 		type: 'MEMBER_ROLE_UPDATE'

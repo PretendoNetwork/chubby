@@ -1,7 +1,6 @@
 const Discord = require('discord.js');
-const ms = require('ms');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const mutes = require('../models/mutes');
+const unmutes = require('../models/unmutes');
 const db = require('../db');
 const util = require('../util');
 
@@ -9,7 +8,7 @@ const util = require('../util');
  *
  * @param {Discord.CommandInteraction} interaction
  */
- async function muteHandler(interaction) {
+ async function unmuteHandler(interaction) {
 	await interaction.deferReply({
 		ephemeral: true
 	});
@@ -18,17 +17,14 @@ const util = require('../util');
 	const executingMember = await interaction.member.fetch();
 	const executor = executingMember.user;
 	const users = interaction.options.getString('users');
-	let timeamount = interaction.options.getString('time');
 	const mutedRoleId = db.getDB().get('roles.muted');
     const mutedRole = mutedRoleId && await guild.roles.fetch(mutedRoleId);
 
-	if (timeamount == null) {timeamount = "Permanently"};
-
 	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
 
-	const muteListEmbed = new Discord.MessageEmbed();
-	muteListEmbed.setTitle('User Mute :zipper_mouth:');
-	muteListEmbed.setColor(0xFFA500);
+	const unmuteListEmbed = new Discord.MessageEmbed();
+	unmuteListEmbed.setTitle('User Unmute :speech_balloon:');
+	unmuteListEmbed.setColor(0xFFA500);
 
 	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
@@ -39,7 +35,7 @@ const util = require('../util');
 		eventLogEmbed.setColor(0xF24E43);
 		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 		eventLogEmbed.setTimestamp(Date.now());
-		eventLogEmbed.setTitle('Event Type: _Member Muted_');
+		eventLogEmbed.setTitle('Event Type: _Member Unmuted_');
 		eventLogEmbed.setFields(
 			{
 				name: 'User',
@@ -58,8 +54,8 @@ const util = require('../util');
 				value: executor.id
 			},
 			{
-				name: 'Amount of time muted',
-				value: timeamount
+				name: 'From bot /unmute command',
+				value: 'true'
 			}
 		);
 		eventLogEmbed.setFooter({
@@ -71,72 +67,56 @@ const util = require('../util');
 
 		const sendMemberEmbeds = [];
 
-		const muteEmbed = new Discord.MessageEmbed();
+		const unmuteEmbed = new Discord.MessageEmbed();
 
-		muteEmbed.setTitle('Punishment Details');
-		muteEmbed.setDescription('You have been muted in the Pretendo Network server. You may not speak inside the server at this time, and an appeal may not be possible\nYou may review the details of your mute below');
-		muteEmbed.setColor(0xF24E43);
-		muteEmbed.setTimestamp(Date.now());
-		muteEmbed.setAuthor({
-			name: `Muted by: ${executingMember.user.tag}`,
+		unmuteEmbed.setTitle('Punishment Details');
+		unmuteEmbed.setDescription('You have been manually unmuted in the Pretendo Network server. You may now speak inside the server.\nThank you for your patience');
+		unmuteEmbed.setColor(0xF24E43);
+		unmuteEmbed.setTimestamp(Date.now());
+		unmuteEmbed.setAuthor({
+			name: `Unmuted by: ${executingMember.user.tag}`,
 			iconURL: executingMember.user.avatarURL()
 		});
-		muteEmbed.setFooter({
+		unmuteEmbed.setFooter({
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()
 		});
-		muteEmbed.setFields({
-			name: 'Mute Time',
-			value: timeamount
+        unmuteEmbed.setFields({
+			name: 'Any concerns?',
+			value: 'If you have any questions or concerns about your mute, feel free to talk to a staff member'
 		});
 
-		sendMemberEmbeds.push(muteEmbed);
+		sendMemberEmbeds.push(unmuteEmbed);
 
 		await member.send({
 			embeds: sendMemberEmbeds
 		}).catch(() => console.log('Failed to DM user'));
 
-        if (!mutedRole) {
-            console.log('Missing muted role!');
-        } else {
-            await(member.roles.add(mutedRole));
-        }
+        await(member.roles.remove(mutedRole));
 
-		if (timeamount !== "Permamently") {
-			setTimeout(function(){
-				member.roles.remove(mutedRole);
-			}, ms(timeamount));
-		}
-
-		await mutes.create({
+		await unmutes.create({
 			user_id: member.id,
 			admin_user_id: executingMember.id,
-			timeamount: timeamount
 		});
 
-		muteListEmbed.addField(`${member.user.username}'s mute time is `, timeamount.toString(), true);
+		unmuteListEmbed.addField(`${member.user.username} has been unmuted`, 'Feel free to dm them about their pardon', true);
 	}
 
-	await interaction.editReply({ embeds: [muteListEmbed], ephemeral: true });
+	await interaction.editReply({ embeds: [unmuteListEmbed], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()
 	.setDefaultPermission(false)
-	.setName('mute')
-	.setDescription('Mute user(s)')
+	.setName('unmute')
+	.setDescription('Unmute user(s)')
 	.addStringOption(option => {
 		return option.setName('users')
-			.setDescription('User(s) to mute')
+			.setDescription('User(s) to unmute')
 			.setRequired(true);
-	})
-	.addStringOption(option => {
-		return option.setName('time')
-			.setDescription('Time of the mute (ex: 15s, 2 hrs, 14 days)')
-			.setRequired(false);
 	});
 
 module.exports = {
 	name: command.name,
-	handler: muteHandler,
+	handler: unmuteHandler,
 	deploy: command.toJSON()
 };
