@@ -13,9 +13,9 @@ const Mutes = sequelize.define('mutes', {
 	admin_user_id: {
 		type: DataTypes.STRING
 	},
-    timeamount: {
-        type: DataTypes.INTEGER
-    },
+	timeamount: {
+		type: DataTypes.INTEGER
+	},
 	timestamp: {
 		type: DataTypes.DATE,
 		defaultValue: DataTypes.NOW
