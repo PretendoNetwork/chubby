@@ -20,7 +20,7 @@ const util = require('../util');
 	const users = interaction.options.getString('users');
 	let timeamount = interaction.options.getString('time');
 	const mutedRoleId = db.getDB().get('roles.muted');
-    const mutedRole = mutedRoleId && await guild.roles.fetch(mutedRoleId);
+	const mutedRole = mutedRoleId && await guild.roles.fetch(mutedRoleId);
 
 	if (timeamount == null) {timeamount = "Permanently"};
 
@@ -32,9 +32,9 @@ const util = require('../util');
 
 	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
-        const user = member.user;
+		const user = member.user;
 
-        const eventLogEmbed = new Discord.MessageEmbed();
+		const eventLogEmbed = new Discord.MessageEmbed();
 
 		eventLogEmbed.setColor(0xF24E43);
 		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
@@ -96,11 +96,11 @@ const util = require('../util');
 			embeds: sendMemberEmbeds
 		}).catch(() => console.log('Failed to DM user'));
 
-        if (!mutedRole) {
-            console.log('Missing muted role!');
-        } else {
-            await(member.roles.add(mutedRole));
-        }
+		if (!mutedRole) {
+			console.log('Missing muted role!');
+		} else {
+			await(member.roles.add(mutedRole));
+		}
 
 		if (timeamount !== "Permamently") {
 			setTimeout(function(){
