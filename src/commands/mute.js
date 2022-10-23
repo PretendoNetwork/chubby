@@ -18,6 +18,7 @@ const util = require('../util');
 	const executingMember = await interaction.member.fetch();
 	const executor = executingMember.user;
 	const users = interaction.options.getString('users');
+	const reason = interaction.options.getString('reasoning');
 	let timeamount = interaction.options.getString('time');
 	const mutedRoleId = db.getDB().get('roles.muted');
 	const mutedRole = mutedRoleId && await guild.roles.fetch(mutedRoleId);
@@ -60,6 +61,10 @@ const util = require('../util');
 			{
 				name: 'Amount of time muted',
 				value: timeamount
+			},
+			{
+				name: 'Reasoning of mute',
+				value: reason
 			}
 		);
 		eventLogEmbed.setFooter({
@@ -88,6 +93,10 @@ const util = require('../util');
 		muteEmbed.setFields({
 			name: 'Mute Time',
 			value: timeamount
+		},
+		{
+			name: 'Reasoning of the mute',
+			value: reason
 		});
 
 		sendMemberEmbeds.push(muteEmbed);
@@ -127,6 +136,11 @@ const command = new SlashCommandBuilder()
 	.addStringOption(option => {
 		return option.setName('users')
 			.setDescription('User(s) to mute')
+			.setRequired(true);
+	})
+	.addStringOption(option => {
+		return option.setName('reasoning')
+			.setDescription('Reasoning of the mute')
 			.setRequired(true);
 	})
 	.addStringOption(option => {

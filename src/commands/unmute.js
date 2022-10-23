@@ -83,7 +83,7 @@ const util = require('../util');
 		});
         unmuteEmbed.setFields({
 			name: 'Any concerns?',
-			value: 'If you have any questions or concerns about your mute, feel free to talk to a staff member'
+			value: 'If you have any questions or concerns about your former mute, feel free to talk to a staff member'
 		});
 
 		sendMemberEmbeds.push(unmuteEmbed);
