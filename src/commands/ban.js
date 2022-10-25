@@ -78,7 +78,7 @@ async function banHandler(interaction) {
 		const banEmbed = new Discord.MessageEmbed();
 
 		banEmbed.setTitle('Punishment Details');
-		banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
+		banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nIf you want to ask for an appeal, try asking some admins or mods, i.e:\nashm#9398, Célistine || TheRealProcyon :sparkling_heart:#0001, FurryVile#8721, Cirno Moment#2022, etc.\nYou may review the details of your ban below');
 		banEmbed.setColor(0xF24E43);
 		banEmbed.setTimestamp(Date.now());
 		banEmbed.setAuthor({
