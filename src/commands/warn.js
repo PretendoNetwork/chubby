@@ -30,12 +30,12 @@ async function warnHandler(interaction) {
 		const member = await interaction.guild.members.fetch(userId);
 		const user = member.user;
 
-		const eventLogEmbed = new Discord.MessageEmbed();
+		const modLogEmbed = new Discord.MessageEmbed();
 
-		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
-		eventLogEmbed.setTimestamp(Date.now());
-		eventLogEmbed.setTitle('Event Type: _Member Warned_'); // Default type
-		eventLogEmbed.setFields( // Default fields
+		modLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+		modLogEmbed.setTimestamp(Date.now());
+		modLogEmbed.setTitle('Event Type: _Member Warned_'); // Default type
+		modLogEmbed.setFields( // Default fields
 			{
 				name: 'User',
 				value: `<@${user.id}>`
@@ -61,7 +61,7 @@ async function warnHandler(interaction) {
 				value: 'true'
 			}
 		);
-		eventLogEmbed.setFooter({
+		modLogEmbed.setFooter({
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()
 		});
@@ -79,8 +79,8 @@ async function warnHandler(interaction) {
 		let isBan;
 
 		if (totalWarnings === 3) { // 2 previous warnings, this would be the 3rd strike
-			eventLogEmbed.setColor(0xEF7F31);
-			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
+			modLogEmbed.setColor(0xEF7F31);
+			modLogEmbed.setTitle('Event Type: _Member Kicked_');
 
 			punishmentEmbed = new Discord.MessageEmbed();
 
@@ -111,8 +111,8 @@ async function warnHandler(interaction) {
 		}
 
 		if (totalWarnings >= 4) { // At least 3 previous warnings. They were kicked already, this is a ban
-			eventLogEmbed.setColor(0xF24E43);
-			eventLogEmbed.setTitle('Event Type: _Member Banned_');
+			modLogEmbed.setColor(0xF24E43);
+			modLogEmbed.setTitle('Event Type: _Member Banned_');
 
 			punishmentEmbed = new Discord.MessageEmbed();
 
@@ -142,7 +142,7 @@ async function warnHandler(interaction) {
 			isBan = true;
 		}
 
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await util.sendModLogMessage(guild, null, modLogEmbed);
 
 		if (punishmentEmbed) {
 			const pastWarningsEmbed = new Discord.MessageEmbed();
