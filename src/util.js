@@ -27,6 +27,8 @@ function ordinal(number) {
 async function sendEventLogMessage(guild, originId, embed) {
 	const logChannelId = db.getDB().get('channels.event-logs');
 	const logChannel = logChannelId && await guild.channels.fetch(logChannelId);
+	const modLogChannelId = db.getDB().get('channels.mod-logs');
+	const modLogChannel = logChannelId && await guild.channels.fetch(modLogChannelId);
 	
 	const blacklistedIds = db.getDBList('channels.event-logs.blacklist');
 	if (blacklistedIds.includes(originId)) {
@@ -38,9 +40,25 @@ async function sendEventLogMessage(guild, originId, embed) {
 	} else {
 		await logChannel.send({ embeds: [embed] });
 	}
+	if (!modLogChannel) {
+		console.log('Missing mod log channel!');
+	} else {
+		await modLogChannel.send({ embeds: [embed] });
+	}
+}
+async function sendModLogMessage(guild, originId, embed) {
+	const modLogChannelId = db.getDB().get('channels.mod-logs');
+	const modLogChannel = logChannelId && await guild.channels.fetch(modLogChannelId);
+
+	if (!modLogChannel) {
+		console.log('Missing mod log channel!');
+	} else {
+		await modLogChannel.send({ embeds: [embed] });
+	}
 }
 
 module.exports = {
 	ordinal,
-	sendEventLogMessage
+	sendEventLogMessage,
+	sendModLogMessage
 };
