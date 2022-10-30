@@ -28,13 +28,13 @@ async function banHandler(interaction) {
 		const member = await interaction.guild.members.fetch(userId);
 		const user = member.user;
 
-		const eventLogEmbed = new Discord.MessageEmbed();
+		const modLogEmbed = new Discord.MessageEmbed();
 
-		eventLogEmbed.setColor(0xF24E43);
-		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
-		eventLogEmbed.setTimestamp(Date.now());
-		eventLogEmbed.setTitle('Event Type: _Member Banned_');
-		eventLogEmbed.setFields(
+		modLogEmbed.setColor(0xF24E43);
+		modLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+		modLogEmbed.setTimestamp(Date.now());
+		modLogEmbed.setTitle('Event Type: _Member Banned_');
+		modLogEmbed.setFields(
 			{
 				name: 'User',
 				value: `<@${user.id}>`
@@ -60,12 +60,12 @@ async function banHandler(interaction) {
 				value: 'true'
 			}
 		);
-		eventLogEmbed.setFooter({
+		modLogEmbed.setFooter({
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()
 		});
 
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await util.sendModLogMessage(guild, null, modLogEmbed);
 		
 		const { count, rows } = await Bans.findAndCountAll({
 			where: {
