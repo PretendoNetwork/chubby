@@ -29,11 +29,11 @@ async function kickHandler(interaction) {
 		const member = await interaction.guild.members.fetch(userId);
 		const user = member.user;
 
-		const eventLogEmbed = new Discord.MessageEmbed();
+		const modLogEmbed = new Discord.MessageEmbed();
 
-		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
-		eventLogEmbed.setTimestamp(Date.now());
-		eventLogEmbed.setFields(
+		modLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+		modLogEmbed.setTimestamp(Date.now());
+		modLogEmbed.setFields(
 			{
 				name: 'User',
 				value: `<@${user.id}>`
@@ -59,7 +59,7 @@ async function kickHandler(interaction) {
 				value: 'true'
 			}
 		);
-		eventLogEmbed.setFooter({
+		modLogEmbed.setFooter({
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()
 		});
@@ -76,8 +76,8 @@ async function kickHandler(interaction) {
 		const sendMemberEmbeds = [];
 
 		if (count >= 2) { // Atleast 2 previous kicks, this would be the 3rd strike. Ban
-			eventLogEmbed.setColor(0xF24E43);
-			eventLogEmbed.setTitle('Event Type: _Member Banned_');
+			modLogEmbed.setColor(0xF24E43);
+			modLogEmbed.setTitle('Event Type: _Member Banned_');
 			
 			const banEmbed = new Discord.MessageEmbed();
 
@@ -108,8 +108,8 @@ async function kickHandler(interaction) {
 
 			sendMemberEmbeds.push(banEmbed);
 		} else { // Just kick
-			eventLogEmbed.setColor(0xEF7F31);
-			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
+			modLogEmbed.setColor(0xEF7F31);
+			modLogEmbed.setTitle('Event Type: _Member Kicked_');
 
 			const kickEmbed = new Discord.MessageEmbed();
 
@@ -135,7 +135,7 @@ async function kickHandler(interaction) {
 			sendMemberEmbeds.push(kickEmbed);
 		}
 
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await util.sendModLogMessage(guild, null, modLogEmbed);
 
 		if (count > 0) {
 			const pastKicksEmbed = new Discord.MessageEmbed();
