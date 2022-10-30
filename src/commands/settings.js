@@ -8,6 +8,7 @@ const editableOptions = [
 	'channels.nsfw-punished',
 	'channels.nsfw-logs',
 	'channels.event-logs',
+	'channels.mod-logs',
 	'channels.event-logs.blacklist',
 ];
 
