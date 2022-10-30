@@ -97,7 +97,7 @@ async function guildMemberRemoveHandler(member) {
 		}
 	);
 
-	await util.sendEventLogMessage(guild, null, eventLogEmbed);
+	await util.sendModLogMessage(guild, null, eventLogEmbed);
 }
 
 module.exports = guildMemberRemoveHandler;
