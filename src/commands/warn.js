@@ -88,10 +88,6 @@ async function warnHandler(interaction) {
 			punishmentEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
 			punishmentEmbed.setColor(0xEF7F31);
 			punishmentEmbed.setTimestamp(Date.now());
-			punishmentEmbed.setAuthor({
-				name: `Kicked by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
-			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()
@@ -120,10 +116,6 @@ async function warnHandler(interaction) {
 			punishmentEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
 			punishmentEmbed.setColor(0xF24E43);
 			punishmentEmbed.setTimestamp(Date.now());
-			punishmentEmbed.setAuthor({
-				name: `Banned by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
-			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()
@@ -157,17 +149,11 @@ async function warnHandler(interaction) {
 
 			for (let i = 0; i < rows.length; i++) {
 				const warning = rows[i];
-				const warningBy = await interaction.client.users.fetch(warning.admin_user_id);
 
 				pastWarningsEmbed.addFields(
 					{
 						name: `${util.ordinal(i + 1)} Warning`,
 						value: warning.reason
-					},
-					{
-						name: 'Punished By',
-						value: warningBy.tag,
-						inline: true
 					},
 					{
 						name: 'Date',

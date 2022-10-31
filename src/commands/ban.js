@@ -81,10 +81,6 @@ async function banHandler(interaction) {
 		banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
 		banEmbed.setColor(0xF24E43);
 		banEmbed.setTimestamp(Date.now());
-		banEmbed.setAuthor({
-			name: `Banned by: ${executingMember.user.tag}`,
-			iconURL: executingMember.user.avatarURL()
-		});
 		banEmbed.setFooter({
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()
@@ -109,17 +105,11 @@ async function banHandler(interaction) {
 
 			for (let i = 0; i < rows.length; i++) {
 				const ban = rows[i];
-				const bannedBy = await interaction.client.users.fetch(ban.admin_user_id);
 
 				pastBansEmbed.addFields(
 					{
 						name: `${util.ordinal(i + 1)} Ban`,
 						value: ban.reason
-					},
-					{
-						name: 'Punished By',
-						value: bannedBy.tag,
-						inline: true
 					},
 					{
 						name: 'Date',

@@ -85,10 +85,6 @@ async function kickHandler(interaction) {
 			banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
 			banEmbed.setColor(0xF24E43);
 			banEmbed.setTimestamp(Date.now());
-			banEmbed.setAuthor({
-				name: `Banned by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
-			});
 			banEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()
@@ -117,10 +113,6 @@ async function kickHandler(interaction) {
 			kickEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
 			kickEmbed.setColor(0xEF7F31);
 			kickEmbed.setTimestamp(Date.now());
-			kickEmbed.setAuthor({
-				name: `Kicked by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
-			});
 			kickEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()
@@ -150,17 +142,11 @@ async function kickHandler(interaction) {
 
 			for (let i = 0; i < rows.length; i++) {
 				const kick = rows[i];
-				const kickedBy = await interaction.client.users.fetch(kick.admin_user_id);
 
 				pastKicksEmbed.addFields(
 					{
 						name: `${util.ordinal(i + 1)} Kick`,
 						value: kick.reason
-					},
-					{
-						name: 'Punished By',
-						value: kickedBy.tag,
-						inline: true
 					},
 					{
 						name: 'Date',
