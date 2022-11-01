@@ -23,7 +23,7 @@ async function warnHandler(interaction) {
 	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
 
 	const warningListEmbed = new Discord.MessageEmbed();
-	warningListEmbed.setTitle('User Warnings :thumbsdown:');
+	warningListEmbed.setTitle('User Warnings :triangular_flag_on_post:');
 	warningListEmbed.setColor(0xFFA500);
 
 	for (const userId of userIds) {
@@ -195,12 +195,8 @@ async function warnHandler(interaction) {
 
 			punishmentEmbed.setTitle('Warning');
 			punishmentEmbed.setDescription('You have been issued a warning.\nYou may review the details of your warning below');
-			punishmentEmbed.setColor(0xF24E43);
+			punishmentEmbed.setColor(0x000000);
 			punishmentEmbed.setTimestamp(Date.now());
-			punishmentEmbed.setAuthor({
-				name: `Warned by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
-			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()

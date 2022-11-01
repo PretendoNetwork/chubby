@@ -22,7 +22,7 @@ async function kickHandler(interaction) {
 	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
 
 	const kicksListEmbed = new Discord.MessageEmbed();
-	kicksListEmbed.setTitle('User Kicks :thumbsdown:');
+	kicksListEmbed.setTitle('User Kicks :wave:');
 	kicksListEmbed.setColor(0xFFA500);
 
 	for (const userId of userIds) {

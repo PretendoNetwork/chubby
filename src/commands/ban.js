@@ -21,7 +21,7 @@ async function banHandler(interaction) {
 	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
 
 	const bansListEmbed = new Discord.MessageEmbed();
-	bansListEmbed.setTitle('User Bans :thumbsdown:');
+	bansListEmbed.setTitle('User Bans :hammer:');
 	bansListEmbed.setColor(0xFFA500);
 
 	for (const userId of userIds) {
