@@ -150,8 +150,9 @@ async function punishUserNSFW(message, suspectedUrls, suspectedFiles, prediction
 		console.log('Missing NSFW log channel!');
 	} else {
 		const embed = new Discord.MessageEmbed();
-		embed.setTitle(`Suspected NSFW Material sent by ${message.author.tag}`);
-		embed.setColor(0xffa500);
+		embed.setTitle('_NSFW Blocked_');
+		embed.setDescription(`Suspected NSFW Material sent by ${message.author.tag}`);
+		embed.setColor(0xdf005d);
 		embed.addFields([
 			{
 				name: 'Suspected URLs',

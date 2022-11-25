@@ -23,8 +23,10 @@ async function warnHandler(interaction) {
 	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
 
 	const warningListEmbed = new Discord.MessageEmbed();
-	warningListEmbed.setTitle('User Warnings :thumbsdown:');
-	warningListEmbed.setColor(0xFFA500);
+	warningListEmbed.setTitle('User Warnings');
+	warningListEmbed.setColor(0xffc800);
+
+	let image;
 
 	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
@@ -32,9 +34,12 @@ async function warnHandler(interaction) {
 
 		const eventLogEmbed = new Discord.MessageEmbed();
 
-		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+		eventLogEmbed.setColor(0xffc800);
+		eventLogEmbed.setDescription(`${user.username} has been warned in Pretendo by ${executor.username}`);
+		image = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
+		eventLogEmbed.setThumbnail('attachment://mod-warn.png');
 		eventLogEmbed.setTimestamp(Date.now());
-		eventLogEmbed.setTitle('Event Type: _Member Warned_'); // Default type
+		eventLogEmbed.setTitle('_Member Warned_'); // Default type
 		eventLogEmbed.setFields( // Default fields
 			{
 				name: 'User',
@@ -45,11 +50,11 @@ async function warnHandler(interaction) {
 				value: user.id
 			},
 			{
-				name: 'Executor',
+				name: 'Moderator',
 				value: `<@${executor.id}>`
 			},
 			{
-				name: 'Executor User ID',
+				name: 'Moderator User ID',
 				value: executor.id
 			},
 			{
@@ -57,7 +62,7 @@ async function warnHandler(interaction) {
 				value: reason
 			},
 			{
-				name: 'From bot /warn command',
+				name: 'From Bot',
 				value: 'true'
 			}
 		);
@@ -66,7 +71,7 @@ async function warnHandler(interaction) {
 			iconURL: guild.iconURL()
 		});
 
-		const { count, rows } = await Warnings.findAndCountAll({
+		const { count } = await Warnings.findAndCountAll({
 			where: {
 				user_id: member.id
 			}
@@ -79,19 +84,19 @@ async function warnHandler(interaction) {
 		let isBan;
 
 		if (totalWarnings === 3) { // 2 previous warnings, this would be the 3rd strike
-			eventLogEmbed.setColor(0xEF7F31);
-			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
+			eventLogEmbed.setColor(0xdd6c02);
+			eventLogEmbed.setTitle('_Member Kicked_');
+			eventLogEmbed.setDescription(`${user.username} has been kicked from Pretendo by ${executor.username}`);
+			image = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
+			eventLogEmbed.setThumbnail('attachment://mod-kick.png');
 
 			punishmentEmbed = new Discord.MessageEmbed();
 
-			punishmentEmbed.setTitle('Punishment Details');
+			punishmentEmbed.setTitle('_Member Kicked_');
 			punishmentEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
-			punishmentEmbed.setColor(0xEF7F31);
+			punishmentEmbed.setThumbnail('attachment://mod-kick.png');
+			punishmentEmbed.setColor(0xdd6c02);
 			punishmentEmbed.setTimestamp(Date.now());
-			punishmentEmbed.setAuthor({
-				name: `Kicked by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
-			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()
@@ -111,19 +116,19 @@ async function warnHandler(interaction) {
 		}
 
 		if (totalWarnings >= 4) { // At least 3 previous warnings. They were kicked already, this is a ban
-			eventLogEmbed.setColor(0xF24E43);
-			eventLogEmbed.setTitle('Event Type: _Member Banned_');
+			eventLogEmbed.setColor(0xa30000);
+			eventLogEmbed.setTitle('_Member Banned_');
+			eventLogEmbed.setDescription(`${user.username} has been banned from Pretendo by ${executor.username}`);
+			image = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
+			eventLogEmbed.setThumbnail('attachment://mod-ban.png');
 
 			punishmentEmbed = new Discord.MessageEmbed();
 
-			punishmentEmbed.setTitle('Punishment Details');
+			punishmentEmbed.setTitle('_Member Banned_');
 			punishmentEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
-			punishmentEmbed.setColor(0xF24E43);
+			punishmentEmbed.setThumbnail('attachment://mod-ban.png');
+			punishmentEmbed.setColor(0xa30000);
 			punishmentEmbed.setTimestamp(Date.now());
-			punishmentEmbed.setAuthor({
-				name: `Banned by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
-			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()
@@ -135,50 +140,19 @@ async function warnHandler(interaction) {
 				},
 				{
 					name: 'From warnings',
-					value: 'This ban was the result of being warned 4 times. Below is a list of all previous warnings'
+					value: 'This ban was the result of being warned 4 times'
 				}
 			);
 
 			isBan = true;
 		}
 
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
 
 		if (punishmentEmbed) {
-			const pastWarningsEmbed = new Discord.MessageEmbed();
-			pastWarningsEmbed.setTitle('Past Warnings');
-			pastWarningsEmbed.setDescription('For clarifty purposes here is a list of your past warnings');
-			pastWarningsEmbed.setColor(0xEF7F31);
-			pastWarningsEmbed.setTimestamp(Date.now());
-			pastWarningsEmbed.setFooter({
-				text: 'Pretendo Network',
-				iconURL: guild.iconURL()
-			});
-
-			for (let i = 0; i < rows.length; i++) {
-				const warning = rows[i];
-				const warningBy = await interaction.client.users.fetch(warning.admin_user_id);
-
-				pastWarningsEmbed.addFields(
-					{
-						name: `${util.ordinal(i + 1)} Warning`,
-						value: warning.reason
-					},
-					{
-						name: 'Punished By',
-						value: warningBy.tag,
-						inline: true
-					},
-					{
-						name: 'Date',
-						value: warning.timestamp.toLocaleDateString(),
-						inline: true
-					}
-				);
-			}
-
 			await member.send({
-				embeds: [punishmentEmbed, pastWarningsEmbed]
+				embeds: [punishmentEmbed],
+				files: [image]
 			}).catch(() => console.log('Failed to DM user'));
 
 			if (isKick) {
@@ -207,14 +181,12 @@ async function warnHandler(interaction) {
 		} else {
 			punishmentEmbed = new Discord.MessageEmbed();
 
-			punishmentEmbed.setTitle('Warning');
+			punishmentEmbed.setTitle('_Member Warned_');
 			punishmentEmbed.setDescription('You have been issued a warning.\nYou may review the details of your warning below');
-			punishmentEmbed.setColor(0xF24E43);
+			image = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
+			punishmentEmbed.setThumbnail('attachment://mod-warn.png');
+			punishmentEmbed.setColor(0xffc800);
 			punishmentEmbed.setTimestamp(Date.now());
-			punishmentEmbed.setAuthor({
-				name: `Warned by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
-			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()
@@ -239,7 +211,8 @@ async function warnHandler(interaction) {
 			);
 
 			await member.send({
-				embeds: [punishmentEmbed]
+				embeds: [punishmentEmbed],
+				files: [image]
 			}).catch(() => console.log('Failed to DM user'));
 		}
 
@@ -249,10 +222,18 @@ async function warnHandler(interaction) {
 			reason: reason
 		});
 
-		warningListEmbed.addField(`${member.user.username}'s warnings`, totalWarnings.toString(), true);
+		warningListEmbed.setDescription(`${user.username} has been successfully warned, here is their previous warns`)
+		warningListEmbed.addField(`${member.user.username}'s warns`, (count + 1).toString(), true);
+		warningListEmbed.setFooter({
+			text: 'Pretendo Network',
+			iconURL: guild.iconURL()
+		});
+		warningListEmbed.setTimestamp(Date.now());
 	}
 
-	await interaction.editReply({ embeds: [warningListEmbed], ephemeral: true });
+	image = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
+	warningListEmbed.setThumbnail('attachment://mod-warn.png');
+	await interaction.editReply({ embeds: [warningListEmbed], files: [image], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()

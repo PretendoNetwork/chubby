@@ -9,6 +9,7 @@ const editableOptions = [
 	'channels.nsfw-logs',
 	'channels.event-logs',
 	'channels.event-logs.blacklist',
+	'channels.mod-logs'
 ];
 
 async function verifyInputtedKey(interaction) {

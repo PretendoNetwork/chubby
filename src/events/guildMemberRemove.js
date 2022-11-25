@@ -9,17 +9,22 @@ const util = require('../util');
 async function guildMemberRemoveHandler(member) {
 	const guild = member.guild;
 	const user = member.user;
+
+	let image;
 	
 	const auditLogs = await guild.fetchAuditLogs({
 		limit: 1
 	});
 
 	const eventLogEmbed = new Discord.MessageEmbed();
-
-	eventLogEmbed.setColor(0xC0C0C0);
-	eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+		eventLogEmbed.setAuthor({
+			name: user.tag,
+			iconURL: user.avatarURL()
+		});
+	eventLogEmbed.setColor(0x878787);
+	eventLogEmbed.setDescription(`${user.username} has left Pretendo`);
 	eventLogEmbed.setTimestamp(Date.now());
-	eventLogEmbed.setTitle('Event Type: _Member Left_'); // Default type
+	eventLogEmbed.setTitle('_Member Left_'); // Default type
 	eventLogEmbed.setFields( // Default fields
 		{
 			name: 'User',
@@ -34,6 +39,7 @@ async function guildMemberRemoveHandler(member) {
 		text: 'Pretendo Network',
 		iconURL: guild.iconURL()
 	});
+	eventLogEmbed.setTimestamp(Date.now());
 
 	const latestLog = auditLogs.entries.first();
 	
@@ -43,7 +49,9 @@ async function guildMemberRemoveHandler(member) {
 		((Date.now() - latestLog.createdTimestamp) > 2000) // log is too old, older than a couple seconds ago
 	) {
 		// User probably just left on their own
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		image = new Discord.MessageAttachment('./src/images/events/event-leave.png');
+		eventLogEmbed.setThumbnail('attachment://event-leave.png');
+		await util.sendEventLogMessage('channels.event-logs', guild, null, eventLogEmbed, image, null);
 		return;
 	}
 
@@ -58,16 +66,22 @@ async function guildMemberRemoveHandler(member) {
 	if (target.id !== member.id) {
 		// Log target does not match current user
 		// Probably just left on their own
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await util.sendEventLogMessage('channels.event-logs', guild, null, eventLogEmbed);
 		return;
 	}
 	
 	if (latestLog.action === 'MEMBER_KICK') {
-		eventLogEmbed.setColor(0xEF7F31);
-		eventLogEmbed.setTitle('Event Type: _Member Kicked_');
+		eventLogEmbed.setColor(0xdd6c02);
+		eventLogEmbed.setTitle('_Member Kicked_');
+		eventLogEmbed.setDescription(`${user.username} has been kicked from Pretendo by ${executor.username}`);
+		image = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
+		eventLogEmbed.setThumbnail('attachment://mod-kick.png');
 	} else {
-		eventLogEmbed.setColor(0xF24E43);
-		eventLogEmbed.setTitle('Event Type: _Member Banned_');
+		eventLogEmbed.setColor(0xa30000);
+		eventLogEmbed.setTitle('_Member Banned_');
+		eventLogEmbed.setDescription(`${user.username} has been banned from Pretendo by ${executor.username}`);
+		image = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
+		eventLogEmbed.setThumbnail('attachment://mod-ban.png');
 	}
 
 	eventLogEmbed.setFields(
@@ -80,11 +94,11 @@ async function guildMemberRemoveHandler(member) {
 			value: user.id
 		},
 		{
-			name: 'Executor',
+			name: 'Moderator',
 			value: `<@${executor.id}>`
 		},
 		{
-			name: 'Executor User ID',
+			name: 'Moderator User ID',
 			value: executor.id
 		},
 		{
@@ -92,12 +106,12 @@ async function guildMemberRemoveHandler(member) {
 			value: latestLog.reason
 		},
 		{
-			name: 'From bot command',
+			name: 'From Bot',
 			value: 'false'
 		}
 	);
 
-	await util.sendEventLogMessage(guild, null, eventLogEmbed);
+	await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
 }
 
 module.exports = guildMemberRemoveHandler;

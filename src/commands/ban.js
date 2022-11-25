@@ -21,8 +21,10 @@ async function banHandler(interaction) {
 	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
 
 	const bansListEmbed = new Discord.MessageEmbed();
-	bansListEmbed.setTitle('User Bans :thumbsdown:');
-	bansListEmbed.setColor(0xFFA500);
+	bansListEmbed.setTitle('User Bans');
+	bansListEmbed.setColor(0xa30000);
+	const image = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
+	bansListEmbed.setThumbnail('attachment://mod-ban.png');
 
 	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
@@ -30,10 +32,14 @@ async function banHandler(interaction) {
 
 		const eventLogEmbed = new Discord.MessageEmbed();
 
-		eventLogEmbed.setColor(0xF24E43);
-		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+		eventLogEmbed.setAuthor({
+			name: user.tag,
+			iconURL: user.avatarURL()
+		});
+		eventLogEmbed.setColor(0xa30000);
+		eventLogEmbed.setDescription(`${user.username} has been banned from Pretendo by ${executor.username}`);
 		eventLogEmbed.setTimestamp(Date.now());
-		eventLogEmbed.setTitle('Event Type: _Member Banned_');
+		eventLogEmbed.setTitle('_Member Banned_');
 		eventLogEmbed.setFields(
 			{
 				name: 'User',
@@ -44,11 +50,11 @@ async function banHandler(interaction) {
 				value: user.id
 			},
 			{
-				name: 'Executor',
+				name: 'Moderator',
 				value: `<@${executor.id}>`
 			},
 			{
-				name: 'Executor User ID',
+				name: 'Moderator User ID',
 				value: executor.id
 			},
 			{
@@ -56,7 +62,7 @@ async function banHandler(interaction) {
 				value: reason
 			},
 			{
-				name: 'From bot /ban command',
+				name: 'From Bot',
 				value: 'true'
 			}
 		);
@@ -64,27 +70,23 @@ async function banHandler(interaction) {
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()
 		});
+		eventLogEmbed.setThumbnail('attachment://mod-ban.png');
 
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
 		
-		const { count, rows } = await Bans.findAndCountAll({
+		const { count } = await Bans.findAndCountAll({
 			where: {
 				user_id: member.id
 			}
 		});
-
-		const sendMemberEmbeds = [];
-
+		
 		const banEmbed = new Discord.MessageEmbed();
 
-		banEmbed.setTitle('Punishment Details');
+		banEmbed.setTitle('_Member Banned_');
 		banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
-		banEmbed.setColor(0xF24E43);
+		banEmbed.setThumbnail('attachment://mod-ban.png');
+		banEmbed.setColor(0xa30000);
 		banEmbed.setTimestamp(Date.now());
-		banEmbed.setAuthor({
-			name: `Banned by: ${executingMember.user.tag}`,
-			iconURL: executingMember.user.avatarURL()
-		});
 		banEmbed.setFooter({
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()
@@ -92,48 +94,15 @@ async function banHandler(interaction) {
 		banEmbed.setFields({
 			name: 'Ban Reason',
 			value: reason
+		},
+		{
+			name: 'Amount Of Times Banned',
+			value: (count + 1).toString()
 		});
 
-		sendMemberEmbeds.push(banEmbed);
-
-		if (count > 0) {
-			const pastBansEmbed = new Discord.MessageEmbed();
-			pastBansEmbed.setTitle('Past Bans');
-			pastBansEmbed.setDescription('For clarifty purposes here is a list of your past bans');
-			pastBansEmbed.setColor(0xEF7F31);
-			pastBansEmbed.setTimestamp(Date.now());
-			pastBansEmbed.setFooter({
-				text: 'Pretendo Network',
-				iconURL: guild.iconURL()
-			});
-
-			for (let i = 0; i < rows.length; i++) {
-				const ban = rows[i];
-				const bannedBy = await interaction.client.users.fetch(ban.admin_user_id);
-
-				pastBansEmbed.addFields(
-					{
-						name: `${util.ordinal(i + 1)} Ban`,
-						value: ban.reason
-					},
-					{
-						name: 'Punished By',
-						value: bannedBy.tag,
-						inline: true
-					},
-					{
-						name: 'Date',
-						value: ban.timestamp.toLocaleDateString(),
-						inline: true
-					}
-				);
-			}
-
-			sendMemberEmbeds.push(pastBansEmbed);
-		}
-
 		await member.send({
-			embeds: sendMemberEmbeds
+			embeds: [banEmbed],
+			files: [image]
 		}).catch(() => console.log('Failed to DM user'));
 
 		await member.ban({
@@ -146,10 +115,17 @@ async function banHandler(interaction) {
 			reason: reason
 		});
 
+		bansListEmbed.setDescription(`${user.username} has been successfully banned, here is their previous bans`)
 		bansListEmbed.addField(`${member.user.username}'s bans`, (count + 1).toString(), true);
+		bansListEmbed.setFooter({
+			text: 'Pretendo Network',
+			iconURL: guild.iconURL()
+		});
+		bansListEmbed.setTimestamp(Date.now());
+
 	}
 
-	await interaction.editReply({ embeds: [bansListEmbed], ephemeral: true });
+	await interaction.editReply({ embeds: [bansListEmbed], files: [image], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()
