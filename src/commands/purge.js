@@ -20,11 +20,11 @@ async function purgeHandler(interaction) {
     const eventLogEmbed = new Discord.MessageEmbed();
 
     const purgeReplyEmbed = new Discord.MessageEmbed();
-    const image = new Discord.MessageAttachment('./src/images/events/event-delete.png');
-    if (users !== null) {
+    const image = new Discord.MessageAttachment('./src/images/mod/mod-purge.png');
+    if (users !== null) { // if a user(s) is actually given
 	    purgeReplyEmbed.setTitle('Messages Purged');
 	    purgeReplyEmbed.setColor(0xff6363);
-	    purgeReplyEmbed.setThumbnail('attachment://event-delete.png');
+	    purgeReplyEmbed.setThumbnail('attachment://mod-purge.png');
 
         const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
 
@@ -32,6 +32,7 @@ async function purgeHandler(interaction) {
             const member = await interaction.guild.members.fetch(userId);
             const user = member.user;
 
+            // Grab the user's messages
             const userMessages = (await interaction.channel.messages.fetch()).filter(
                 (m) => m.author.id === member.id
             );
@@ -68,7 +69,7 @@ async function purgeHandler(interaction) {
                 iconURL: guild.iconURL()
             });
             eventLogEmbed.setTimestamp(Date.now());
-            eventLogEmbed.setThumbnail('attachment://event-delete.png');
+            eventLogEmbed.setThumbnail('attachment://mod-purge.png');
         
             await util.sendEventLogMessage('channels.mod-logs', guild, interaction.channelId, eventLogEmbed, image, null);
 
@@ -82,16 +83,16 @@ async function purgeHandler(interaction) {
             await interaction.editReply({ embeds: [purgeReplyEmbed], files: [image], ephemeral: true });
         }
     } else {
-        if (isNaN(deleteAmount) || deleteAmount < 2) {
+        if (isNaN(deleteAmount) || deleteAmount < 2) { // Either nothing is given within the delete amount OR less than 2
             throw new Error('Please insert an amount between 2-99 to delete.');
         }
     
-        if (parseInt(deleteAmount) > 99) {
+        if (parseInt(deleteAmount) > 99) { // If the number is higher than 99 (discord's limit)
             throw new Error('Can only delete 2-99 messages at once. Please insert a lower number.');
-        } else {
+        } else { // None of these are the case, continue to purge
             purgeReplyEmbed.setTitle('Messages Purged');
 	        purgeReplyEmbed.setColor(0xff6363);
-	        purgeReplyEmbed.setThumbnail('attachment://event-delete.png');
+	        purgeReplyEmbed.setThumbnail('attachment://mod-purge.png');
 
             // Bulk Delete
             let { size } = await interaction.channel.bulkDelete(deleteAmount);
@@ -123,7 +124,7 @@ async function purgeHandler(interaction) {
                 iconURL: guild.iconURL()
             });
             eventLogEmbed.setTimestamp(Date.now());
-            eventLogEmbed.setThumbnail('attachment://event-delete.png');
+            eventLogEmbed.setThumbnail('attachment://mod-purge.png');
             
             await util.sendEventLogMessage('channels.mod-logs', guild, interaction.channelId, eventLogEmbed, image, null);
     
@@ -139,20 +140,20 @@ async function purgeHandler(interaction) {
     }
 }
 
- const command = new SlashCommandBuilder()
- .setDefaultPermission(false)
- .setName('purge')
- .setDescription('purge message(s)')
- .addIntegerOption(option => {
-     return option.setName('amount')
-         .setDescription('Amount of messages deleted (2-99)')
-         .setRequired(false);
- })
- .addStringOption(option => {
-     return option.setName('users')
-         .setDescription('User(s) to purged (will only purge within the current channel)')
-         .setRequired(false);
- });
+const command = new SlashCommandBuilder()
+    .setDefaultPermission(false)
+    .setName('purge')
+    .setDescription('purge message(s)')
+    .addIntegerOption(option => {
+        return option.setName('amount')
+            .setDescription('Amount of messages deleted (2-99)')
+            .setRequired(false);
+    })
+    .addStringOption(option => {
+        return option.setName('users')
+            .setDescription('User(s) to purged (will only purge within the current channel)')
+            .setRequired(false);
+    });
 
 module.exports = {
  name: command.name,

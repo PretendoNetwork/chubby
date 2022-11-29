@@ -34,6 +34,10 @@ async function warnHandler(interaction) {
 
 		const eventLogEmbed = new Discord.MessageEmbed();
 
+		eventLogEmbed.setAuthor({
+			name: user.tag,
+			iconURL: user.avatarURL()
+		});
 		eventLogEmbed.setColor(0xffc800);
 		eventLogEmbed.setDescription(`${user.username} has been warned in Pretendo by ${executor.username}`);
 		image = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
@@ -175,8 +179,6 @@ async function warnHandler(interaction) {
 					reason: reason,
 					from_warning: true
 				});
-			} else {
-				// ???
 			}
 		} else {
 			punishmentEmbed = new Discord.MessageEmbed();

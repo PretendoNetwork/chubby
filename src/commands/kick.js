@@ -164,8 +164,6 @@ async function kickHandler(interaction) {
 				reason: reason,
 				from_kick: true
 			});
-		} else {
-			// ???
 		}
 
 		await Kicks.create({
