@@ -5,7 +5,7 @@ const util = require('../util');
  * 
  * @param {Discord.GuildMember} member
  */
-async function guildMemberAddedHandler(member) {
+async function guildMemberAddHandler(member) {
     const guild = member.guild;
     const user = member.user;
 
@@ -43,4 +43,4 @@ async function guildMemberAddedHandler(member) {
 
 	await util.sendEventLogMessage('channels.event-logs', guild, null, eventLogEmbed, image, null);
 }
-module.exports = guildMemberAddedHandler;
+module.exports = guildMemberAddHandler;
