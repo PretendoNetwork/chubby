@@ -29,7 +29,7 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 		iconURL: guild.iconURL()
 	});
 
-	if (oldMember.communicationDisabledUntilTimestamp !== newMember.communicationDisabledUntilTimestamp) {
+	if (oldMember.communicationDisabledUntilTimestamp < newMember.communicationDisabledUntilTimestamp) {
 		const image = new Discord.MessageAttachment('./src/images/events/event-timedout.png');
 		eventLogEmbed.setAuthor({
 			name: user.tag,

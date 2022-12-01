@@ -12,6 +12,18 @@ async function messageDeleteHandler(message) {
 	const member = await message.member.fetch();
 	const user = member.user;
 
+	const auditLogs = await guild.fetchAuditLogs({
+		limit: 1,
+		type: 'MESSAGE_DELETE'
+	});
+
+	const latestLog = auditLogs.entries.first();
+
+	const { executor } = latestLog;
+
+	if (executor.id = guild.me.id) return;
+
+
 	const messageContent = message.content.length > 1024 ? message.content.substr(0, 1023) + '…' : message.content;
 
 	const eventLogEmbed = new Discord.MessageEmbed();
