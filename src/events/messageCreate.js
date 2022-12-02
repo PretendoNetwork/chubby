@@ -66,6 +66,7 @@ async function messageHandler(message) {
 			default:
 				break;
 		}
+	}
 }
 
 module.exports = messageHandler;
