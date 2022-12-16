@@ -31,6 +31,13 @@ async function kickHandler(interaction) {
 		const member = await interaction.guild.members.fetch(userId);
 		const user = member.user;
 
+		// Checks if they're above/equal to the executor
+		if (member.roles.highest.position >= executingMember.roles.highest.position) {
+			await interaction.editReply(`You cannot kick ${member.username} as they have a higher role compared to you.`);
+			return;
+		}
+
+		// Creates mod logs
 		const eventLogEmbed = new Discord.MessageEmbed();
 
 		eventLogEmbed.setAuthor({

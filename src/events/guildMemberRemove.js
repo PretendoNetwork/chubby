@@ -84,6 +84,11 @@ async function guildMemberRemoveHandler(member) {
 		eventLogEmbed.setThumbnail('attachment://mod-ban.png');
 	}
 
+	// Incase of the reason being not filled
+	if (latestLog.reason === null) {
+		latestLog.reason = "*No Reason Given*";
+	}
+	
 	eventLogEmbed.setFields(
 		{
 			name: 'User',
