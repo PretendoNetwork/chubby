@@ -52,19 +52,6 @@ async function settingsHandler(interaction) {
 		return;
 	}
 
-	if (interaction.options.getSubcommand() === 'which') {
-		await interaction.reply({
-			content: `**possible settings**:\n${editableOptions
-				.map((v) => `\`${v}\``)
-				.join('\n')}`,
-			ephemeral: true,
-			allowedMentions: {
-				parse: [], // dont allow tagging anything
-			},
-		});
-		return;
-	}
-
 	throw new Error('unhandled subcommand');
 }
 
@@ -80,6 +67,11 @@ command.addSubcommand((cmd) => {
 		option.setName('key');
 		option.setDescription('Key to modify');
 		option.setRequired(true);
+		for(setting in editableOptions) {
+			option.addChoices(
+				{ name: editableOptions[setting], value: editableOptions[setting] }
+			);
+		}
 		return option;
 	});
 	cmd.addStringOption((option) => {
@@ -97,13 +89,13 @@ command.addSubcommand((cmd) => {
 		option.setName('key');
 		option.setDescription('Key to modify');
 		option.setRequired(true);
+		for(setting in editableOptions) {
+			option.addChoices(
+				{ name: editableOptions[setting], value: editableOptions[setting] }
+			);
+		}
 		return option;
 	});
-	return cmd;
-});
-command.addSubcommand((cmd) => {
-	cmd.setName('which');
-	cmd.setDescription('which settings are valid?');
 	return cmd;
 });
 
