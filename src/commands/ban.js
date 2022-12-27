@@ -32,7 +32,7 @@ async function banHandler(interaction) {
 
 		// Checks if they're above/equal to the executor
 		if (member.roles.highest.position >= executingMember.roles.highest.position) {
-			await interaction.editReply(`You cannot ban ${member.username} as they have a higher role compared to you.`);
+			await interaction.editReply(`You cannot ban ${user.username} as they have a higher role compared to you.`);
 			return;
 		}
 
