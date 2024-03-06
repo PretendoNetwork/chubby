@@ -1,6 +1,5 @@
 {
 	"bot_token": "TOKEN",
-	"botspam_id": "CHANNEL_ID",
 	"quantized_nsfw_model": false,
 	"sequelize": {
 		"force": false,

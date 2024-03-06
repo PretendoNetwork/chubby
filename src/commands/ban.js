@@ -23,8 +23,9 @@ async function banHandler(interaction) {
 	const bansListEmbed = new Discord.MessageEmbed();
 	bansListEmbed.setTitle('User Bans');
 	bansListEmbed.setColor(0xa30000);
-	const image = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
 	bansListEmbed.setThumbnail('attachment://mod-ban.png');
+
+	const image = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
 
 	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
@@ -44,7 +45,7 @@ async function banHandler(interaction) {
 			iconURL: user.avatarURL()
 		});
 		eventLogEmbed.setColor(0xa30000);
-		eventLogEmbed.setDescription(`${user.username} has been banned from Pretendo by ${executor.username}`);
+		eventLogEmbed.setDescription(`${user.username} has been banned by ${executor.username}`);
 		eventLogEmbed.setTimestamp(Date.now());
 		eventLogEmbed.setTitle('_Member Banned_');
 		eventLogEmbed.setFields(
@@ -122,7 +123,7 @@ async function banHandler(interaction) {
 			reason: reason
 		});
 
-		bansListEmbed.setDescription(`${user.username} has been successfully banned, here is their previous bans`)
+		bansListEmbed.setDescription(`${user.username} has been successfully banned`)
 		bansListEmbed.addField(`${member.user.username}'s bans`, (count + 1).toString(), true);
 		bansListEmbed.setFooter({
 			text: 'Pretendo Network',

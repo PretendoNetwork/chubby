@@ -35,11 +35,7 @@ async function sendEventLogMessage(logType, guild, originId, embed, file, compon
 	if (!logChannel) {
 		console.log('Missing log channel!');
 	} else {
-		if (components === null) {
-			await logChannel.send({ embeds: [embed], files: [file] });
-		} else {
 			await logChannel.send({ embeds: [embed], files: [file], components: [components] });
-		}
 	}
 }
 

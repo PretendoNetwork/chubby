@@ -39,8 +39,9 @@ async function pardonHandler(interaction) {
                     user_id: member.id
                 }
             });
+            
             if (userWarns < 1 || isNaN(userWarns)) { // User has no warns
-                throw new Error('This user has no warns, did you put in the wrong info?');
+                throw new Error('This user has no warnings. Ensure you are using the correct user');
             } else { // User has warns
 	            pardonedListEmbed.setTitle('User Pardoned');
 	            pardonedListEmbed.setColor(0xffffff);
@@ -138,8 +139,9 @@ async function pardonHandler(interaction) {
                     user_id: member.id
                 }
             });
+
             if (userKicks < 1 || isNaN(userKicks)) { // User has no kicks
-                throw new Error('This user has no kicks, did you put in the wrong info?');
+                throw new Error('This user has no kicks. Ensure you are using the correct user.');
             } else { // User has kicks
 	            pardonedListEmbed.setTitle('User Pardoned');
 	            pardonedListEmbed.setColor(0xffffff);

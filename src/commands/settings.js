@@ -67,11 +67,13 @@ command.addSubcommand((cmd) => {
 		option.setName('key');
 		option.setDescription('Key to modify');
 		option.setRequired(true);
+
 		for(setting in editableOptions) {
 			option.addChoices(
 				{ name: editableOptions[setting], value: editableOptions[setting] }
 			);
 		}
+		
 		return option;
 	});
 	cmd.addStringOption((option) => {
@@ -89,11 +91,13 @@ command.addSubcommand((cmd) => {
 		option.setName('key');
 		option.setDescription('Key to modify');
 		option.setRequired(true);
+
 		for(setting in editableOptions) {
 			option.addChoices(
 				{ name: editableOptions[setting], value: editableOptions[setting] }
 			);
 		}
+
 		return option;
 	});
 	return cmd;

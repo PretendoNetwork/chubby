@@ -9,7 +9,7 @@ async function guildMemberAddHandler(member) {
     const guild = member.guild;
     const user = member.user;
 
-    const eventLogEmbed = new Discord.MessageEmbed();
+	const eventLogEmbed = new Discord.MessageEmbed();
 	const image = new Discord.MessageAttachment('./src/images/events/event-join.png');
 
     eventLogEmbed.setAuthor({

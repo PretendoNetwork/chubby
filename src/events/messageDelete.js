@@ -21,7 +21,7 @@ async function messageDeleteHandler(message) {
 
 	const { executor } = latestLog;
 
-	if (executor.id = guild.me.id) return;
+	if (executor.id == guild.me.id) return;
 
 
 	const messageContent = message.content.length > 1024 ? message.content.substr(0, 1023) + '…' : message.content;

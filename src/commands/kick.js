@@ -179,7 +179,7 @@ async function kickHandler(interaction) {
 			reason: reason
 		});
 
-		kicksListEmbed.setDescription(`${user.username} has been successfully kicked, here is their previous kicks`)
+		kicksListEmbed.setDescription(`${user.username} has been successfully kicked`)
 		kicksListEmbed.addField(`${member.user.username}'s kicks`, (count + 1).toString(), true);
 		kicksListEmbed.setFooter({
 			text: 'Pretendo Network',
