@@ -19,19 +19,31 @@ async function kickHandler(interaction) {
 	const users = interaction.options.getString('users');
 	const reason = interaction.options.getString('reason');
 
+	let image;
+
 	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
 
 	const kicksListEmbed = new Discord.MessageEmbed();
-	kicksListEmbed.setTitle('User Kicks :thumbsdown:');
-	kicksListEmbed.setColor(0xFFA500);
+	kicksListEmbed.setTitle('User Kicks');
+	kicksListEmbed.setColor(0xdd6c02);
 
 	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
 		const user = member.user;
 
+		// Checks if they're above/equal to the executor
+		if (member.roles.highest.position >= executingMember.roles.highest.position) {
+			await interaction.editReply(`You cannot kick ${user.username} as they have a higher role compared to you.`);
+			return;
+		}
+
+		// Creates mod logs
 		const eventLogEmbed = new Discord.MessageEmbed();
 
-		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+		eventLogEmbed.setAuthor({
+			name: user.tag,
+			iconURL: user.avatarURL()
+		});
 		eventLogEmbed.setTimestamp(Date.now());
 		eventLogEmbed.setFields(
 			{
@@ -43,11 +55,11 @@ async function kickHandler(interaction) {
 				value: user.id
 			},
 			{
-				name: 'Executor',
+				name: 'Moderator',
 				value: `<@${executor.id}>`
 			},
 			{
-				name: 'Executor User ID',
+				name: 'Moderator User ID',
 				value: executor.id
 			},
 			{
@@ -55,7 +67,7 @@ async function kickHandler(interaction) {
 				value: reason
 			},
 			{
-				name: 'From bot /kick command',
+				name: 'From Bot',
 				value: 'true'
 			}
 		);
@@ -64,7 +76,7 @@ async function kickHandler(interaction) {
 			iconURL: guild.iconURL()
 		});
 
-		const { count, rows } = await Kicks.findAndCountAll({
+		const { count } = await Kicks.findAndCountAll({
 			where: {
 				user_id: member.id
 			}
@@ -76,19 +88,19 @@ async function kickHandler(interaction) {
 		const sendMemberEmbeds = [];
 
 		if (count >= 2) { // Atleast 2 previous kicks, this would be the 3rd strike. Ban
-			eventLogEmbed.setColor(0xF24E43);
-			eventLogEmbed.setTitle('Event Type: _Member Banned_');
+			eventLogEmbed.setColor(0xa30000);
+			eventLogEmbed.setTitle('_Member Banned_');
+			eventLogEmbed.setDescription(`${user.username} has been banned from Pretendo by ${executor.username}`);
+			image = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
+			eventLogEmbed.setThumbnail('attachment://mod-ban.png');
 			
 			const banEmbed = new Discord.MessageEmbed();
 
-			banEmbed.setTitle('Punishment Details');
+			banEmbed.setTitle('_Member Banned_');
 			banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
-			banEmbed.setColor(0xF24E43);
+			banEmbed.setThumbnail('attachment://mod-ban.png');
+			banEmbed.setColor(0xa30000);
 			banEmbed.setTimestamp(Date.now());
-			banEmbed.setAuthor({
-				name: `Banned by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
-			});
 			banEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()
@@ -100,7 +112,7 @@ async function kickHandler(interaction) {
 				},
 				{
 					name: 'From kick',
-					value: 'This ban was the result of being kicked 3 times. Below is a list of all previous kicks'
+					value: 'This ban was the result of being kicked 3 times'
 				}
 			);
 
@@ -108,19 +120,19 @@ async function kickHandler(interaction) {
 
 			sendMemberEmbeds.push(banEmbed);
 		} else { // Just kick
-			eventLogEmbed.setColor(0xEF7F31);
-			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
+			eventLogEmbed.setColor(0xdd6c02);
+			eventLogEmbed.setTitle('_Member Kicked_');
+			eventLogEmbed.setDescription(`${user.username} has been kicked from Pretendo by ${executor.username}`);
+			image = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
+			eventLogEmbed.setThumbnail('attachment://mod-kick.png');
 
 			const kickEmbed = new Discord.MessageEmbed();
 
-			kickEmbed.setTitle('Punishment Details');
+			kickEmbed.setTitle('_Member Kicked_');
 			kickEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
-			kickEmbed.setColor(0xEF7F31);
+			kickEmbed.setThumbnail('attachment://mod-kick.png');
+			kickEmbed.setColor(0xdd6c02);
 			kickEmbed.setTimestamp(Date.now());
-			kickEmbed.setAuthor({
-				name: `Kicked by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
-			});
 			kickEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()
@@ -128,6 +140,10 @@ async function kickHandler(interaction) {
 			kickEmbed.setFields({
 				name: 'Kick Reason',
 				value: reason
+			},
+			{
+				name: 'Amount Of Times Kicked',
+				value: (count + 1).toString()
 			});
 
 			isKick = true;
@@ -135,46 +151,11 @@ async function kickHandler(interaction) {
 			sendMemberEmbeds.push(kickEmbed);
 		}
 
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
-
-		if (count > 0) {
-			const pastKicksEmbed = new Discord.MessageEmbed();
-			pastKicksEmbed.setTitle('Past Kicks');
-			pastKicksEmbed.setDescription('For clarifty purposes here is a list of your past kicks');
-			pastKicksEmbed.setColor(0xEF7F31);
-			pastKicksEmbed.setTimestamp(Date.now());
-			pastKicksEmbed.setFooter({
-				text: 'Pretendo Network',
-				iconURL: guild.iconURL()
-			});
-
-			for (let i = 0; i < rows.length; i++) {
-				const kick = rows[i];
-				const kickedBy = await interaction.client.users.fetch(kick.admin_user_id);
-
-				pastKicksEmbed.addFields(
-					{
-						name: `${util.ordinal(i + 1)} Kick`,
-						value: kick.reason
-					},
-					{
-						name: 'Punished By',
-						value: kickedBy.tag,
-						inline: true
-					},
-					{
-						name: 'Date',
-						value: kick.timestamp.toLocaleDateString(),
-						inline: true
-					}
-				);
-			}
-
-			sendMemberEmbeds.push(pastKicksEmbed);
-		}
+		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
 
 		await member.send({
-			embeds: sendMemberEmbeds
+			embeds: sendMemberEmbeds,
+			files: [image]
 		}).catch(() => console.log('Failed to DM user'));
 
 		if (isKick) {
@@ -190,8 +171,6 @@ async function kickHandler(interaction) {
 				reason: reason,
 				from_kick: true
 			});
-		} else {
-			// ???
 		}
 
 		await Kicks.create({
@@ -200,10 +179,18 @@ async function kickHandler(interaction) {
 			reason: reason
 		});
 
+		kicksListEmbed.setDescription(`${user.username} has been successfully kicked`)
 		kicksListEmbed.addField(`${member.user.username}'s kicks`, (count + 1).toString(), true);
+		kicksListEmbed.setFooter({
+			text: 'Pretendo Network',
+			iconURL: guild.iconURL()
+		});
+		kicksListEmbed.setTimestamp(Date.now());
 	}
 
-	await interaction.editReply({ embeds: [kicksListEmbed], ephemeral: true });
+	image = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
+	kicksListEmbed.setThumbnail('attachment://mod-kick.png');
+	await interaction.editReply({ embeds: [kicksListEmbed], files: [image], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()

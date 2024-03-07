@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-
+// NSFW Vars
 const checkNSFW = require('../check-nsfw');
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 
@@ -7,7 +7,7 @@ const urlRegex = /(https?:\/\/[^\s]+)/g;
  *
  * @param {Discord.Message} message
  */
-function messageHandler(message) {
+async function messageHandler(message) {
 	// Ignore bot messages
 	if (message.author.bot) return;
 

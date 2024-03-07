@@ -16,12 +16,27 @@ async function messageUpdateHandler(oldMessage, newMessage) {
 
 		const oldMessageContent = oldMessage.content.length > 1024 ? oldMessage.content.substr(0, 1023) + '…' : oldMessage.content;
 		const newMessageContent = newMessage.content.length > 1024 ? newMessage.content.substr(0, 1023) + '…' : newMessage.content;
-	
-		const eventLogEmbed = new Discord.MessageEmbed();
 
-		eventLogEmbed.setColor(0xC0C0C0);
-		eventLogEmbed.setTitle('Event Type: _Message Update_');
-		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+		// Jump button
+		const row = new Discord.MessageActionRow();
+		row.addComponents(
+			new Discord.MessageButton()
+				.setLabel('Jump!')
+				.setStyle('LINK')
+				.setURL(newMessage.url)
+				.setEmoji('📨'),
+		);
+		
+		const eventLogEmbed = new Discord.MessageEmbed();
+		const image = new Discord.MessageAttachment('./src/images/events/event-update.png');
+
+		eventLogEmbed.setAuthor({
+			name: user.tag,
+			iconURL: user.avatarURL()
+		});
+		eventLogEmbed.setColor(0xffefb6);
+		eventLogEmbed.setTitle('_Message Update_');
+		eventLogEmbed.setDescription(`${user.username} has updated their message in ${newMessage.channel.name}`);
 		eventLogEmbed.setFields(
 			{
 				name: 'User',
@@ -32,12 +47,8 @@ async function messageUpdateHandler(oldMessage, newMessage) {
 				value: user.id
 			},
 			{
-				name: 'Channel Tag',
+				name: 'Channel',
 				value: `<#${newMessage.channelId}>`
-			},
-			{
-				name: 'Channel Name',
-				value: newMessage.channel.name
 			},
 			{
 				name: 'Old Message',
@@ -54,8 +65,10 @@ async function messageUpdateHandler(oldMessage, newMessage) {
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()
 		});
+		eventLogEmbed.setTimestamp(Date.now());
+		eventLogEmbed.setThumbnail('attachment://event-update.png');
 
-		await util.sendEventLogMessage(guild, newMessage.channelId, eventLogEmbed);
+		await util.sendEventLogMessage('channels.event-logs', guild, newMessage.channelId, eventLogEmbed, image, row);
 	}
 	
 }

@@ -7,7 +7,6 @@ const util = require('../util');
  */
 async function messageDeleteHandler(message) {
 	if (message.author.bot) return;
-	if (!message.member) return;
 
 	const guild = await message.guild.fetch();
 	const member = await message.member.fetch();
@@ -16,10 +15,15 @@ async function messageDeleteHandler(message) {
 	const messageContent = message.content.length > 1024 ? message.content.substr(0, 1023) + '…' : message.content;
 
 	const eventLogEmbed = new Discord.MessageEmbed();
+	const image = new Discord.MessageAttachment('./src/images/events/event-delete.png');
 
-	eventLogEmbed.setColor(0xC0C0C0);
-	eventLogEmbed.setTitle('Event Type: _Message Delete_');
-	eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+	eventLogEmbed.setAuthor({
+		name: user.tag,
+		iconURL: user.avatarURL()
+	});
+	eventLogEmbed.setColor(0xff6363);
+	eventLogEmbed.setTitle('_Message Delete_');
+	eventLogEmbed.setDescription(`${user.username}'s message in ${message.channel.name} has been deleted`);
 	eventLogEmbed.setTimestamp(Date.now());
 	eventLogEmbed.setFields(
 		{
@@ -31,20 +35,8 @@ async function messageDeleteHandler(message) {
 			value: user.id
 		},
 		{
-			name: 'Author',
-			value: `<@${message.author.id}>`
-		},
-		{
-			name: 'Author ID',
-			value: message.author.id
-		},
-		{
-			name: 'Channel Tag',
+			name: 'Channel',
 			value: `<#${message.channelId}>`
-		},
-		{
-			name: 'Channel Name',
-			value: message.channel.name
 		},
 		{
 			name: 'Message',
@@ -55,8 +47,10 @@ async function messageDeleteHandler(message) {
 		text: 'Pretendo Network',
 		iconURL: guild.iconURL()
 	});
+	eventLogEmbed.setTimestamp(Date.now());
+	eventLogEmbed.setThumbnail('attachment://event-delete.png');
 
-	await util.sendEventLogMessage(guild, message.channelId, eventLogEmbed);
+	await util.sendEventLogMessage('channels.event-logs', guild, message.channelId, eventLogEmbed, image, null);
 	
 }
 
