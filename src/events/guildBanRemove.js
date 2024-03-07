@@ -6,22 +6,22 @@ const util = require('../util');
  * @param {Discord.GuildBan} ban
  */
  async function guildBanRemoveHandler(ban) {
-    const guild = ban.guild;
-    const user = ban.user;
+	const guild = ban.guild;
+	const user = ban.user;
 
-    const auditLogs = await guild.fetchAuditLogs({
+	const auditLogs = await guild.fetchAuditLogs({
 		limit: 1,
 		type: 'MEMBER_BAN_REMOVE'
 	});
 
 	const latestLog = auditLogs.entries.first();
 
-    const { executor } = latestLog;
+	const { executor } = latestLog;
 
-    const eventLogEmbed = new Discord.MessageEmbed();
+	const eventLogEmbed = new Discord.MessageEmbed();
 	const image = new Discord.MessageAttachment('./src/images/mod/mod-pardon.png');
 
-    eventLogEmbed.setAuthor({
+	eventLogEmbed.setAuthor({
 		name: user.tag,
 		iconURL: user.avatarURL()
 	});
@@ -31,29 +31,29 @@ const util = require('../util');
 	eventLogEmbed.setTimestamp(Date.now());
 	eventLogEmbed.setFields(
 		{
-            name: 'User',
-            value: `<@${user.id}>`
-        },
-        {
-            name: 'User ID',
-            value: user.id
-        },
-        {
-            name: 'Moderator',
-            value: `<@${executor.id}>`
-        },
-        {
-            name: 'Moderator User ID',
-            value: executor.id
-        },
-        {
-            name: 'Type',
-            value: 'Ban Pardon'
-        },
-        {
-            name: 'From Bot',
-            value: 'false'
-        }
+			name: 'User',
+			value: `<@${user.id}>`
+		},
+		{
+			name: 'User ID',
+			value: user.id
+		},
+		{
+			name: 'Moderator',
+			value: `<@${executor.id}>`
+		},
+		{
+			name: 'Moderator User ID',
+			value: executor.id
+		},
+		{
+			name: 'Type',
+			value: 'Ban Pardon'
+		},
+		{
+			name: 'From Bot',
+			value: 'false'
+		}
 	);
 	eventLogEmbed.setFooter({
 		text: 'Pretendo Network',
