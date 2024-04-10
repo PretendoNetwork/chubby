@@ -11,7 +11,7 @@ async function messageHandler(message) {
 	// Ignore bot messages
 	if (message.author.bot) return;
 
-	if (message.content == '')
+	if (message.content == '' && message.attachments.size == 0)
 		message.delete();
 
 	// check if the message has any URLs
