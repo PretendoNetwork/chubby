@@ -8,3 +8,4 @@ Chubby can:
 - Pardon warns and kicks from multiple users
 - Purge messages from a channel or from a specified user
 - Log user and moderation events
+- Remove Discord polls
