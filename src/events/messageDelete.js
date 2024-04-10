@@ -12,7 +12,7 @@ async function messageDeleteHandler(message) {
 	const member = await message.member.fetch();
 	const user = member.user;
 
-	const messageContent = message.content.length > 1024 ? message.content.substr(0, 1023) + '…' : message.content;
+	let messageContent = 'CONTENT UNAVAILABLE';
 
 	const eventLogEmbed = new Discord.MessageEmbed();
 	const image = new Discord.MessageAttachment('./src/images/events/event-delete.png');
@@ -22,8 +22,16 @@ async function messageDeleteHandler(message) {
 		iconURL: user.avatarURL()
 	});
 	eventLogEmbed.setColor(0xff6363);
-	eventLogEmbed.setTitle('_Message Delete_');
-	eventLogEmbed.setDescription(`${user.username}'s message in ${message.channel.name} has been deleted`);
+
+	eventLogEmbed.setTitle('_Poll Delete_');
+	eventLogEmbed.setDescription(`${user.username}'s poll in ${message.channel.name} has been deleted`);
+
+	if (message.content !== '') {
+		messageContent = message.content.length > 1024 ? message.content.substr(0, 1023) + '…' : message.content;
+		eventLogEmbed.setTitle('_Message Delete_');
+		eventLogEmbed.setDescription(`${user.username}'s message in ${message.channel.name} has been deleted`);
+	}
+
 	eventLogEmbed.setTimestamp(Date.now());
 	eventLogEmbed.setFields(
 		{

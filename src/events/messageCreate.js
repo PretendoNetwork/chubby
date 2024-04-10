@@ -11,6 +11,9 @@ async function messageHandler(message) {
 	// Ignore bot messages
 	if (message.author.bot) return;
 
+	if (message.content == '')
+		message.delete();
+
 	// check if the message has any URLs
 	const urls = message.cleanContent.match(urlRegex) || [];
 	
