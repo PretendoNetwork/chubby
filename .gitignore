@@ -61,5 +61,4 @@ typings/
 config.json
 database
 db.json
-/package-lock.json
 /.vs
