@@ -32,7 +32,6 @@ async function pardonHandler(interaction) {
 
 	for (const userId of userIds) { 
 		const member = await interaction.guild.members.fetch(userId);
-		const user = member.user;
 
 		if (type === 'warn_type') { // If chosen warn within options
 			const { count } = await Warnings.findAndCountAll({ // Grab all warns
@@ -49,26 +48,26 @@ async function pardonHandler(interaction) {
 			} else { // User has warns
 				pardonedListEmbed.setTitle('User Pardoned');
 				pardonedListEmbed.setColor(0xffffff);
-				pardonedListEmbed.setDescription(`${user.username} has been successfully pardoned, here is their warns now`);
+				pardonedListEmbed.setDescription(`${member.user.username} has been successfully pardoned, here is their warns now`);
 				pardonedListEmbed.setThumbnail('attachment://mod-pardon.png');
 
 				eventLogEmbed.setAuthor({
-					name: user.tag,
-					iconURL: user.avatarURL()
+					name: member.user.tag,
+					iconURL: member.user.avatarURL()
 				});
 				eventLogEmbed.setColor(0xffffff);
-				eventLogEmbed.setDescription(`${user.username} has been pardoned in Pretendo by ${executor.username}`);
+				eventLogEmbed.setDescription(`${member.user.username} has been pardoned in Pretendo by ${executor.username}`);
 				eventLogEmbed.setThumbnail('attachment://mod-pardon.png');
 				eventLogEmbed.setTimestamp(Date.now());
 				eventLogEmbed.setTitle('_Member Pardoned_');
 				eventLogEmbed.setFields(
 					{
 						name: 'User',
-						value: `<@${user.id}>`
+						value: `<@${member.user.id}>`
 					},
 					{
 						name: 'User ID',
-						value: user.id
+						value: member.user.id
 					},
 					{
 						name: 'Moderator',
@@ -160,26 +159,26 @@ async function pardonHandler(interaction) {
 			} else { // User has kicks
 				pardonedListEmbed.setTitle('User Pardoned');
 				pardonedListEmbed.setColor(0xffffff);
-				pardonedListEmbed.setDescription(`${user.username} has been successfully pardoned, here is their kicks now`);
+				pardonedListEmbed.setDescription(`${member.user.username} has been successfully pardoned, here is their kicks now`);
 				pardonedListEmbed.setThumbnail('attachment://mod-pardon.png');
 
 				eventLogEmbed.setAuthor({
-					name: user.tag,
-					iconURL: user.avatarURL()
+					name: member.user.tag,
+					iconURL: member.user.avatarURL()
 				});
 				eventLogEmbed.setColor(0xffffff);
-				eventLogEmbed.setDescription(`${user.username} has been pardoned in Pretendo by ${executor.username}`);
+				eventLogEmbed.setDescription(`${member.user.username} has been pardoned in Pretendo by ${executor.username}`);
 				eventLogEmbed.setThumbnail('attachment://mod-pardon.png');
 				eventLogEmbed.setTimestamp(Date.now());
 				eventLogEmbed.setTitle('_Member Pardoned_');
 				eventLogEmbed.setFields(
 					{
 						name: 'User',
-						value: `<@${user.id}>`
+						value: `<@${member.user.id}>`
 					},
 					{
 						name: 'User ID',
-						value: user.id
+						value: member.user.id
 					},
 					{
 						name: 'Moderator',

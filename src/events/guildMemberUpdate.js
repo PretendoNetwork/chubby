@@ -30,7 +30,7 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 	});
 
 	if (oldMember.communicationDisabledUntilTimestamp < newMember.communicationDisabledUntilTimestamp) {
-		const image = new Discord.MessageAttachment('./src/images/events/event-timedout.png');
+		const memberUpdateImage = new Discord.MessageAttachment('./src/images/events/event-timedout.png');
 		eventLogEmbed.setAuthor({
 			name: user.tag,
 			iconURL: user.avatarURL()
@@ -67,7 +67,7 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 		eventLogEmbed.setTimestamp(Date.now());
 		eventLogEmbed.setThumbnail('attachment://event-timedout.png');
 
-		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
+		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, memberUpdateImage, null);
 	}
 
 	if (oldMember.nickname !== newMember.nickname) {

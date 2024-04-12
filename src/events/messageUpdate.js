@@ -28,7 +28,7 @@ async function messageUpdateHandler(oldMessage, newMessage) {
 		);
 		
 		const eventLogEmbed = new Discord.MessageEmbed();
-		const image = new Discord.MessageAttachment('./src/images/events/event-update.png');
+		const msgUpdateImage = new Discord.MessageAttachment('./src/images/events/event-update.png');
 
 		eventLogEmbed.setAuthor({
 			name: user.tag,
@@ -68,7 +68,7 @@ async function messageUpdateHandler(oldMessage, newMessage) {
 		eventLogEmbed.setTimestamp(Date.now());
 		eventLogEmbed.setThumbnail('attachment://event-update.png');
 
-		await util.sendEventLogMessage('channels.event-logs', guild, newMessage.channelId, eventLogEmbed, image, row);
+		await util.sendEventLogMessage('channels.event-logs', guild, newMessage.channelId, eventLogEmbed, msgUpdateImage, row);
 	}
 	
 }

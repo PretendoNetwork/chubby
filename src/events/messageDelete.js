@@ -15,7 +15,7 @@ async function messageDeleteHandler(message) {
 	let messageContent = 'CONTENT UNAVAILABLE';
 
 	const eventLogEmbed = new Discord.MessageEmbed();
-	const image = new Discord.MessageAttachment('./src/images/events/event-delete.png');
+	const msgDeleteImage = new Discord.MessageAttachment('./src/images/events/event-delete.png');
 
 	eventLogEmbed.setAuthor({
 		name: user.tag,
@@ -58,7 +58,7 @@ async function messageDeleteHandler(message) {
 	eventLogEmbed.setTimestamp(Date.now());
 	eventLogEmbed.setThumbnail('attachment://event-delete.png');
 
-	await util.sendEventLogMessage('channels.event-logs', guild, message.channelId, eventLogEmbed, image, null);
+	await util.sendEventLogMessage('channels.event-logs', guild, message.channelId, eventLogEmbed, msgDeleteImage, null);
 	
 }
 
