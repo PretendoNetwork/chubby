@@ -19,7 +19,7 @@ async function kickHandler(interaction) {
 	const users = interaction.options.getString('users');
 	const reason = interaction.options.getString('reason');
 
-	let image;
+	let modImage;
 
 	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
 
@@ -67,7 +67,7 @@ async function kickHandler(interaction) {
 				value: reason
 			},
 			{
-				name: 'From Bot',
+				name: 'From `/kick`',
 				value: 'true'
 			}
 		);
@@ -91,7 +91,7 @@ async function kickHandler(interaction) {
 			eventLogEmbed.setColor(0xa30000);
 			eventLogEmbed.setTitle('_Member Banned_');
 			eventLogEmbed.setDescription(`${user.username} has been banned from Pretendo by ${executor.username}`);
-			image = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
+			modImage = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
 			eventLogEmbed.setThumbnail('attachment://mod-ban.png');
 			
 			const banEmbed = new Discord.MessageEmbed();
@@ -123,7 +123,7 @@ async function kickHandler(interaction) {
 			eventLogEmbed.setColor(0xdd6c02);
 			eventLogEmbed.setTitle('_Member Kicked_');
 			eventLogEmbed.setDescription(`${user.username} has been kicked from Pretendo by ${executor.username}`);
-			image = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
+			modImage = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
 			eventLogEmbed.setThumbnail('attachment://mod-kick.png');
 
 			const kickEmbed = new Discord.MessageEmbed();
@@ -151,11 +151,11 @@ async function kickHandler(interaction) {
 			sendMemberEmbeds.push(kickEmbed);
 		}
 
-		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
+		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, modImage, null);
 
 		await member.send({
 			embeds: sendMemberEmbeds,
-			files: [image]
+			files: [modImage]
 		}).catch(() => console.log('Failed to DM user'));
 
 		if (isKick) {
@@ -179,7 +179,7 @@ async function kickHandler(interaction) {
 			reason: reason
 		});
 
-		kicksListEmbed.setDescription(`${user.username} has been successfully kicked`)
+		kicksListEmbed.setDescription(`${user.username} has been successfully kicked`);
 		kicksListEmbed.addField(`${member.user.username}'s kicks`, (count + 1).toString(), true);
 		kicksListEmbed.setFooter({
 			text: 'Pretendo Network',
@@ -188,9 +188,9 @@ async function kickHandler(interaction) {
 		kicksListEmbed.setTimestamp(Date.now());
 	}
 
-	image = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
+	modImage = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
 	kicksListEmbed.setThumbnail('attachment://mod-kick.png');
-	await interaction.editReply({ embeds: [kicksListEmbed], files: [image], ephemeral: true });
+	await interaction.editReply({ embeds: [kicksListEmbed], files: [modImage], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()

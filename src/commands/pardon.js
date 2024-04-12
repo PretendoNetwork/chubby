@@ -24,7 +24,7 @@ async function pardonHandler(interaction) {
 
 	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
 
-	const image = new Discord.MessageAttachment('./src/images/mod/mod-pardon.png');
+	const pardonImage = new Discord.MessageAttachment('./src/images/mod/mod-pardon.png');
 	// Initialize all of the embeds
 	const pardonedListEmbed = new Discord.MessageEmbed();
 	const eventLogEmbed = new Discord.MessageEmbed();
@@ -35,7 +35,7 @@ async function pardonHandler(interaction) {
 		const user = member.user;
 
 		if (type === 'warn_type') { // If chosen warn within options
-			let { count } = await Warnings.findAndCountAll({ // Grab all warns
+			const { count } = await Warnings.findAndCountAll({ // Grab all warns
 				where: {
 					user_id: member.id
 				}
@@ -92,7 +92,7 @@ async function pardonHandler(interaction) {
 					iconURL: guild.iconURL()
 				});
 
-				await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
+				await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, pardonImage, null);
 
 				const targetedWarn = await Warnings.findOne({
 					where: {
@@ -135,7 +135,7 @@ async function pardonHandler(interaction) {
 
 				await member.send({
 					embeds: [pardonDmEmbed],
-					files: [image]
+					files: [pardonImage]
 				}).catch(() => console.log('Failed to DM user'));
 
 				pardonedListEmbed.addField(`${member.user.username}'s warns`, userWarns.toString(), true);
@@ -146,7 +146,7 @@ async function pardonHandler(interaction) {
 				pardonedListEmbed.setTimestamp(Date.now());
 			}
 		} else if (type === 'kick_type') {
-			let { count } = await Kicks.findAndCountAll({ // Grab all kicks
+			const { count } = await Kicks.findAndCountAll({ // Grab all kicks
 				where: {
 					user_id: member.id
 				}
@@ -203,7 +203,7 @@ async function pardonHandler(interaction) {
 					iconURL: guild.iconURL()
 				});
 
-				await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
+				await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, pardonImage, null);
 
 				const targetedKick = await Kicks.findOne({
 					where: {
@@ -238,7 +238,7 @@ async function pardonHandler(interaction) {
 
 				await member.send({
 					embeds: [pardonDmEmbed],
-					files: [image]
+					files: [pardonImage]
 				}).catch(() => console.log('Failed to DM user'));
 
 				pardonedListEmbed.addField(`${member.user.username}'s kicks`, userKicks.toString(), true);
@@ -250,7 +250,7 @@ async function pardonHandler(interaction) {
 			}
 		}
 	}
-	await interaction.editReply({ embeds: [pardonedListEmbed], files: [image], ephemeral: true });
+	await interaction.editReply({ embeds: [pardonedListEmbed], files: [pardonImage], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()
@@ -278,7 +278,7 @@ const command = new SlashCommandBuilder()
 	});
 
 module.exports = {
- name: command.name,
- handler: pardonHandler,
- deploy: command.toJSON()
+	name: command.name,
+	handler: pardonHandler,
+	deploy: command.toJSON()
 };

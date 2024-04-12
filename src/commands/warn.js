@@ -26,7 +26,7 @@ async function warnHandler(interaction) {
 	warningListEmbed.setTitle('User Warnings');
 	warningListEmbed.setColor(0xffc800);
 
-	let image;
+	let modImage;
 
 	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
@@ -47,7 +47,7 @@ async function warnHandler(interaction) {
 		});
 		eventLogEmbed.setColor(0xffc800);
 		eventLogEmbed.setDescription(`${user.username} has been warned in Pretendo by ${executor.username}`);
-		image = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
+		modImage = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
 		eventLogEmbed.setThumbnail('attachment://mod-warn.png');
 		eventLogEmbed.setTimestamp(Date.now());
 		eventLogEmbed.setTitle('_Member Warned_'); // Default type
@@ -98,7 +98,7 @@ async function warnHandler(interaction) {
 			eventLogEmbed.setColor(0xdd6c02);
 			eventLogEmbed.setTitle('_Member Kicked_');
 			eventLogEmbed.setDescription(`${user.username} has been kicked from Pretendo by ${executor.username}`);
-			image = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
+			modImage = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
 			eventLogEmbed.setThumbnail('attachment://mod-kick.png');
 
 			punishmentEmbed = new Discord.MessageEmbed();
@@ -130,7 +130,7 @@ async function warnHandler(interaction) {
 			eventLogEmbed.setColor(0xa30000);
 			eventLogEmbed.setTitle('_Member Banned_');
 			eventLogEmbed.setDescription(`${user.username} has been banned from Pretendo by ${executor.username}`);
-			image = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
+			modImage = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
 			eventLogEmbed.setThumbnail('attachment://mod-ban.png');
 
 			punishmentEmbed = new Discord.MessageEmbed();
@@ -158,12 +158,12 @@ async function warnHandler(interaction) {
 			isBan = true;
 		}
 
-		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
+		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, modImage, null);
 
 		if (punishmentEmbed) {
 			await member.send({
 				embeds: [punishmentEmbed],
-				files: [image]
+				files: [modImage]
 			}).catch(() => console.log('Failed to DM user'));
 
 			if (isKick) {
@@ -192,7 +192,7 @@ async function warnHandler(interaction) {
 
 			punishmentEmbed.setTitle('_Member Warned_');
 			punishmentEmbed.setDescription('You have been issued a warning.\nYou may review the details of your warning below');
-			image = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
+			modImage = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
 			punishmentEmbed.setThumbnail('attachment://mod-warn.png');
 			punishmentEmbed.setColor(0xffc800);
 			punishmentEmbed.setTimestamp(Date.now());
@@ -221,7 +221,7 @@ async function warnHandler(interaction) {
 
 			await member.send({
 				embeds: [punishmentEmbed],
-				files: [image]
+				files: [modImage]
 			}).catch(() => console.log('Failed to DM user'));
 		}
 
@@ -231,7 +231,7 @@ async function warnHandler(interaction) {
 			reason: reason
 		});
 
-		warningListEmbed.setDescription(`${user.username} has been successfully warned, here is their previous warns`)
+		warningListEmbed.setDescription(`${user.username} has been successfully warned, here is their previous warns`);
 		warningListEmbed.addField(`${member.user.username}'s warns`, (count + 1).toString(), true);
 		warningListEmbed.setFooter({
 			text: 'Pretendo Network',
@@ -240,9 +240,9 @@ async function warnHandler(interaction) {
 		warningListEmbed.setTimestamp(Date.now());
 	}
 
-	image = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
+	modImage = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
 	warningListEmbed.setThumbnail('attachment://mod-warn.png');
-	await interaction.editReply({ embeds: [warningListEmbed], files: [image], ephemeral: true });
+	await interaction.editReply({ embeds: [warningListEmbed], files: [modImage], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()

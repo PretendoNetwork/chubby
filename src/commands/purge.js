@@ -20,7 +20,7 @@ async function purgeHandler(interaction) {
 	const eventLogEmbed = new Discord.MessageEmbed();
 
 	const purgeReplyEmbed = new Discord.MessageEmbed();
-	const image = new Discord.MessageAttachment('./src/images/mod/mod-purge.png');
+	const purgeImage = new Discord.MessageAttachment('./src/images/mod/mod-purge.png');
 
 	if (users !== null) { // if a user(s) is actually given
 		purgeReplyEmbed.setTitle('Messages Purged');
@@ -72,7 +72,7 @@ async function purgeHandler(interaction) {
 			eventLogEmbed.setTimestamp(Date.now());
 			eventLogEmbed.setThumbnail('attachment://mod-purge.png');
 		
-			await util.sendEventLogMessage('channels.mod-logs', guild, interaction.channelId, eventLogEmbed, image, null);
+			await util.sendEventLogMessage('channels.mod-logs', guild, interaction.channelId, eventLogEmbed, purgeImage, null);
 
 			purgeReplyEmbed.setDescription(`${user.username} has been successfully purged, here is where the messages been purged in`);
 			purgeReplyEmbed.addField('User Messages were purged in', `<#${interaction.channelId}>`, true);
@@ -81,7 +81,7 @@ async function purgeHandler(interaction) {
 				iconURL: guild.iconURL()
 			});
 			purgeReplyEmbed.setTimestamp(Date.now());
-			await interaction.editReply({ embeds: [purgeReplyEmbed], files: [image], ephemeral: true });
+			await interaction.editReply({ embeds: [purgeReplyEmbed], files: [purgeImage], ephemeral: true });
 		}
 	} else {
 		if (isNaN(deleteAmount) || deleteAmount < 2 || parseInt(deleteAmount) > 99) { // Either nothing is given within the delete amount OR less than 2
@@ -93,7 +93,7 @@ async function purgeHandler(interaction) {
 		purgeReplyEmbed.setThumbnail('attachment://mod-purge.png');
 
 		// Bulk Delete
-		let { size } = await interaction.channel.bulkDelete(deleteAmount);
+		const { size } = await interaction.channel.bulkDelete(deleteAmount);
 			
 		eventLogEmbed.setColor(0xff6363);
 		eventLogEmbed.setTitle('_Messages Purged_');
@@ -110,21 +110,21 @@ async function purgeHandler(interaction) {
 			},
 			{
 				name: 'Channel',
-					value: `<#${interaction.channelId}>`
+				value: `<#${interaction.channelId}>`
 			},
 			{
 				name: 'Amount of Messages Deleted',
 				value: `${size}`
 			}
 		);
-			eventLogEmbed.setFooter({
+		eventLogEmbed.setFooter({
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()
 		});
 		eventLogEmbed.setTimestamp(Date.now());
 		eventLogEmbed.setThumbnail('attachment://mod-purge.png');
 			
-		await util.sendEventLogMessage('channels.mod-logs', guild, interaction.channelId, eventLogEmbed, image, null);
+		await util.sendEventLogMessage('channels.mod-logs', guild, interaction.channelId, eventLogEmbed, purgeImage, null);
 	
 		purgeReplyEmbed.setDescription(`<#${interaction.channelId}> has been successfully purged, here is how many messages been purged`);
 		purgeReplyEmbed.addField('Amount of messages purged', `${size}`, true);
@@ -133,7 +133,7 @@ async function purgeHandler(interaction) {
 			iconURL: guild.iconURL()
 		});
 		purgeReplyEmbed.setTimestamp(Date.now());
-		await interaction.editReply({ embeds: [purgeReplyEmbed], files: [image], ephemeral: true });
+		await interaction.editReply({ embeds: [purgeReplyEmbed], files: [purgeImage], ephemeral: true });
 	}
 }
 
@@ -153,7 +153,7 @@ const command = new SlashCommandBuilder()
 	});
 
 module.exports = {
- name: command.name,
- handler: purgeHandler,
- deploy: command.toJSON()
+	name: command.name,
+	handler: purgeHandler,
+	deploy: command.toJSON()
 };

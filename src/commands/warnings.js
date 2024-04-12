@@ -31,7 +31,7 @@ async function warningsHandler(interaction) {
 			}
 		});
 	
-		warningListEmbed.setDescription(`${user.username} previous warns:`)
+		warningListEmbed.setDescription(`${user.username} previous warns:`);
 		warningListEmbed.addFields(
 			{
 				name: `${user.username}'s warns`,
@@ -55,9 +55,9 @@ async function warningsHandler(interaction) {
 		warningListEmbed.setTimestamp(Date.now());
 	}
 
-	const image = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
+	const warnImage = new Discord.MessageAttachment('./src/images/mod/mod-warn.png');
 	warningListEmbed.setThumbnail('attachment://mod-warn.png');
-	await interaction.editReply({ embeds: [warningListEmbed], files: [image], ephemeral: true });
+	await interaction.editReply({ embeds: [warningListEmbed], files: [warnImage], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()

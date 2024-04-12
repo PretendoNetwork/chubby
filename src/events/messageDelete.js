@@ -26,7 +26,7 @@ async function messageDeleteHandler(message) {
 	eventLogEmbed.setTitle('_Poll Delete_');
 	eventLogEmbed.setDescription(`${user.username}'s poll in ${message.channel.name} has been deleted`);
 
-	if (message.content !== '') {
+	if (message.content.trim() || message.attachments.size > 0) {
 		messageContent = message.content.length > 1024 ? message.content.substr(0, 1023) + '…' : message.content;
 		eventLogEmbed.setTitle('_Message Delete_');
 		eventLogEmbed.setDescription(`${user.username}'s message in ${message.channel.name} has been deleted`);
@@ -48,7 +48,7 @@ async function messageDeleteHandler(message) {
 		},
 		{
 			name: 'Message',
-			value: messageContent
+			value: messageContent || 'CONTENT UNAVAILABLE'
 		}
 	);
 	eventLogEmbed.setFooter({

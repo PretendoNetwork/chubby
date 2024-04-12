@@ -25,7 +25,7 @@ async function banHandler(interaction) {
 	bansListEmbed.setColor(0xa30000);
 	bansListEmbed.setThumbnail('attachment://mod-ban.png');
 
-	const image = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
+	const banImage = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
 
 	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
@@ -80,7 +80,7 @@ async function banHandler(interaction) {
 		});
 		eventLogEmbed.setThumbnail('attachment://mod-ban.png');
 
-		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
+		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, banImage, null);
 		
 		const { count } = await Bans.findAndCountAll({
 			where: {
@@ -110,7 +110,7 @@ async function banHandler(interaction) {
 
 		await member.send({
 			embeds: [banEmbed],
-			files: [image]
+			files: [banImage]
 		}).catch(() => console.log('Failed to DM user'));
 
 		await member.ban({
@@ -123,7 +123,7 @@ async function banHandler(interaction) {
 			reason: reason
 		});
 
-		bansListEmbed.setDescription(`${user.username} has been successfully banned`)
+		bansListEmbed.setDescription(`${user.username} has been successfully banned`);
 		bansListEmbed.addField(`${member.user.username}'s bans`, (count + 1).toString(), true);
 		bansListEmbed.setFooter({
 			text: 'Pretendo Network',
@@ -133,7 +133,7 @@ async function banHandler(interaction) {
 
 	}
 
-	await interaction.editReply({ embeds: [bansListEmbed], files: [image], ephemeral: true });
+	await interaction.editReply({ embeds: [bansListEmbed], files: [banImage], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()

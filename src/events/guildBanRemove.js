@@ -5,7 +5,7 @@ const util = require('../util');
  * 
  * @param {Discord.GuildBan} ban
  */
- async function guildBanRemoveHandler(ban) {
+async function guildBanRemoveHandler(ban) {
 	const guild = ban.guild;
 	const user = ban.user;
 
@@ -19,7 +19,7 @@ const util = require('../util');
 	const { executor } = latestLog;
 
 	const eventLogEmbed = new Discord.MessageEmbed();
-	const image = new Discord.MessageAttachment('./src/images/mod/mod-pardon.png');
+	const pardonImage = new Discord.MessageAttachment('./src/images/mod/mod-pardon.png');
 
 	eventLogEmbed.setAuthor({
 		name: user.tag,
@@ -62,6 +62,6 @@ const util = require('../util');
 	eventLogEmbed.setTimestamp(Date.now());
 	eventLogEmbed.setThumbnail('attachment://mod-pardon.png');
 
-	await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
+	await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, pardonImage, null);
 }
 module.exports = guildBanRemoveHandler;

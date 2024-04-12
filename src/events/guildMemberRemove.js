@@ -10,17 +10,17 @@ async function guildMemberRemoveHandler(member) {
 	const guild = member.guild;
 	const user = member.user;
 
-	let image;
+	let memberRemovedImage;
 	
 	const auditLogs = await guild.fetchAuditLogs({
 		limit: 1
 	});
 
 	const eventLogEmbed = new Discord.MessageEmbed();
-		eventLogEmbed.setAuthor({
-			name: user.tag,
-			iconURL: user.avatarURL()
-		});
+	eventLogEmbed.setAuthor({
+		name: user.tag,
+		iconURL: user.avatarURL()
+	});
 	eventLogEmbed.setColor(0x878787);
 	eventLogEmbed.setDescription(`${user.username} has left Pretendo`);
 	eventLogEmbed.setTimestamp(Date.now());
@@ -49,9 +49,9 @@ async function guildMemberRemoveHandler(member) {
 		((Date.now() - latestLog.createdTimestamp) > 2000) // log is too old, older than a couple seconds ago
 	) {
 		// User probably just left on their own
-		image = new Discord.MessageAttachment('./src/images/events/event-leave.png');
+		memberRemovedImage = new Discord.MessageAttachment('./src/images/events/event-leave.png');
 		eventLogEmbed.setThumbnail('attachment://event-leave.png');
-		await util.sendEventLogMessage('channels.event-logs', guild, null, eventLogEmbed, image, null);
+		await util.sendEventLogMessage('channels.event-logs', guild, null, eventLogEmbed, memberRemovedImage, null);
 		return;
 	}
 
@@ -74,13 +74,13 @@ async function guildMemberRemoveHandler(member) {
 		eventLogEmbed.setColor(0xdd6c02);
 		eventLogEmbed.setTitle('_Member Kicked_');
 		eventLogEmbed.setDescription(`${user.username} has been kicked from Pretendo by ${executor.username}`);
-		image = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
+		memberRemovedImage = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
 		eventLogEmbed.setThumbnail('attachment://mod-kick.png');
 	} else {
 		eventLogEmbed.setColor(0xa30000);
 		eventLogEmbed.setTitle('_Member Banned_');
 		eventLogEmbed.setDescription(`${user.username} has been banned from Pretendo by ${executor.username}`);
-		image = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
+		memberRemovedImage = new Discord.MessageAttachment('./src/images/mod/mod-ban.png');
 		eventLogEmbed.setThumbnail('attachment://mod-ban.png');
 	}
 
@@ -116,7 +116,7 @@ async function guildMemberRemoveHandler(member) {
 		}
 	);
 
-	await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, image, null);
+	await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, memberRemovedImage, null);
 }
 
 module.exports = guildMemberRemoveHandler;

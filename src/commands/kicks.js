@@ -20,7 +20,6 @@ async function kicksHandler(interaction) {
 	kickListEmbed.setTitle('Previous User Kicks');
 	kickListEmbed.setColor(0xdd6c02);
 
-
 	for (const userId of userIds) {
 		const member = await interaction.guild.members.fetch(userId);
 		const user = member.user;
@@ -51,9 +50,9 @@ async function kicksHandler(interaction) {
 		kickListEmbed.setTimestamp(Date.now());
 	}
 
-	const image = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
+	const kickImage = new Discord.MessageAttachment('./src/images/mod/mod-kick.png');
 	kickListEmbed.setThumbnail('attachment://mod-kick.png');
-	await interaction.editReply({ embeds: [kickListEmbed], files: [image], ephemeral: true });
+	await interaction.editReply({ embeds: [kickListEmbed], files: [kickImage], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()
