@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const pollDeleteHandler = require('../events/pollDelete');
 // NSFW Vars
 const checkNSFW = require('../check-nsfw');
 const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -13,6 +14,7 @@ async function messageHandler(message) {
 
 	if (!message.content.trim() && message.attachments.size == 0) {
 		await message.delete();
+		pollDeleteHandler(message);
 		return;
 	}
 

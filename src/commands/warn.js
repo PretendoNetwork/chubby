@@ -73,7 +73,7 @@ async function warnHandler(interaction) {
 				value: reason
 			},
 			{
-				name: 'From Bot',
+				name: 'From `/warn`',
 				value: 'true'
 			}
 		);
@@ -82,7 +82,7 @@ async function warnHandler(interaction) {
 			iconURL: guild.iconURL()
 		});
 
-		const { count } = await Warnings.findAndCountAll({
+		const { count, rows } = await Warnings.findAndCountAll({
 			where: {
 				user_id: member.id
 			}
@@ -161,8 +161,40 @@ async function warnHandler(interaction) {
 		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, modImage, null);
 
 		if (punishmentEmbed) {
+			const pastWarningsEmbed = new Discord.MessageEmbed();
+			pastWarningsEmbed.setTitle('Past Warnings');
+			pastWarningsEmbed.setDescription('For clarifty purposes here is a list of your past warnings');
+			pastWarningsEmbed.setColor(0xffc800);
+			pastWarningsEmbed.setTimestamp(Date.now());
+			pastWarningsEmbed.setFooter({
+				text: 'Pretendo Network',
+				iconURL: guild.iconURL()
+			});
+
+			for (let i = 0; i < rows.length; i++) {
+				const warning = rows[i];
+				const warningBy = await interaction.client.users.fetch(warning.admin_user_id);
+
+				pastWarningsEmbed.addFields(
+					{
+						name: `${util.ordinal(i + 1)} Warning`,
+						value: warning.reason
+					},
+					{
+						name: 'Punished By',
+						value: warningBy.tag,
+						inline: true
+					},
+					{
+						name: 'Date',
+						value: warning.timestamp.toLocaleDateString(),
+						inline: true
+					}
+				);
+			}
+
 			await member.send({
-				embeds: [punishmentEmbed],
+				embeds: [punishmentEmbed, pastWarningsEmbed],
 				files: [modImage]
 			}).catch(() => console.log('Failed to DM user'));
 

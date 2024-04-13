@@ -1,18 +1,13 @@
 const Discord = require('discord.js');
 const util = require('../util');
 
-/**
- * 
- * @param {Discord.Message} message
- */
 async function messageDeleteHandler(message) {
 	if (message.author.bot) return;
+	if (!message.content.trim() && message.attachments.size == 0) return;
 
 	const guild = await message.guild.fetch();
 	const member = await message.member.fetch();
 	const user = member.user;
-
-	let messageContent = 'CONTENT UNAVAILABLE';
 
 	const eventLogEmbed = new Discord.MessageEmbed();
 	const msgDeleteImage = new Discord.MessageAttachment('./src/images/events/event-delete.png');
@@ -23,15 +18,9 @@ async function messageDeleteHandler(message) {
 	});
 	eventLogEmbed.setColor(0xff6363);
 
-	eventLogEmbed.setTitle('_Poll Delete_');
-	eventLogEmbed.setDescription(`${user.username}'s poll in ${message.channel.name} has been deleted`);
-
-	if (message.content.trim() || message.attachments.size > 0) {
-		messageContent = message.content.length > 1024 ? message.content.substr(0, 1023) + '…' : message.content;
-		eventLogEmbed.setTitle('_Message Delete_');
-		eventLogEmbed.setDescription(`${user.username}'s message in ${message.channel.name} has been deleted`);
-	}
-
+	const messageContent = message.content.length > 1024 ? message.content.substr(0, 1023) + '…' : message.content;
+	eventLogEmbed.setTitle('_Message Delete_');
+	eventLogEmbed.setDescription(`${user.username}'s message in ${message.channel.name} has been deleted`);
 	eventLogEmbed.setTimestamp(Date.now());
 	eventLogEmbed.setFields(
 		{
@@ -48,7 +37,7 @@ async function messageDeleteHandler(message) {
 		},
 		{
 			name: 'Message',
-			value: messageContent || 'CONTENT UNAVAILABLE'
+			value: messageContent || '***N/A***'
 		}
 	);
 	eventLogEmbed.setFooter({

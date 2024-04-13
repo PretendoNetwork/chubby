@@ -76,7 +76,7 @@ async function kickHandler(interaction) {
 			iconURL: guild.iconURL()
 		});
 
-		const { count } = await Kicks.findAndCountAll({
+		const { count, rows } = await Kicks.findAndCountAll({
 			where: {
 				user_id: member.id
 			}
@@ -152,6 +152,42 @@ async function kickHandler(interaction) {
 		}
 
 		await util.sendEventLogMessage('channels.mod-logs', guild, null, eventLogEmbed, modImage, null);
+
+		if (count > 0) {
+			const pastKicksEmbed = new Discord.MessageEmbed();
+			pastKicksEmbed.setTitle('Past Kicks');
+			pastKicksEmbed.setDescription('For clarifty purposes here is a list of your past kicks');
+			pastKicksEmbed.setColor(0xEF7F31);
+			pastKicksEmbed.setTimestamp(Date.now());
+			pastKicksEmbed.setFooter({
+				text: 'Pretendo Network',
+				iconURL: guild.iconURL()
+			});
+
+			for (let i = 0; i < rows.length; i++) {
+				const kick = rows[i];
+				const kickedBy = await interaction.client.users.fetch(kick.admin_user_id);
+
+				pastKicksEmbed.addFields(
+					{
+						name: `${util.ordinal(i + 1)} Kick`,
+						value: kick.reason
+					},
+					{
+						name: 'Punished By',
+						value: kickedBy.tag,
+						inline: true
+					},
+					{
+						name: 'Date',
+						value: kick.timestamp.toLocaleDateString(),
+						inline: true
+					}
+				);
+			}
+
+			sendMemberEmbeds.push(pastKicksEmbed);
+		}
 
 		await member.send({
 			embeds: sendMemberEmbeds,
