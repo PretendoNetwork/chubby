@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const guildMemberRemoveHandler = require('./events/guildMemberRemove');
 const guildMemberUpdateHandler = require('./events/guildMemberUpdate');
+const guildBanRemoveHandler = require('./events/guildBanRemove');
 const interactionCreateHandler = require('./events/interactionCreate');
 const messageCreateHandler = require('./events/messageCreate');
 const messageDeleteHandler = require('./events/messageDelete');
@@ -13,6 +14,7 @@ const client = new Discord.Client({
 		Discord.Intents.FLAGS.GUILDS,
 		Discord.Intents.FLAGS.GUILD_MESSAGES,
 		Discord.Intents.FLAGS.GUILD_MEMBERS,
+		Discord.Intents.FLAGS.GUILD_BANS,
 	]
 });
 
@@ -21,6 +23,7 @@ client.commands = new Discord.Collection();
 client.on('ready', readyHandler);
 client.on('guildMemberRemove', guildMemberRemoveHandler);
 client.on('guildMemberUpdate', guildMemberUpdateHandler);
+client.on('guildBanRemove', guildBanRemoveHandler);
 client.on('interactionCreate', interactionCreateHandler);
 client.on('messageCreate', messageCreateHandler);
 client.on('messageDelete', messageDeleteHandler);

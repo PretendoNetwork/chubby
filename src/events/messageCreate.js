@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
-
+const pollDeleteHandler = require('../events/pollDelete');
+// NSFW Vars
 const checkNSFW = require('../check-nsfw');
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 
@@ -7,9 +8,15 @@ const urlRegex = /(https?:\/\/[^\s]+)/g;
  *
  * @param {Discord.Message} message
  */
-function messageHandler(message) {
+async function messageHandler(message) {
 	// Ignore bot messages
 	if (message.author.bot) return;
+
+	if (!message.content.trim() && message.attachments.size == 0) {
+		await message.delete();
+		pollDeleteHandler(message);
+		return;
+	}
 
 	// check if the message has any URLs
 	const urls = message.cleanContent.match(urlRegex) || [];

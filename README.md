@@ -1,9 +1,11 @@
-# Chubby
-Discord moderation bot for Pretendo
+![Chubby Banner](./src/images/misc/chubby-banner.png)
+---
+Chubby, the official Pretendo Network Discord moderation bot.
 
-Features:
-
-- `/warn` command for warning users. Supports multiple users per warning. 3 warnings results in a kick. 4 warnings results in a ban
-- `/kick` command for kicking users. Supports multiple users per kick. 3 kicks results in a ban
-- `/ban` command for banning users. Supports multiple users per warning
-- NSFW content detection
+Chubby can:
+- Detect and remove NSFW content
+- `/warn`, `/kick`, and `/ban` multiple users at once
+- `/remove-punishment` like warns and kicks from multiple users
+- `/purge` messages from a channel or from a specified user
+- Log user and moderation events
+- Remove Discord polls
