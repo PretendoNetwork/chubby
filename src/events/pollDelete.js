@@ -6,14 +6,12 @@ const util = require('../util');
  * @param {Discord.Message} message
  */
 async function pollDeleteHandler(message) {
-	if (message.author.bot) return;
-
 	const guild = await message.guild.fetch();
 	const member = await message.member.fetch();
 	const user = member.user;
 
 	const eventLogEmbed = new Discord.MessageEmbed();
-	const msgDeleteImage = new Discord.MessageAttachment('./src/images/events/event-delete.png');
+	const pollDeleteImage = new Discord.MessageAttachment('./src/images/events/event-delete.png');
 
 	eventLogEmbed.setAuthor({
 		name: user.tag,
@@ -50,7 +48,7 @@ async function pollDeleteHandler(message) {
 	eventLogEmbed.setTimestamp(Date.now());
 	eventLogEmbed.setThumbnail('attachment://event-delete.png');
 
-	await util.sendEventLogMessage('channels.event-logs', guild, message.channelId, eventLogEmbed, msgDeleteImage, null);
+	await util.sendEventLogMessage('channels.event-logs', guild, message.channelId, eventLogEmbed, pollDeleteImage, null);
 
 }
 
