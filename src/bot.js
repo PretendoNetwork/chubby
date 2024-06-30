@@ -5,6 +5,7 @@ const interactionCreateHandler = require('./events/interactionCreate');
 const messageCreateHandler = require('./events/messageCreate');
 const messageDeleteHandler = require('./events/messageDelete');
 const messageUpdateHandler = require('./events/messageUpdate');
+const threadUpdateHandler = require('./events/threadUpdate');
 const readyHandler = require('./events/ready');
 const config = require('../config.json');
 
@@ -25,6 +26,6 @@ client.on('interactionCreate', interactionCreateHandler);
 client.on('messageCreate', messageCreateHandler);
 client.on('messageDelete', messageDeleteHandler);
 client.on('messageUpdate', messageUpdateHandler);
-
+client.on('threadUpdate', threadUpdateHandler);
 
 client.login(config.bot_token);
