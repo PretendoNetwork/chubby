@@ -10,6 +10,7 @@ const editableOptions = [
 	'channels.event-logs',
 	'channels.event-logs.blacklist',
 	'channels.matchmaking',
+	'matchmaking.lock-timeout-seconds',
 ];
 
 async function verifyInputtedKey(interaction) {
