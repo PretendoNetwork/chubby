@@ -1,8 +1,11 @@
 const Discord = require('discord.js');
 const glob = require('glob');
 const path = require('path');
+const schedule = require('node-schedule');
+
 const setupGuild = require('../setup-guild');
 const sequelize = require('../sequelize');
+const checkMatchmakingThreads = require('../matchmaking-thread-checker');
 const config = require('../../config.json');
 
 /**
@@ -22,6 +25,11 @@ async function readyHandler(client) {
 
 		await setupGuild(guild);
 	}
+
+	// Check for inactive matchmaking threads on a schedule
+	schedule.scheduleJob('*/10 * * * *', async () => {
+		await checkMatchmakingThreads(client);
+	});
 
 	console.log(`Logged in as ${client.user.tag}!`);
 }

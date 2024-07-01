@@ -1,13 +1,16 @@
 const Discord = require('discord.js');
 
 const checkNSFW = require('../check-nsfw');
+const db = require('../db');
+const MatchmakingThreads = require('../models/matchmakingThreads');
+
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 
 /**
  *
  * @param {Discord.Message} message
  */
-function messageHandler(message) {
+async function messageHandler(message) {
 	// Ignore bot messages
 	if (message.author.bot) return;
 
@@ -25,6 +28,26 @@ function messageHandler(message) {
 
 		checkNSFW(message, urls);
 	}
+
+	await handleMatchmakingThreadMessage(message);
+}
+
+/**
+ *
+ * @param {Discord.Message} message
+ */
+async function handleMatchmakingThreadMessage(message) {
+	const matchmakingChannelId = db.getDB().get('channels.matchmaking');
+	if (!matchmakingChannelId) {
+		console.log('Missing matchmaking channel!');
+		return;
+	}
+
+	if (message.channel.type !== 'GUILD_PUBLIC_THREAD' || message.channel.parentId !== matchmakingChannelId) {
+		return;
+	}
+
+	await MatchmakingThreads.upsert({ id: message.channelId, lastMessageSent: message.createdAt });
 }
 
 module.exports = messageHandler;
