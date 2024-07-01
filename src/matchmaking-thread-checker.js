@@ -38,20 +38,31 @@ async function checkMatchmakingThreads(client) {
 		const timeSinceLastMessage = now - lastMessageSent;
 
 		if (timeSinceLastMessage > matchmakingLockTimeout * 1000) {
+			const guild = await threadChannel.guild.fetch();
+
 			if (!threadChannel.archived && !threadChannel.locked) {
-				// Only send an inactivity message if the thread is not already archived/locked by moderators
-				await threadChannel.send('Thread locked due to inactivity.');
+				// Only send an inactivity message if the thread has not already been closed/locked by moderators
+				const inactivityEmbed = new Discord.MessageEmbed();
+				inactivityEmbed.setColor(0x6060ff);
+				inactivityEmbed.setTitle('Matchmaking Thread Locked');
+				inactivityEmbed.setDescription(
+					'This matchmaking thread has been automatically locked due to inactivity.\n\nIf you want to play again, please just create a new thread here and ping whoever you want to add!'
+				);
+				inactivityEmbed.setFooter({
+					text: 'Thanks for using Pretendo!',
+					iconURL: guild.iconURL(),
+				});
+				await threadChannel.send({
+					content: `Hi <@${threadChannel.ownerId}>!`,
+					embeds: [inactivityEmbed],
+				});
 			}
 
-			if (threadChannel.archived) {
-				// Cannot lock an archived thread, so we need to unarchive it first
-				await threadChannel.setArchived(false);
-			}
-			await threadChannel.setLocked(true);
-			await threadChannel.setArchived(true, 'Automatic lock of inactive matchmaking thread.');
+			// Leave the thread unarchived so that the user can see the bot message
+			await threadChannel.setArchived(false);
+			await threadChannel.setLocked(true, 'Automatic lock of inactive matchmaking thread.');
 			await MatchmakingThreads.destroy({ where: { id: thread.id } });
 
-			const guild = await threadChannel.guild.fetch();
 			const eventLogEmbed = new Discord.MessageEmbed();
 			eventLogEmbed.setColor(0x6060ff);
 			eventLogEmbed.setTitle('Event Type: _Matchmaking Thread Locked_');
