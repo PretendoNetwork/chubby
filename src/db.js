@@ -14,7 +14,7 @@ function getDB() {
 function getDBList(key) {
 	const data = db.get(key);
 	if (!data) return [];
-	return data.split(",");
+	return data.split(',');
 }
 
 /**
@@ -24,9 +24,9 @@ function getDBList(key) {
  * @param array array of strings to store
  */
 function setDBList(key, array) {
-	if (array.find(v=>v.contains(",")))
-		throw new Error("List items cannot contain any commas")
-	db.set(key, array.join(","));
+	if (array.find(v=>v.contains(',')))
+		throw new Error('List items cannot contain any commas');
+	db.set(key, array.join(','));
 }
 
 module.exports = {
