@@ -1,17 +1,16 @@
-// eslint-disable-next-line
-const Discord = require('discord.js'); // Disable ESLint since this is used only for JSDoc
-const commandHandler = require('../handlers/command-handler');
+import { commandHandler } from '@/handlers/command-handler';
+import type { Interaction } from 'discord.js'; 
 
-/**
- * 
- * @param {Discord.Interaction} interaction
- */
-async function interactionHander(interaction) {
+export async function interactionCreateHandler(interaction: Interaction): Promise<void> {
 	try {
 		if (interaction.isCommand()) {
 			await commandHandler(interaction);
 		}
-	} catch (error) {
+	} catch (error: any) {
+		if (!interaction.isCommand()) {
+			return;
+		}
+
 		const payload = {
 			content: error.message || 'Missing error message',
 			ephemeral: true
@@ -28,5 +27,3 @@ async function interactionHander(interaction) {
 		}
 	}
 }
-
-module.exports = interactionHander;

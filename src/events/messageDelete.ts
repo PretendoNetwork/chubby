@@ -1,21 +1,28 @@
-const Discord = require('discord.js');
-const util = require('../util');
+import { MessageEmbed } from 'discord.js';
+import { sendEventLogMessage } from '@/util';
+import type { Message, PartialMessage } from 'discord.js';
 
-/**
- * 
- * @param {Discord.Message} message
- */
-async function messageDeleteHandler(message) {
-	if (message.author.bot) return;
-	if (!message.member) return;
+export async function messageDeleteHandler(message: Message | PartialMessage): Promise<void> {
+	if (message.partial) {
+		// * This should never happen as we don't opt into partial structures
+		// * but we need this to be here to convince the compiler that the rest is safe
+		return;
+	}
 
-	const guild = await message.guild.fetch();
+	if (message.author.bot) {
+		return;
+	}
+	if (!message.member) {
+		return;
+	}
+
+	const guild = await message.guild!.fetch();
 	const member = await message.member.fetch();
 	const user = member.user;
 
 	const messageContent = message.content.length > 1024 ? message.content.substr(0, 1023) + '…' : message.content;
 
-	const eventLogEmbed = new Discord.MessageEmbed();
+	const eventLogEmbed = new MessageEmbed();
 
 	eventLogEmbed.setColor(0xC0C0C0);
 	eventLogEmbed.setTitle('Event Type: _Message Delete_');
@@ -44,7 +51,7 @@ async function messageDeleteHandler(message) {
 		},
 		{
 			name: 'Channel Name',
-			value: message.channel.name
+			value: (message.channel as any).name // TODO a better way of doing this?
 		},
 		{
 			name: 'Message',
@@ -53,11 +60,8 @@ async function messageDeleteHandler(message) {
 	);
 	eventLogEmbed.setFooter({
 		text: 'Pretendo Network',
-		iconURL: guild.iconURL()
+		iconURL: guild.iconURL()!
 	});
 
-	await util.sendEventLogMessage(guild, message.channelId, eventLogEmbed);
-	
+	await sendEventLogMessage(guild, message.channelId, eventLogEmbed);
 }
-
-module.exports = messageDeleteHandler;

@@ -1,40 +1,37 @@
-const got = require('got');
-const tensorflow = require('@tensorflow/tfjs-node');
-const nsfw = require('nsfwjs');
-const decodeGif = require('decode-gif');
-const jpeg = require('jpeg-js');
-const Discord = require('discord.js');
-const db = require('./db');
-const config = require('../config.json');
+import got from 'got';
+import * as tensorflow from '@tensorflow/tfjs-node';
+import { load } from 'nsfwjs';
+import decodeGif from 'decode-gif';
+import jpeg from 'jpeg-js';
+import { MessageEmbed, TextChannel } from 'discord.js';
+import { getDB } from '@/db';
+import type { Tensor3D } from '@tensorflow/tfjs-node';
+import type { FileOptions, Message} from 'discord.js';
+import type { NSFWJS, predictionType } from 'nsfwjs';
+import config from '@/config.json';
+import path from 'path';
 
-let model;
+let model: NSFWJS;
 const GIF_MAGIC = Buffer.from([0x47, 0x49, 0x46, 0x38]);
 
-/**
- * 
- * @param {Discord.Message} message 
- * @param {Array} urls
- */
-async function checkNSFW(message, urls) {
-	if (message.channel.nsfw) {
+export async function checkNSFW(message: Message, urls: string[]): Promise<void> {
+	if (message.channel instanceof TextChannel && message.channel.nsfw) {
 		return; // Do not check if the channel is NSFW
 	}
 
 	if (!model) {
-		let modelPath;
-
-		if (config.quantized_nsfw_model) {
-			modelPath = 'file://' + __dirname + '/nsfw_model/quantized/';
-		} else {
-			modelPath = 'file://' + __dirname + '/nsfw_model/normal/';
-		}
+		const quantized = config.quantized_nsfw_model ? 'quantized' : 'normal';
+		const modelPath = path.join(path.resolve(config.nsfw_model_path), quantized);
+		const modelUri = `file://${modelPath}/`;
 		
-		model = await nsfw.load(modelPath, { type: 'graph' });
+		// * We have to set the options to `any` here because although `type` is a valid option
+		// * it's not included in the types, this is also an inline type so we can't enhance it
+		model = await load(modelUri, { type: 'graph' } as any);
 	}
 
-	const suspectedUrls = [];
-	const suspectedFiles = [];
-	let predictions;
+	const suspectedUrls: string[] = [];
+	const suspectedFiles: FileOptions[] = [];
+	let predictions: predictionType[] = [];
 
 	for (const url of urls) {
 		// Check the headers before requesting data
@@ -42,7 +39,7 @@ async function checkNSFW(message, urls) {
 		const contentType = headers['content-type'];
 
 		// Filter out non-image URLs
-		if (contentType.search(/^image\//) === -1) {
+		if (contentType?.search(/^image\//) === -1) {
 			continue;
 		}
 
@@ -66,13 +63,15 @@ async function checkNSFW(message, urls) {
 				// decodeGif returns frames as RGB data
 				// need to convert each frame to an image that TensorFlow can understand
 				const jpegImageData = jpeg.encode(rawImageData);
-				const image = await tensorflow.node.decodeImage(jpegImageData.data, 3);
+				const image = tensorflow.node.decodeImage(jpegImageData.data, 3) as Tensor3D;
 				const framePredictions = await model.classify(image);
 				image.dispose(); // do not let this image float around memory
 				const frameClassification = framePredictions.sort((a, b) => b.probability - a.probability)[0];
 
 				// if low confidence then do nothing
-				if (frameClassification.probability < 0.8) continue;
+				if (frameClassification.probability < 0.8) {
+					continue;
+				}
 
 				// aggressive NSFW check
 				// flag the GIF if ANY NSFW frame is found
@@ -80,7 +79,7 @@ async function checkNSFW(message, urls) {
 					predictions = framePredictions;
 					suspectedUrls.push(url); // if suspected as NSFW then track the url
 					suspectedFiles.push({ // if suspected as NSFW then track the GIF
-						file: data,
+						attachment: data,
 						name: 'SPOILER_FILE.jpg'
 					});
 					break; // end the loop if ANY NSFW frame is found
@@ -88,7 +87,7 @@ async function checkNSFW(message, urls) {
 			}
 		} else {
 			// handle normal images
-			const image = await tensorflow.node.decodeImage(data, 3);
+			const image = tensorflow.node.decodeImage(data, 3) as Tensor3D;
 			predictions = await model.classify(image);
 			image.dispose(); // do not let this image float around memory
 
@@ -96,7 +95,9 @@ async function checkNSFW(message, urls) {
 			const classification = predictions.sort((a, b) => b.probability - a.probability)[0];
 
 			// if low confidence then do nothing
-			if (classification.probability < 0.8) continue;
+			if (classification.probability < 0.8) {
+				continue;
+			}
 
 			// check if the prediction is black listed
 			if (classification.className === 'Porn' || classification.className === 'Hentai' || classification.className === 'Sexy') {
@@ -115,41 +116,34 @@ async function checkNSFW(message, urls) {
 	}
 }
 
-/**
- * 
- * @param {Discord.Message} message 
- * @param {Array} suspectedUrls 
- * @param {Array} suspectedFiles 
- * @param {Array} predictions 
- */
-async function punishUserNSFW(message, suspectedUrls, suspectedFiles, predictions) {
+async function punishUserNSFW(message: Message, suspectedUrls: string[], suspectedFiles: FileOptions[], predictions: predictionType[]): Promise<void> {
 	await message.delete(); // remove message
 
-	const mutedRoleId = db.getDB().get('roles.muted');
-	const nsfwPunishedRoleId = db.getDB().get('roles.nsfw-punished');
-	const mutedRole = mutedRoleId && await message.guild.roles.fetch(mutedRoleId);
-	const nsfwPunishedRole = nsfwPunishedRoleId && await message.guild.roles.fetch(nsfwPunishedRoleId);
+	const mutedRoleId = getDB().get('roles.muted');
+	const nsfwPunishedRoleId = getDB().get('roles.nsfw-punished');
+	const mutedRole = mutedRoleId && await message.guild!.roles.fetch(mutedRoleId);
+	const nsfwPunishedRole = nsfwPunishedRoleId && await message.guild!.roles.fetch(nsfwPunishedRoleId);
 
 	if (!mutedRole) {
 		console.log('Missing muted role!');
 	} else {
-		message.member.roles.add(mutedRole);
+		message.member!.roles.add(mutedRole);
 	}
 
 	if (!nsfwPunishedRole) {
 		console.log('Missing NSFW punished role!');
 	} else {
-		message.member.roles.add(nsfwPunishedRole);
+		message.member!.roles.add(nsfwPunishedRole);
 	}
 
 	// log the punisment to the log channel
-	const nsfwLogChannelId = db.getDB().get('channels.nsfw-logs');
-	const nsfwLogChannel = nsfwLogChannelId && await message.guild.channels.fetch(nsfwLogChannelId);
+	const nsfwLogChannelId = getDB().get('channels.nsfw-logs')!;
+	const nsfwLogChannel = await message.guild!.channels.fetch(nsfwLogChannelId);
 	
-	if (!nsfwLogChannel) {
+	if (!nsfwLogChannel || !nsfwLogChannel.isText()) {
 		console.log('Missing NSFW log channel!');
 	} else {
-		const embed = new Discord.MessageEmbed();
+		const embed = new MessageEmbed();
 		embed.setTitle(`Suspected NSFW Material sent by ${message.author.tag}`);
 		embed.setColor(0xffa500);
 		embed.addFields([
@@ -198,5 +192,3 @@ async function punishUserNSFW(message, suspectedUrls, suspectedFiles, prediction
 		});
 	}
 }
-
-module.exports = checkNSFW;

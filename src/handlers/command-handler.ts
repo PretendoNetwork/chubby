@@ -1,13 +1,8 @@
-const Discord = require('discord.js');
+import type { CommandInteraction } from 'discord.js';
 
-/**
- * 
- * @param {Discord.CommandInteraction} interaction
- */
-async function commandHandler(interaction) {
+export async function commandHandler(interaction: CommandInteraction): Promise<void> {
 	const { commandName } = interaction;
 
-	/** @type {Discord.Collection} */
 	const commands = interaction.client.commands;
 	const command = commands.get(commandName);
 
@@ -19,5 +14,3 @@ async function commandHandler(interaction) {
 	// run the command
 	await command.handler(interaction);
 }
-
-module.exports = commandHandler;

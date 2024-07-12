@@ -1,36 +1,32 @@
-const Discord = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const Warnings = require('../models/warnings');
-const Kicks = require('../models/kicks');
-const Bans = require('../models/bans');
-const util = require('../util');
+import { MessageEmbed, MessageMentions } from 'discord.js';
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { Warning } from '@/models/warnings';
+import { Kick } from '@/models/kicks';
+import { Ban } from '@/models/bans';
+import { ordinal, sendEventLogMessage } from '@/util';
+import type { CommandInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function warnHandler(interaction) {
+async function warnHandler(interaction: CommandInteraction): Promise<void> {
 	await interaction.deferReply({
 		ephemeral: true
 	});
 
-	const guild = await interaction.guild.fetch();
-	const executingMember = await interaction.member.fetch();
-	const executor = executingMember.user;
-	const users = interaction.options.getString('users');
-	const reason = interaction.options.getString('reason');
+	const guild = await interaction.guild!.fetch();
+	const executor = interaction.user;
+	const users = interaction.options.getString('users')!;
+	const reason = interaction.options.getString('reason')!;
 
-	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
+	const userIds = [...new Set(Array.from(users.matchAll(MessageMentions.USERS_PATTERN), match => match[1]))];
 
-	const warningListEmbed = new Discord.MessageEmbed();
+	const warningListEmbed = new MessageEmbed();
 	warningListEmbed.setTitle('User Warnings :thumbsdown:');
 	warningListEmbed.setColor(0xFFA500);
 
 	for (const userId of userIds) {
-		const member = await interaction.guild.members.fetch(userId);
+		const member = await interaction.guild!.members.fetch(userId);
 		const user = member.user;
 
-		const eventLogEmbed = new Discord.MessageEmbed();
+		const eventLogEmbed = new MessageEmbed();
 
 		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 		eventLogEmbed.setTimestamp(Date.now());
@@ -63,10 +59,10 @@ async function warnHandler(interaction) {
 		);
 		eventLogEmbed.setFooter({
 			text: 'Pretendo Network',
-			iconURL: guild.iconURL()
+			iconURL: guild.iconURL()!
 		});
 
-		const { count, rows } = await Warnings.findAndCountAll({
+		const { count, rows } = await Warning.findAndCountAll({
 			where: {
 				user_id: member.id
 			}
@@ -82,19 +78,19 @@ async function warnHandler(interaction) {
 			eventLogEmbed.setColor(0xEF7F31);
 			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
 
-			punishmentEmbed = new Discord.MessageEmbed();
+			punishmentEmbed = new MessageEmbed();
 
 			punishmentEmbed.setTitle('Punishment Details');
 			punishmentEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
 			punishmentEmbed.setColor(0xEF7F31);
 			punishmentEmbed.setTimestamp(Date.now());
 			punishmentEmbed.setAuthor({
-				name: `Kicked by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
+				name: `Kicked by: ${executor.tag}`,
+				iconURL: executor.avatarURL() ?? undefined
 			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
-				iconURL: guild.iconURL()
+				iconURL: guild.iconURL()!
 			});
 			punishmentEmbed.setFields(
 				{
@@ -114,19 +110,19 @@ async function warnHandler(interaction) {
 			eventLogEmbed.setColor(0xF24E43);
 			eventLogEmbed.setTitle('Event Type: _Member Banned_');
 
-			punishmentEmbed = new Discord.MessageEmbed();
+			punishmentEmbed = new MessageEmbed();
 
 			punishmentEmbed.setTitle('Punishment Details');
 			punishmentEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
 			punishmentEmbed.setColor(0xF24E43);
 			punishmentEmbed.setTimestamp(Date.now());
 			punishmentEmbed.setAuthor({
-				name: `Banned by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
+				name: `Banned by: ${executor.tag}`,
+				iconURL: executor.avatarURL() ?? undefined
 			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
-				iconURL: guild.iconURL()
+				iconURL: guild.iconURL()!
 			});
 			punishmentEmbed.setFields(
 				{
@@ -142,17 +138,17 @@ async function warnHandler(interaction) {
 			isBan = true;
 		}
 
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await sendEventLogMessage(guild, null, eventLogEmbed);
 
 		if (punishmentEmbed) {
-			const pastWarningsEmbed = new Discord.MessageEmbed();
+			const pastWarningsEmbed = new MessageEmbed();
 			pastWarningsEmbed.setTitle('Past Warnings');
 			pastWarningsEmbed.setDescription('For clarifty purposes here is a list of your past warnings');
 			pastWarningsEmbed.setColor(0xEF7F31);
 			pastWarningsEmbed.setTimestamp(Date.now());
 			pastWarningsEmbed.setFooter({
 				text: 'Pretendo Network',
-				iconURL: guild.iconURL()
+				iconURL: guild.iconURL()!
 			});
 
 			for (let i = 0; i < rows.length; i++) {
@@ -161,7 +157,7 @@ async function warnHandler(interaction) {
 
 				pastWarningsEmbed.addFields(
 					{
-						name: `${util.ordinal(i + 1)} Warning`,
+						name: `${ordinal(i + 1)} Warning`,
 						value: warning.reason
 					},
 					{
@@ -184,9 +180,9 @@ async function warnHandler(interaction) {
 			if (isKick) {
 				await member.kick(reason);
 
-				await Kicks.create({
+				await Kick.create({
 					user_id: member.id,
-					admin_user_id: executingMember.id,
+					admin_user_id: executor.id,
 					reason: reason,
 					from_warning: true
 				});
@@ -195,9 +191,9 @@ async function warnHandler(interaction) {
 					reason
 				});
 
-				await Bans.create({
+				await Ban.create({
 					user_id: member.id,
-					admin_user_id: executingMember.id,
+					admin_user_id: executor.id,
 					reason: reason,
 					from_warning: true
 				});
@@ -205,19 +201,19 @@ async function warnHandler(interaction) {
 				// ???
 			}
 		} else {
-			punishmentEmbed = new Discord.MessageEmbed();
+			punishmentEmbed = new MessageEmbed();
 
 			punishmentEmbed.setTitle('Warning');
 			punishmentEmbed.setDescription('You have been issued a warning.\nYou may review the details of your warning below');
 			punishmentEmbed.setColor(0xF24E43);
 			punishmentEmbed.setTimestamp(Date.now());
 			punishmentEmbed.setAuthor({
-				name: `Warned by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
+				name: `Warned by: ${executor.tag}`,
+				iconURL: executor.avatarURL() ?? undefined
 			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
-				iconURL: guild.iconURL()
+				iconURL: guild.iconURL()!
 			});
 			punishmentEmbed.setFields(
 				{
@@ -243,16 +239,16 @@ async function warnHandler(interaction) {
 			}).catch(() => console.log('Failed to DM user'));
 		}
 
-		await Warnings.create({
+		await Warning.create({
 			user_id: member.id,
-			admin_user_id: executingMember.id,
+			admin_user_id: executor.id,
 			reason: reason
 		});
 
 		warningListEmbed.addField(`${member.user.username}'s warnings`, totalWarnings.toString(), true);
 	}
 
-	await interaction.editReply({ embeds: [warningListEmbed], ephemeral: true });
+	await interaction.editReply({ embeds: [warningListEmbed] });
 }
 
 const command = new SlashCommandBuilder()
@@ -270,7 +266,7 @@ const command = new SlashCommandBuilder()
 			.setRequired(true);
 	});
 
-module.exports = {
+export default {
 	name: command.name,
 	handler: warnHandler,
 	deploy: command.toJSON()

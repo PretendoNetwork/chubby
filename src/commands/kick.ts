@@ -1,35 +1,31 @@
-const Discord = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const Kicks = require('../models/kicks');
-const Bans = require('../models/bans');
-const util = require('../util');
+import { MessageMentions, MessageEmbed } from 'discord.js';
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { Kick } from '@/models/kicks';
+import { Ban } from '@/models/bans';
+import { ordinal, sendEventLogMessage } from '@/util';
+import type { CommandInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function kickHandler(interaction) {
+async function kickHandler(interaction: CommandInteraction): Promise<void> {
 	await interaction.deferReply({
 		ephemeral: true
 	});
 
-	const guild = await interaction.guild.fetch();
-	const executingMember = await interaction.member.fetch();
-	const executor = executingMember.user;
-	const users = interaction.options.getString('users');
-	const reason = interaction.options.getString('reason');
+	const guild = await interaction.guild!.fetch();
+	const executor = interaction.user;
+	const users = interaction.options.getString('users')!;
+	const reason = interaction.options.getString('reason')!;
 
-	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
+	const userIds = [...new Set(Array.from(users.matchAll(MessageMentions.USERS_PATTERN), match => match[1]))];
 
-	const kicksListEmbed = new Discord.MessageEmbed();
+	const kicksListEmbed = new MessageEmbed();
 	kicksListEmbed.setTitle('User Kicks :thumbsdown:');
 	kicksListEmbed.setColor(0xFFA500);
 
 	for (const userId of userIds) {
-		const member = await interaction.guild.members.fetch(userId);
+		const member = await interaction.guild!.members.fetch(userId);
 		const user = member.user;
 
-		const eventLogEmbed = new Discord.MessageEmbed();
+		const eventLogEmbed = new MessageEmbed();
 
 		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 		eventLogEmbed.setTimestamp(Date.now());
@@ -61,10 +57,10 @@ async function kickHandler(interaction) {
 		);
 		eventLogEmbed.setFooter({
 			text: 'Pretendo Network',
-			iconURL: guild.iconURL()
+			iconURL: guild.iconURL() ?? undefined
 		});
 
-		const { count, rows } = await Kicks.findAndCountAll({
+		const { count, rows } = await Kick.findAndCountAll({
 			where: {
 				user_id: member.id
 			}
@@ -79,19 +75,19 @@ async function kickHandler(interaction) {
 			eventLogEmbed.setColor(0xF24E43);
 			eventLogEmbed.setTitle('Event Type: _Member Banned_');
 			
-			const banEmbed = new Discord.MessageEmbed();
+			const banEmbed = new MessageEmbed();
 
 			banEmbed.setTitle('Punishment Details');
 			banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
 			banEmbed.setColor(0xF24E43);
 			banEmbed.setTimestamp(Date.now());
 			banEmbed.setAuthor({
-				name: `Banned by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
+				name: `Banned by: ${executor.tag}`,
+				iconURL: executor.avatarURL() ?? undefined
 			});
 			banEmbed.setFooter({
 				text: 'Pretendo Network',
-				iconURL: guild.iconURL()
+				iconURL: guild.iconURL()!
 			});
 			banEmbed.setFields(
 				{
@@ -111,19 +107,19 @@ async function kickHandler(interaction) {
 			eventLogEmbed.setColor(0xEF7F31);
 			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
 
-			const kickEmbed = new Discord.MessageEmbed();
+			const kickEmbed = new MessageEmbed();
 
 			kickEmbed.setTitle('Punishment Details');
 			kickEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
 			kickEmbed.setColor(0xEF7F31);
 			kickEmbed.setTimestamp(Date.now());
 			kickEmbed.setAuthor({
-				name: `Kicked by: ${executingMember.user.tag}`,
-				iconURL: executingMember.user.avatarURL()
+				name: `Kicked by: ${executor.tag}`,
+				iconURL: executor.avatarURL() ?? undefined
 			});
 			kickEmbed.setFooter({
 				text: 'Pretendo Network',
-				iconURL: guild.iconURL()
+				iconURL: guild.iconURL()!
 			});
 			kickEmbed.setFields({
 				name: 'Kick Reason',
@@ -135,17 +131,17 @@ async function kickHandler(interaction) {
 			sendMemberEmbeds.push(kickEmbed);
 		}
 
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await sendEventLogMessage(guild, null, eventLogEmbed);
 
 		if (count > 0) {
-			const pastKicksEmbed = new Discord.MessageEmbed();
+			const pastKicksEmbed = new MessageEmbed();
 			pastKicksEmbed.setTitle('Past Kicks');
 			pastKicksEmbed.setDescription('For clarifty purposes here is a list of your past kicks');
 			pastKicksEmbed.setColor(0xEF7F31);
 			pastKicksEmbed.setTimestamp(Date.now());
 			pastKicksEmbed.setFooter({
 				text: 'Pretendo Network',
-				iconURL: guild.iconURL()
+				iconURL: guild.iconURL()!
 			});
 
 			for (let i = 0; i < rows.length; i++) {
@@ -154,7 +150,7 @@ async function kickHandler(interaction) {
 
 				pastKicksEmbed.addFields(
 					{
-						name: `${util.ordinal(i + 1)} Kick`,
+						name: `${ordinal(i + 1)} Kick`,
 						value: kick.reason
 					},
 					{
@@ -184,9 +180,9 @@ async function kickHandler(interaction) {
 				reason
 			});
 
-			await Bans.create({
+			await Ban.create({
 				user_id: member.id,
-				admin_user_id: executingMember.id,
+				admin_user_id: executor.id,
 				reason: reason,
 				from_kick: true
 			});
@@ -194,16 +190,16 @@ async function kickHandler(interaction) {
 			// ???
 		}
 
-		await Kicks.create({
+		await Kick.create({
 			user_id: member.id,
-			admin_user_id: executingMember.id,
+			admin_user_id: executor.id,
 			reason: reason
 		});
 
 		kicksListEmbed.addField(`${member.user.username}'s kicks`, (count + 1).toString(), true);
 	}
 
-	await interaction.editReply({ embeds: [kicksListEmbed], ephemeral: true });
+	await interaction.editReply({ embeds: [kicksListEmbed] });
 }
 
 const command = new SlashCommandBuilder()
@@ -221,8 +217,7 @@ const command = new SlashCommandBuilder()
 			.setRequired(true);
 	});
 
-
-module.exports = {
+export default {
 	name: command.name,
 	handler: kickHandler,
 	deploy: command.toJSON()

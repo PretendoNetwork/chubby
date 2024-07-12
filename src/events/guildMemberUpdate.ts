@@ -1,13 +1,11 @@
-const Discord = require('discord.js');
-const util = require('../util');
+import { MessageEmbed } from 'discord.js';
+import { sendEventLogMessage } from '@/util';
+import type { GuildMember, PartialGuildMember } from 'discord.js';
 
-/**
- * 
- * @param {Discord.GuildMember} oldMember
- * @param {Discord.GuildMember} newMember
- */
-async function guildMemberUpdateHandler(oldMember, newMember) {
-	if (oldMember.user.bot) return;
+export async function guildMemberUpdateHandler(oldMember: GuildMember | PartialGuildMember, newMember: GuildMember): Promise<void> {
+	if (oldMember.user.bot) {
+		return;
+	}
 
 	const member = newMember;
 	const guild = member.guild;
@@ -19,16 +17,19 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 	});
 
 	const latestLog = auditLogs.entries.first();
+	if (!latestLog) {
+		return;
+	}
 
 	const { executor } = latestLog;
 
-	const eventLogEmbed = new Discord.MessageEmbed();
+	const eventLogEmbed = new MessageEmbed();
 
 	eventLogEmbed.setColor(0xC0C0C0);
 	eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 	eventLogEmbed.setFooter({
 		text: 'Pretendo Network',
-		iconURL: guild.iconURL()
+		iconURL: guild.iconURL() as string
 	});
 
 	if (oldMember.communicationDisabledUntilTimestamp !== newMember.communicationDisabledUntilTimestamp) {
@@ -45,23 +46,23 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 			},
 			{
 				name: 'Executor',
-				value: `<@${executor.id}>`
+				value: `<@${executor!.id}>`
 			},
 			{
 				name: 'Executor User ID',
-				value: executor.id
+				value: executor!.id
 			},
 			{
 				name: 'Reason',
-				value: latestLog.reason
+				value: latestLog.reason ?? ''
 			},
 			{
 				name: 'Disabled Until (UTC)',
-				value: newMember.communicationDisabledUntil.toUTCString()
+				value: newMember?.communicationDisabledUntil?.toUTCString() ?? ''
 			}
 		);
 
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await sendEventLogMessage(guild, null, eventLogEmbed);
 	}
 
 	if (oldMember.nickname !== newMember.nickname) {
@@ -78,11 +79,11 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 			},
 			{
 				name: 'Executor',
-				value: `<@${executor.id}>`
+				value: `<@${executor!.id}>`
 			},
 			{
 				name: 'Executor User ID',
-				value: executor.id
+				value: executor!.id
 			},
 			{
 				name: 'Old Nickname',
@@ -96,8 +97,6 @@ async function guildMemberUpdateHandler(oldMember, newMember) {
 			}
 		);
 
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await sendEventLogMessage(guild, null, eventLogEmbed);
 	}
 }
-
-module.exports = guildMemberUpdateHandler;
