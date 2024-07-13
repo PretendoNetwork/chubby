@@ -1,22 +1,22 @@
-import { MessageEmbed, MessageMentions } from 'discord.js';
+import { EmbedBuilder, MessageMentions } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Ban } from '@/models/bans';
 import { sendEventLogMessage, ordinal } from '@/util';
-import type { CommandInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
-async function banHandler(interaction: CommandInteraction): Promise<void> {
+async function banHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	await interaction.deferReply({
 		ephemeral: true
 	});
 
 	const guild = await interaction.guild!.fetch();
 	const executor = interaction.user;
-	const users = interaction.options.getString('users')!;
-	const reason = interaction.options.getString('reason')!;
+	const users = interaction.options.getString('users', true);
+	const reason = interaction.options.getString('reason', true);
 
-	const userIds = [...new Set(Array.from(users!.matchAll(MessageMentions.USERS_PATTERN), match => match[1]))];
+	const userIds = [...new Set(Array.from(users!.matchAll(new RegExp(MessageMentions.UsersPattern, 'g')), match => match[1]))];
 
-	const bansListEmbed = new MessageEmbed();
+	const bansListEmbed = new EmbedBuilder();
 	bansListEmbed.setTitle('User Bans :thumbsdown:');
 	bansListEmbed.setColor(0xFFA500);
 
@@ -24,7 +24,7 @@ async function banHandler(interaction: CommandInteraction): Promise<void> {
 		const member = await interaction.guild!.members.fetch(userId);
 		const user = member.user;
 
-		const eventLogEmbed = new MessageEmbed();
+		const eventLogEmbed = new EmbedBuilder();
 
 		eventLogEmbed.setColor(0xF24E43);
 		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
@@ -71,7 +71,7 @@ async function banHandler(interaction: CommandInteraction): Promise<void> {
 
 		const sendMemberEmbeds = [];
 
-		const banEmbed = new MessageEmbed();
+		const banEmbed = new EmbedBuilder();
 
 		banEmbed.setTitle('Punishment Details');
 		banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
@@ -93,7 +93,7 @@ async function banHandler(interaction: CommandInteraction): Promise<void> {
 		sendMemberEmbeds.push(banEmbed);
 
 		if (count > 0) {
-			const pastBansEmbed = new MessageEmbed();
+			const pastBansEmbed = new EmbedBuilder();
 			pastBansEmbed.setTitle('Past Bans');
 			pastBansEmbed.setDescription('For clarity purposes here is a list of your past bans');
 			pastBansEmbed.setColor(0xEF7F31);
@@ -142,14 +142,15 @@ async function banHandler(interaction: CommandInteraction): Promise<void> {
 			reason: reason
 		});
 
-		bansListEmbed.addField(`${member.user.username}'s bans`, (count + 1).toString(), true);
+		bansListEmbed.addFields([
+			{ name: `${member.user.username}'s bans`, value: (count + 1).toString(), inline: true }
+		]);
 	}
 
 	await interaction.editReply({ embeds: [bansListEmbed] });
 }
 
 const command = new SlashCommandBuilder()
-	.setDefaultPermission(false)
 	.setName('ban')
 	.setDescription('Ban user(s)')
 	.addStringOption(option => {

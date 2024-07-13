@@ -1,6 +1,6 @@
-import { MessageEmbed } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
-import type { GuildMember, PartialGuildMember } from 'discord.js';
+import { AuditLogEvent, EmbedBuilder, GuildMember } from 'discord.js';
+import type { PartialGuildMember } from 'discord.js';
 
 export async function guildMemberRemoveHandler(member: GuildMember | PartialGuildMember): Promise<void> {
 	if (member.partial) {
@@ -16,7 +16,7 @@ export async function guildMemberRemoveHandler(member: GuildMember | PartialGuil
 		limit: 1
 	});
 
-	const eventLogEmbed = new MessageEmbed();
+	const eventLogEmbed = new EmbedBuilder();
 
 	eventLogEmbed.setColor(0xC0C0C0);
 	eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
@@ -57,14 +57,14 @@ export async function guildMemberRemoveHandler(member: GuildMember | PartialGuil
 		return;
 	}
 
-	if (target?.id !== member.id) {
+	if (target && target instanceof GuildMember && target.id !== member.id) {
 		// Log target does not match current user
 		// Probably just left on their own
 		await sendEventLogMessage(guild, null, eventLogEmbed);
 		return;
 	}
 	
-	if ((latestLog.action as any) === 'MEMBER_KICK') {
+	if (latestLog.action === AuditLogEvent.MemberKick) {
 		eventLogEmbed.setColor(0xEF7F31);
 		eventLogEmbed.setTitle('Event Type: _Member Kicked_');
 	} else {

@@ -1,23 +1,23 @@
-import { MessageMentions, MessageEmbed } from 'discord.js';
+import { MessageMentions, EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
 import { ordinal, sendEventLogMessage } from '@/util';
-import type { CommandInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
-async function kickHandler(interaction: CommandInteraction): Promise<void> {
+async function kickHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	await interaction.deferReply({
 		ephemeral: true
 	});
 
 	const guild = await interaction.guild!.fetch();
 	const executor = interaction.user;
-	const users = interaction.options.getString('users')!;
-	const reason = interaction.options.getString('reason')!;
+	const users = interaction.options.getString('users', true);
+	const reason = interaction.options.getString('reason', true);
 
-	const userIds = [...new Set(Array.from(users.matchAll(MessageMentions.USERS_PATTERN), match => match[1]))];
+	const userIds = [...new Set(Array.from(users.matchAll(new RegExp(MessageMentions.UsersPattern, 'g')), match => match[1]))];
 
-	const kicksListEmbed = new MessageEmbed();
+	const kicksListEmbed = new EmbedBuilder();
 	kicksListEmbed.setTitle('User Kicks :thumbsdown:');
 	kicksListEmbed.setColor(0xFFA500);
 
@@ -25,7 +25,7 @@ async function kickHandler(interaction: CommandInteraction): Promise<void> {
 		const member = await interaction.guild!.members.fetch(userId);
 		const user = member.user;
 
-		const eventLogEmbed = new MessageEmbed();
+		const eventLogEmbed = new EmbedBuilder();
 
 		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 		eventLogEmbed.setTimestamp(Date.now());
@@ -75,7 +75,7 @@ async function kickHandler(interaction: CommandInteraction): Promise<void> {
 			eventLogEmbed.setColor(0xF24E43);
 			eventLogEmbed.setTitle('Event Type: _Member Banned_');
 			
-			const banEmbed = new MessageEmbed();
+			const banEmbed = new EmbedBuilder();
 
 			banEmbed.setTitle('Punishment Details');
 			banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
@@ -107,7 +107,7 @@ async function kickHandler(interaction: CommandInteraction): Promise<void> {
 			eventLogEmbed.setColor(0xEF7F31);
 			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
 
-			const kickEmbed = new MessageEmbed();
+			const kickEmbed = new EmbedBuilder();
 
 			kickEmbed.setTitle('Punishment Details');
 			kickEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
@@ -134,7 +134,7 @@ async function kickHandler(interaction: CommandInteraction): Promise<void> {
 		await sendEventLogMessage(guild, null, eventLogEmbed);
 
 		if (count > 0) {
-			const pastKicksEmbed = new MessageEmbed();
+			const pastKicksEmbed = new EmbedBuilder();
 			pastKicksEmbed.setTitle('Past Kicks');
 			pastKicksEmbed.setDescription('For clarifty purposes here is a list of your past kicks');
 			pastKicksEmbed.setColor(0xEF7F31);
@@ -196,14 +196,15 @@ async function kickHandler(interaction: CommandInteraction): Promise<void> {
 			reason: reason
 		});
 
-		kicksListEmbed.addField(`${member.user.username}'s kicks`, (count + 1).toString(), true);
+		kicksListEmbed.addFields([
+			{ name: `${member.user.username}'s kicks`, value: (count + 1).toString(), inline: true }
+		]);
 	}
 
 	await interaction.editReply({ embeds: [kicksListEmbed] });
 }
 
 const command = new SlashCommandBuilder()
-	.setDefaultPermission(false)
 	.setName('kick')
 	.setDescription('Kick user(s)')
 	.addStringOption(option => {

@@ -1,4 +1,4 @@
-import { MessageEmbed } from 'discord.js';
+import { AuditLogEvent, EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
 import type { GuildMember, PartialGuildMember } from 'discord.js';
 
@@ -13,7 +13,7 @@ export async function guildMemberUpdateHandler(oldMember: GuildMember | PartialG
 
 	const auditLogs = await guild.fetchAuditLogs({
 		limit: 1,
-		type: 'MEMBER_UPDATE'
+		type: AuditLogEvent.MemberUpdate
 	});
 
 	const latestLog = auditLogs.entries.first();
@@ -23,7 +23,7 @@ export async function guildMemberUpdateHandler(oldMember: GuildMember | PartialG
 
 	const { executor } = latestLog;
 
-	const eventLogEmbed = new MessageEmbed();
+	const eventLogEmbed = new EmbedBuilder();
 
 	eventLogEmbed.setColor(0xC0C0C0);
 	eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');

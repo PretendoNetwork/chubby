@@ -1,4 +1,4 @@
-import { Client, Intents, Collection } from 'discord.js';
+import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import { guildMemberRemoveHandler } from '@/events/guildMemberRemove';
 import { guildMemberUpdateHandler } from '@/events/guildMemberUpdate';
 import { interactionCreateHandler } from '@/events/interactionCreate';
@@ -10,9 +10,10 @@ import config from '@/config.json';
 
 const client = new Client({
 	intents: [
-		Intents.FLAGS.GUILDS,
-		Intents.FLAGS.GUILD_MESSAGES,
-		Intents.FLAGS.GUILD_MEMBERS,
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMessages,
+		GatewayIntentBits.MessageContent,
+		GatewayIntentBits.GuildMembers
 	]
 });
 

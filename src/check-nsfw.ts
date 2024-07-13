@@ -3,13 +3,13 @@ import * as tensorflow from '@tensorflow/tfjs-node';
 import { load } from 'nsfwjs';
 import decodeGif from 'decode-gif';
 import jpeg from 'jpeg-js';
-import { MessageEmbed, TextChannel } from 'discord.js';
+import { ChannelType, EmbedBuilder, TextChannel } from 'discord.js';
 import { getDB } from '@/db';
+import path from 'path';
 import type { Tensor3D } from '@tensorflow/tfjs-node';
-import type { FileOptions, Message} from 'discord.js';
+import type { AttachmentPayload, Message } from 'discord.js';
 import type { NSFWJS, predictionType } from 'nsfwjs';
 import config from '@/config.json';
-import path from 'path';
 
 let model: NSFWJS;
 const GIF_MAGIC = Buffer.from([0x47, 0x49, 0x46, 0x38]);
@@ -30,7 +30,7 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 	}
 
 	const suspectedUrls: string[] = [];
-	const suspectedFiles: FileOptions[] = [];
+	const suspectedFiles: AttachmentPayload[] = [];
 	let predictions: predictionType[] = [];
 
 	for (const url of urls) {
@@ -116,7 +116,7 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 	}
 }
 
-async function punishUserNSFW(message: Message, suspectedUrls: string[], suspectedFiles: FileOptions[], predictions: predictionType[]): Promise<void> {
+async function punishUserNSFW(message: Message, suspectedUrls: string[], suspectedFiles: AttachmentPayload[], predictions: predictionType[]): Promise<void> {
 	await message.delete(); // remove message
 
 	const mutedRoleId = getDB().get('roles.muted');
@@ -140,10 +140,10 @@ async function punishUserNSFW(message: Message, suspectedUrls: string[], suspect
 	const nsfwLogChannelId = getDB().get('channels.nsfw-logs')!;
 	const nsfwLogChannel = await message.guild!.channels.fetch(nsfwLogChannelId);
 	
-	if (!nsfwLogChannel || !nsfwLogChannel.isText()) {
+	if (!nsfwLogChannel || nsfwLogChannel.type !== ChannelType.GuildText) {
 		console.log('Missing NSFW log channel!');
 	} else {
-		const embed = new MessageEmbed();
+		const embed = new EmbedBuilder();
 		embed.setTitle(`Suspected NSFW Material sent by ${message.author.tag}`);
 		embed.setColor(0xffa500);
 		embed.addFields([

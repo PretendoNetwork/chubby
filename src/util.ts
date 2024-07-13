@@ -1,5 +1,6 @@
 import { getDB, getDBList } from '@/db';
-import type Discord from 'discord.js';
+import { ChannelType } from 'discord.js';
+import type { EmbedBuilder, Guild } from 'discord.js';
 
 const ordinalRules = new Intl.PluralRules('en', {
 	type: 'ordinal'
@@ -18,7 +19,7 @@ export function ordinal(number: number): string {
 	return (number + suffix);
 }
 
-export async function sendEventLogMessage(guild: Discord.Guild, originId: string | null, embed: Discord.MessageEmbed): Promise<void> {
+export async function sendEventLogMessage(guild: Guild, originId: string | null, embed: EmbedBuilder): Promise<void> {
 	const blacklistedIds = getDBList('channels.event-logs.blacklist');
 	if (originId && blacklistedIds.includes(originId)) {
 		return;
@@ -32,7 +33,7 @@ export async function sendEventLogMessage(guild: Discord.Guild, originId: string
 
 	const logChannel = await guild.channels.fetch(logChannelId);
 	
-	if (!logChannel || !logChannel.isText()) {
+	if (!logChannel || logChannel.type !== ChannelType.GuildText) {
 		console.log('Missing log channel!');
 		return;
 	}

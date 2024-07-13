@@ -1,4 +1,4 @@
-import { MessageEmbed } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
 import type { Message, PartialMessage } from 'discord.js';
 
@@ -10,6 +10,7 @@ export async function messageUpdateHandler(oldMessage: Message | PartialMessage,
 	}
 
 	if (newMessage.author.bot) {
+		console.log('author is a bot?!');
 		return;
 	}
 
@@ -22,7 +23,7 @@ export async function messageUpdateHandler(oldMessage: Message | PartialMessage,
 		const newMessageContent = newMessage.content.length > 1024 ? newMessage.content.substring(0, 1023) + '…' : newMessage.content;
 		const channel = newMessage.channel;
 	
-		const eventLogEmbed = new MessageEmbed();
+		const eventLogEmbed = new EmbedBuilder();
 
 		eventLogEmbed.setColor(0xC0C0C0);
 		eventLogEmbed.setTitle('Event Type: _Message Update_');

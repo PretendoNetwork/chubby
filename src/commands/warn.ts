@@ -1,24 +1,24 @@
-import { MessageEmbed, MessageMentions } from 'discord.js';
+import { EmbedBuilder, MessageMentions } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Warning } from '@/models/warnings';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
 import { ordinal, sendEventLogMessage } from '@/util';
-import type { CommandInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
-async function warnHandler(interaction: CommandInteraction): Promise<void> {
+async function warnHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	await interaction.deferReply({
 		ephemeral: true
 	});
 
 	const guild = await interaction.guild!.fetch();
 	const executor = interaction.user;
-	const users = interaction.options.getString('users')!;
-	const reason = interaction.options.getString('reason')!;
+	const users = interaction.options.getString('users', true);
+	const reason = interaction.options.getString('reason', true);
 
-	const userIds = [...new Set(Array.from(users.matchAll(MessageMentions.USERS_PATTERN), match => match[1]))];
+	const userIds = [...new Set(Array.from(users.matchAll(new RegExp(MessageMentions.UsersPattern, 'g')), match => match[1]))];
 
-	const warningListEmbed = new MessageEmbed();
+	const warningListEmbed = new EmbedBuilder();
 	warningListEmbed.setTitle('User Warnings :thumbsdown:');
 	warningListEmbed.setColor(0xFFA500);
 
@@ -26,7 +26,7 @@ async function warnHandler(interaction: CommandInteraction): Promise<void> {
 		const member = await interaction.guild!.members.fetch(userId);
 		const user = member.user;
 
-		const eventLogEmbed = new MessageEmbed();
+		const eventLogEmbed = new EmbedBuilder();
 
 		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 		eventLogEmbed.setTimestamp(Date.now());
@@ -78,7 +78,7 @@ async function warnHandler(interaction: CommandInteraction): Promise<void> {
 			eventLogEmbed.setColor(0xEF7F31);
 			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
 
-			punishmentEmbed = new MessageEmbed();
+			punishmentEmbed = new EmbedBuilder();
 
 			punishmentEmbed.setTitle('Punishment Details');
 			punishmentEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
@@ -110,7 +110,7 @@ async function warnHandler(interaction: CommandInteraction): Promise<void> {
 			eventLogEmbed.setColor(0xF24E43);
 			eventLogEmbed.setTitle('Event Type: _Member Banned_');
 
-			punishmentEmbed = new MessageEmbed();
+			punishmentEmbed = new EmbedBuilder();
 
 			punishmentEmbed.setTitle('Punishment Details');
 			punishmentEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
@@ -141,7 +141,7 @@ async function warnHandler(interaction: CommandInteraction): Promise<void> {
 		await sendEventLogMessage(guild, null, eventLogEmbed);
 
 		if (punishmentEmbed) {
-			const pastWarningsEmbed = new MessageEmbed();
+			const pastWarningsEmbed = new EmbedBuilder();
 			pastWarningsEmbed.setTitle('Past Warnings');
 			pastWarningsEmbed.setDescription('For clarifty purposes here is a list of your past warnings');
 			pastWarningsEmbed.setColor(0xEF7F31);
@@ -201,7 +201,7 @@ async function warnHandler(interaction: CommandInteraction): Promise<void> {
 				// ???
 			}
 		} else {
-			punishmentEmbed = new MessageEmbed();
+			punishmentEmbed = new EmbedBuilder();
 
 			punishmentEmbed.setTitle('Warning');
 			punishmentEmbed.setDescription('You have been issued a warning.\nYou may review the details of your warning below');
@@ -245,14 +245,15 @@ async function warnHandler(interaction: CommandInteraction): Promise<void> {
 			reason: reason
 		});
 
-		warningListEmbed.addField(`${member.user.username}'s warnings`, totalWarnings.toString(), true);
+		warningListEmbed.addFields([
+			{ name: `${member.user.username}'s warnings`, value: totalWarnings.toString(), inline: true }
+		]);
 	}
 
 	await interaction.editReply({ embeds: [warningListEmbed] });
 }
 
 const command = new SlashCommandBuilder()
-	.setDefaultPermission(false)
 	.setName('warn')
 	.setDescription('Warn user(s)')
 	.addStringOption(option => {

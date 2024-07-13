@@ -1,4 +1,4 @@
-import { MessageEmbed } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
 import type { Message, PartialMessage } from 'discord.js';
 
@@ -22,7 +22,7 @@ export async function messageDeleteHandler(message: Message | PartialMessage): P
 
 	const messageContent = message.content.length > 1024 ? message.content.substr(0, 1023) + '…' : message.content;
 
-	const eventLogEmbed = new MessageEmbed();
+	const eventLogEmbed = new EmbedBuilder();
 
 	eventLogEmbed.setColor(0xC0C0C0);
 	eventLogEmbed.setTitle('Event Type: _Message Delete_');

@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { getDB } from '@/db';
-import type { CommandInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
 const editableOptions = [
 	'roles.muted',
@@ -11,17 +11,17 @@ const editableOptions = [
 	'channels.event-logs.blacklist',
 ];
 
-async function verifyInputtedKey(interaction: CommandInteraction): Promise<void> {
-	const key = interaction.options.getString('key')!;
+function verifyInputtedKey(interaction: ChatInputCommandInteraction): string {
+	const key = interaction.options.getString('key', true);
 	if (!editableOptions.includes(key)) {
 		throw new Error('Cannot edit this setting - not a valid setting');
 	}
+	return key;
 }
 
-async function settingsHandler(interaction: CommandInteraction): Promise<void> {
-	const key = interaction.options.getString('key')!;
+async function settingsHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	if (interaction.options.getSubcommand() === 'get') {
-		await verifyInputtedKey(interaction);
+		const key = verifyInputtedKey(interaction);
 		// this is hellish string concatenation, I know
 		await interaction.reply({
 			content:
@@ -35,7 +35,7 @@ async function settingsHandler(interaction: CommandInteraction): Promise<void> {
 	}
 
 	if (interaction.options.getSubcommand() === 'set') {
-		await verifyInputtedKey(interaction);
+		const key = verifyInputtedKey(interaction);
 		getDB().set(key, interaction.options.getString('value')!);
 		await interaction.reply({
 			content: `setting \`${key}\` has been saved successfully`,
@@ -65,7 +65,6 @@ async function settingsHandler(interaction: CommandInteraction): Promise<void> {
 
 const command = new SlashCommandBuilder();
 
-command.setDefaultPermission(false);
 command.setName('settings');
 command.setDescription('Setup the bot');
 command.addSubcommand((cmd) => {
