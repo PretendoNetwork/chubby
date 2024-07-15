@@ -66,6 +66,7 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 const command = new SlashCommandBuilder();
 
 command.setDefaultMemberPermissions('0');
+command.setName('settings');
 command.setDescription('Setup the bot');
 command.addSubcommand((cmd) => {
 	cmd.setName('set');

@@ -1,4 +1,4 @@
-import { ChannelType, EmbedBuilder } from 'discord.js';
+import { BaseGuildTextChannel, EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
 import type { Message, PartialMessage } from 'discord.js';
 
@@ -20,7 +20,7 @@ export default async function messageDeleteHandler(message: Message | PartialMes
 	const messageContent = message.content.length > 1024 ? message.content.substring(0, 1023) + '…' : message.content;
 
 	let channelName = 'No channel name found';
-	if (message.channel.type === ChannelType.GuildText) {
+	if (message.channel instanceof BaseGuildTextChannel) {
 		channelName = message.channel.name;
 	}
 
