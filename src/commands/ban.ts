@@ -151,6 +151,7 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 }
 
 const command = new SlashCommandBuilder()
+	.setDefaultMemberPermissions('0')
 	.setName('ban')
 	.setDescription('Ban user(s)')
 	.addStringOption(option => {

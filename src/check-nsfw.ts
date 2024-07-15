@@ -4,11 +4,11 @@ import { node as tensorflow } from '@tensorflow/tfjs-node';
 import { load as loadModel } from 'nsfwjs';
 import decodeGif from 'decode-gif';
 import jpeg from 'jpeg-js';
-import { ChannelType, EmbedBuilder, TextChannel } from 'discord.js';
+import { AttachmentBuilder, ChannelType, EmbedBuilder, TextChannel } from 'discord.js';
 import { getDB } from '@/db';
 import config from '@/config.json';
 import type { Tensor3D } from '@tensorflow/tfjs-node';
-import type { AttachmentPayload, Message } from 'discord.js';
+import type { Message } from 'discord.js';
 import type { NSFWJS, predictionType } from 'nsfwjs';
 
 let model: NSFWJS;
@@ -30,7 +30,7 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 	}
 
 	const suspectedUrls: string[] = [];
-	const suspectedFiles: AttachmentPayload[] = [];
+	const suspectedFiles: AttachmentBuilder[] = [];
 	let predictions: predictionType[] = [];
 
 	for (const url of urls) {
@@ -78,10 +78,9 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 				if (frameClassification.className === 'Porn' || frameClassification.className === 'Hentai' || frameClassification.className === 'Sexy') {
 					predictions = framePredictions;
 					suspectedUrls.push(url); // * if suspected as NSFW then track the url
-					suspectedFiles.push({ // * if suspected as NSFW then track the GIF
-						attachment: data,
-						name: 'SPOILER_FILE.jpg'
-					});
+					const attachment = new AttachmentBuilder(data)
+						.setName('SPOILER_FILE.jpg');
+					suspectedFiles.push(attachment); // * if suspected as NSFW then track the GIF
 					break; // * end the loop if ANY NSFW frame is found
 				}
 			}
@@ -102,10 +101,9 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 			// check if the prediction is black listed
 			if (classification.className === 'Porn' || classification.className === 'Hentai' || classification.className === 'Sexy') {
 				suspectedUrls.push(url); // if suspected as NSFW then track the url
-				suspectedFiles.push({ // if suspected as NSFW then track the image
-					attachment: data,
-					name: 'SPOILER_FILE.jpg'
-				});
+				const attachment = new AttachmentBuilder(data)
+					.setName('SOILER_FILE.jpg');
+				suspectedFiles.push(attachment); // if suspected as NSFW then track the image
 			}
 		}
 	}
@@ -116,7 +114,7 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 	}
 }
 
-async function punishUserNSFW(message: Message, suspectedUrls: string[], suspectedFiles: AttachmentPayload[], predictions: predictionType[]): Promise<void> {
+async function punishUserNSFW(message: Message, suspectedUrls: string[], suspectedFiles: AttachmentBuilder[], predictions: predictionType[]): Promise<void> {
 	await message.delete(); // remove message
 
 	const mutedRoleId = getDB().get('roles.muted');

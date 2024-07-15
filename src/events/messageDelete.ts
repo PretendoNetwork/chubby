@@ -1,4 +1,4 @@
-import { EmbedBuilder } from 'discord.js';
+import { ChannelType, EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
 import type { Message, PartialMessage } from 'discord.js';
 
@@ -17,7 +17,12 @@ export default async function messageDeleteHandler(message: Message | PartialMes
 	const member = await message.member.fetch();
 	const user = member.user;
 
-	const messageContent = message.content.length > 1024 ? message.content.substr(0, 1023) + '…' : message.content;
+	const messageContent = message.content.length > 1024 ? message.content.substring(0, 1023) + '…' : message.content;
+
+	let channelName = 'No channel name found';
+	if (message.channel.type === ChannelType.GuildText) {
+		channelName = message.channel.name;
+	}
 
 	const eventLogEmbed = new EmbedBuilder();
 
@@ -48,7 +53,7 @@ export default async function messageDeleteHandler(message: Message | PartialMes
 		},
 		{
 			name: 'Channel Name',
-			value: (message.channel as any).name // TODO a better way of doing this?
+			value: channelName
 		},
 		{
 			name: 'Message',

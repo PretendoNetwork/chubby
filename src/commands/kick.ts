@@ -57,7 +57,7 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 		);
 		eventLogEmbed.setFooter({
 			text: 'Pretendo Network',
-			iconURL: guild.iconURL() ?? undefined
+			iconURL: guild.iconURL()!
 		});
 
 		const { count, rows } = await Kick.findAndCountAll({
@@ -205,6 +205,7 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 }
 
 const command = new SlashCommandBuilder()
+	.setDefaultMemberPermissions('0')
 	.setName('kick')
 	.setDescription('Kick user(s)')
 	.addStringOption(option => {

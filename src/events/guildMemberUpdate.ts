@@ -29,7 +29,7 @@ export default async function guildMemberUpdateHandler(oldMember: GuildMember | 
 	eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 	eventLogEmbed.setFooter({
 		text: 'Pretendo Network',
-		iconURL: guild.iconURL() as string
+		iconURL: guild.iconURL()!
 	});
 
 	if (oldMember.communicationDisabledUntilTimestamp !== newMember.communicationDisabledUntilTimestamp) {

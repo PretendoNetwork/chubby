@@ -254,6 +254,7 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 }
 
 const command = new SlashCommandBuilder()
+	.setDefaultMemberPermissions('0')
 	.setName('warn')
 	.setDescription('Warn user(s)')
 	.addStringOption(option => {
