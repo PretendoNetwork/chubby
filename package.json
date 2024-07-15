@@ -8,7 +8,7 @@
     "start:dev": "NODE_ENV=development node .",
     "lint": "npx eslint .",
     "build": "npm run lint && npm run clean && npx tsc && npx tsc-alias",
-    "clean": "rimraf ./dist"
+    "clean": "npx rimraf ./dist"
   },
   "keywords": [],
   "author": "",

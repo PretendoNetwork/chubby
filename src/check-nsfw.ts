@@ -1,22 +1,22 @@
+import path from 'node:path';
 import got from 'got';
-import * as tensorflow from '@tensorflow/tfjs-node';
-import { load } from 'nsfwjs';
+import { node as tensorflow } from '@tensorflow/tfjs-node';
+import { load as loadModel } from 'nsfwjs';
 import decodeGif from 'decode-gif';
 import jpeg from 'jpeg-js';
 import { ChannelType, EmbedBuilder, TextChannel } from 'discord.js';
 import { getDB } from '@/db';
-import path from 'path';
+import config from '@/config.json';
 import type { Tensor3D } from '@tensorflow/tfjs-node';
 import type { AttachmentPayload, Message } from 'discord.js';
 import type { NSFWJS, predictionType } from 'nsfwjs';
-import config from '@/config.json';
 
 let model: NSFWJS;
 const GIF_MAGIC = Buffer.from([0x47, 0x49, 0x46, 0x38]);
 
 export async function checkNSFW(message: Message, urls: string[]): Promise<void> {
 	if (message.channel instanceof TextChannel && message.channel.nsfw) {
-		return; // Do not check if the channel is NSFW
+		return; // * Do not check if the channel is NSFW
 	}
 
 	if (!model) {
@@ -26,7 +26,7 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 		
 		// * We have to set the options to `any` here because although `type` is a valid option
 		// * it's not included in the types, this is also an inline type so we can't enhance it
-		model = await load(modelUri, { type: 'graph' } as any);
+		model = await loadModel(modelUri, { type: 'graph' } as any);
 	}
 
 	const suspectedUrls: string[] = [];
@@ -46,9 +46,9 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 		// request the image data
 		const data = await got(url).buffer();
 		
-		// handle GIF frames
+		// Handle GIF frames
 		if (data.subarray(0, 4).equals(GIF_MAGIC)) {
-			// model.classifyGif is too slow and doesn't let us break out of the classifcation loop
+			// * model.classifyGif is too slow and doesn't let us break out of the classifcation loop
 			// reimplement the GIF exploding and frame classification
 			const decodedGif = decodeGif(data);
 			const { width, height, frames } = decodedGif;
@@ -60,10 +60,10 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 					height: height,
 				};
 
-				// decodeGif returns frames as RGB data
-				// need to convert each frame to an image that TensorFlow can understand
+				// * decodeGif returns frames as RGB data
+				// * need to convert each frame to an image that TensorFlow can understand
 				const jpegImageData = jpeg.encode(rawImageData);
-				const image = tensorflow.node.decodeImage(jpegImageData.data, 3) as Tensor3D;
+				const image = tensorflow.decodeImage(jpegImageData.data, 3) as Tensor3D;
 				const framePredictions = await model.classify(image);
 				image.dispose(); // do not let this image float around memory
 				const frameClassification = framePredictions.sort((a, b) => b.probability - a.probability)[0];
@@ -73,21 +73,21 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 					continue;
 				}
 
-				// aggressive NSFW check
-				// flag the GIF if ANY NSFW frame is found
+				// * aggressive NSFW check
+				// * flag the GIF if ANY NSFW frame is found
 				if (frameClassification.className === 'Porn' || frameClassification.className === 'Hentai' || frameClassification.className === 'Sexy') {
 					predictions = framePredictions;
-					suspectedUrls.push(url); // if suspected as NSFW then track the url
-					suspectedFiles.push({ // if suspected as NSFW then track the GIF
+					suspectedUrls.push(url); // * if suspected as NSFW then track the url
+					suspectedFiles.push({ // * if suspected as NSFW then track the GIF
 						attachment: data,
 						name: 'SPOILER_FILE.jpg'
 					});
-					break; // end the loop if ANY NSFW frame is found
+					break; // * end the loop if ANY NSFW frame is found
 				}
 			}
 		} else {
-			// handle normal images
-			const image = tensorflow.node.decodeImage(data, 3) as Tensor3D;
+			// * handle normal images
+			const image = tensorflow.decodeImage(data, 3) as Tensor3D;
 			predictions = await model.classify(image);
 			image.dispose(); // do not let this image float around memory
 
@@ -136,7 +136,7 @@ async function punishUserNSFW(message: Message, suspectedUrls: string[], suspect
 		message.member!.roles.add(nsfwPunishedRole);
 	}
 
-	// log the punisment to the log channel
+	// log the punishment to the log channel
 	const nsfwLogChannelId = getDB().get('channels.nsfw-logs')!;
 	const nsfwLogChannel = await message.guild!.channels.fetch(nsfwLogChannelId);
 	

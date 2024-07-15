@@ -2,7 +2,7 @@ import { sendEventLogMessage } from '@/util';
 import { AuditLogEvent, EmbedBuilder, GuildMember } from 'discord.js';
 import type { PartialGuildMember } from 'discord.js';
 
-export async function guildMemberRemoveHandler(member: GuildMember | PartialGuildMember): Promise<void> {
+export default async function guildMemberRemoveHandler(member: GuildMember | PartialGuildMember): Promise<void> {
 	if (member.partial) {
 		// * This should never happen as we don't opt into partial structures
 		// * but we need this to be here to convince the compiler that the rest is safe

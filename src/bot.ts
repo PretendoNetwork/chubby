@@ -1,12 +1,13 @@
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
-import { guildMemberRemoveHandler } from '@/events/guildMemberRemove';
-import { guildMemberUpdateHandler } from '@/events/guildMemberUpdate';
-import { interactionCreateHandler } from '@/events/interactionCreate';
-import { messageCreateHandler } from '@/events/messageCreate';
-import { messageDeleteHandler } from '@/events/messageDelete';
-import { messageUpdateHandler } from '@/events/messageUpdate';
-import { readyHandler } from '@/events/ready';
+import guildMemberRemoveHandler from '@/events/guildMemberRemove';
+import guildMemberUpdateHandler from '@/events/guildMemberUpdate';
+import interactionCreateHandler from '@/events/interactionCreate';
+import messageCreateHandler from '@/events/messageCreate';
+import messageDeleteHandler from '@/events/messageDelete';
+import messageUpdateHandler from '@/events/messageUpdate';
+import readyHandler from '@/events/ready';
 import config from '@/config.json';
+import type { ClientCommand } from '@/types';
 
 const client = new Client({
 	intents: [
@@ -17,7 +18,7 @@ const client = new Client({
 	]
 });
 
-client.commands = new Collection<string, any>();
+client.commands = new Collection<string, ClientCommand>();
 
 client.on('ready', readyHandler);
 client.on('guildMemberRemove', guildMemberRemoveHandler);

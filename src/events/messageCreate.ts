@@ -3,7 +3,7 @@ import type { Message } from 'discord.js';
 
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 
-export async function messageCreateHandler(message: Message): Promise<void> {
+export default async function messageCreateHandler(message: Message): Promise<void> {
 	// Ignore bot messages
 	if (message.author.bot) {
 		return;

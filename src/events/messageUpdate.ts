@@ -2,7 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
 import type { Message, PartialMessage } from 'discord.js';
 
-export async function messageUpdateHandler(oldMessage: Message | PartialMessage, newMessage: Message | PartialMessage): Promise<void> {
+export default async function messageUpdateHandler(oldMessage: Message | PartialMessage, newMessage: Message | PartialMessage): Promise<void> {
 	if (oldMessage.partial || newMessage.partial) {
 		// * This should never happen as we don't opt into partial structures
 		// * but we need this to be here to convince the compiler that the rest is safe

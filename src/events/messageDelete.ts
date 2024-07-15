@@ -2,17 +2,14 @@ import { EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
 import type { Message, PartialMessage } from 'discord.js';
 
-export async function messageDeleteHandler(message: Message | PartialMessage): Promise<void> {
+export default async function messageDeleteHandler(message: Message | PartialMessage): Promise<void> {
 	if (message.partial) {
 		// * This should never happen as we don't opt into partial structures
 		// * but we need this to be here to convince the compiler that the rest is safe
 		return;
 	}
 
-	if (message.author.bot) {
-		return;
-	}
-	if (!message.member) {
+	if (message.author.bot || !message.member) {
 		return;
 	}
 

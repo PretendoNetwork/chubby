@@ -2,7 +2,7 @@ import { AuditLogEvent, EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
 import type { GuildMember, PartialGuildMember } from 'discord.js';
 
-export async function guildMemberUpdateHandler(oldMember: GuildMember | PartialGuildMember, newMember: GuildMember): Promise<void> {
+export default async function guildMemberUpdateHandler(oldMember: GuildMember | PartialGuildMember, newMember: GuildMember): Promise<void> {
 	if (oldMember.user.bot) {
 		return;
 	}

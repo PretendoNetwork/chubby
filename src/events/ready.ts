@@ -6,8 +6,9 @@ import kickCommand from '@/commands/kick';
 import settingsCommand from '@/commands/settings';
 import warnCommand from '@/commands/warn';
 import type { Client, Collection } from 'discord.js';
+import type { ClientCommand } from '@/types';
 
-export async function readyHandler(client: Client): Promise<void> {
+export default async function readyHandler(client: Client): Promise<void> {
 	loadBotHandlersCollection('commands', client.commands);
 	console.log('Registered global commands');
 
@@ -23,7 +24,7 @@ export async function readyHandler(client: Client): Promise<void> {
 	console.log(`Logged in as ${client.user!.tag}!`);
 }
 
-function loadBotHandlersCollection(name: string, collection: Collection<string, any>): void {
+function loadBotHandlersCollection(name: string, collection: Collection<string, ClientCommand>): void {
 	collection.set(banCommand.name, banCommand);
 	collection.set(kickCommand.name, kickCommand);
 	collection.set(settingsCommand.name, settingsCommand);
