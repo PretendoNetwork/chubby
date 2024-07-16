@@ -1,12 +1,14 @@
-// eslint-disable-next-line
-const Discord = require('discord.js');
-const util = require('../util');
+import { sendEventLogMessage } from '@/util';
+import { AuditLogEvent, EmbedBuilder, GuildMember } from 'discord.js';
+import type { PartialGuildMember } from 'discord.js';
 
-/**
- * 
- * @param {Discord.GuildMember} member
- */
-async function guildMemberRemoveHandler(member) {
+export default async function guildMemberRemoveHandler(member: GuildMember | PartialGuildMember): Promise<void> {
+	if (member.partial) {
+		// * This should never happen as we don't opt into partial structures
+		// * but we need this to be here to convince the compiler that the rest is safe
+		return;
+	}
+
 	const guild = member.guild;
 	const user = member.user;
 	
@@ -14,7 +16,7 @@ async function guildMemberRemoveHandler(member) {
 		limit: 1
 	});
 
-	const eventLogEmbed = new Discord.MessageEmbed();
+	const eventLogEmbed = new EmbedBuilder();
 
 	eventLogEmbed.setColor(0xC0C0C0);
 	eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
@@ -32,7 +34,7 @@ async function guildMemberRemoveHandler(member) {
 	);
 	eventLogEmbed.setFooter({
 		text: 'Pretendo Network',
-		iconURL: guild.iconURL()
+		iconURL: guild.iconURL()!
 	});
 
 	const latestLog = auditLogs.entries.first();
@@ -43,26 +45,26 @@ async function guildMemberRemoveHandler(member) {
 		((Date.now() - latestLog.createdTimestamp) > 2000) // log is too old, older than a couple seconds ago
 	) {
 		// User probably just left on their own
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await sendEventLogMessage(guild, null, eventLogEmbed);
 		return;
 	}
 
 	// User was either kicked or banned
 	const { executor, target } = latestLog;
 
-	if (executor.bot) {
+	if (executor?.bot) {
 		// Bot actions log themselves in the action handlers
 		return;
 	}
 
-	if (target.id !== member.id) {
+	if (target && target instanceof GuildMember && target.id !== member.id) {
 		// Log target does not match current user
 		// Probably just left on their own
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await sendEventLogMessage(guild, null, eventLogEmbed);
 		return;
 	}
 	
-	if (latestLog.action === 'MEMBER_KICK') {
+	if (latestLog.action === AuditLogEvent.MemberKick) {
 		eventLogEmbed.setColor(0xEF7F31);
 		eventLogEmbed.setTitle('Event Type: _Member Kicked_');
 	} else {
@@ -81,15 +83,15 @@ async function guildMemberRemoveHandler(member) {
 		},
 		{
 			name: 'Executor',
-			value: `<@${executor.id}>`
+			value: `<@${executor!.id}>`
 		},
 		{
 			name: 'Executor User ID',
-			value: executor.id
+			value: executor!.id
 		},
 		{
 			name: 'Reason',
-			value: latestLog.reason
+			value: latestLog.reason ?? ''
 		},
 		{
 			name: 'From bot command',
@@ -97,7 +99,5 @@ async function guildMemberRemoveHandler(member) {
 		}
 	);
 
-	await util.sendEventLogMessage(guild, null, eventLogEmbed);
+	await sendEventLogMessage(guild, null, eventLogEmbed);
 }
-
-module.exports = guildMemberRemoveHandler;

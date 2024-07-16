@@ -1,34 +1,30 @@
-const Discord = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const Bans = require('../models/bans');
-const util = require('../util');
+import { EmbedBuilder, MessageMentions } from 'discord.js';
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { Ban } from '@/models/bans';
+import { sendEventLogMessage, ordinal } from '@/util';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function banHandler(interaction) {
+async function banHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	await interaction.deferReply({
 		ephemeral: true
 	});
 
-	const guild = await interaction.guild.fetch();
-	const executingMember = await interaction.member.fetch();
-	const executor = executingMember.user;
-	const users = interaction.options.getString('users');
-	const reason = interaction.options.getString('reason');
+	const guild = await interaction.guild!.fetch();
+	const executor = interaction.user;
+	const users = interaction.options.getString('users', true);
+	const reason = interaction.options.getString('reason', true);
 
-	const userIds = [...new Set(Array.from(users.matchAll(Discord.MessageMentions.USERS_PATTERN), match => match[1]))];
+	const userIds = [...new Set(Array.from(users!.matchAll(new RegExp(MessageMentions.UsersPattern, 'g')), match => match[1]))];
 
-	const bansListEmbed = new Discord.MessageEmbed();
+	const bansListEmbed = new EmbedBuilder();
 	bansListEmbed.setTitle('User Bans :thumbsdown:');
 	bansListEmbed.setColor(0xFFA500);
 
 	for (const userId of userIds) {
-		const member = await interaction.guild.members.fetch(userId);
+		const member = await interaction.guild!.members.fetch(userId);
 		const user = member.user;
 
-		const eventLogEmbed = new Discord.MessageEmbed();
+		const eventLogEmbed = new EmbedBuilder();
 
 		eventLogEmbed.setColor(0xF24E43);
 		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
@@ -45,11 +41,11 @@ async function banHandler(interaction) {
 			},
 			{
 				name: 'Executor',
-				value: `<@${executor.id}>`
+				value: `<@${executor!.id}>`
 			},
 			{
 				name: 'Executor User ID',
-				value: executor.id
+				value: executor!.id
 			},
 			{
 				name: 'Reason',
@@ -62,12 +58,12 @@ async function banHandler(interaction) {
 		);
 		eventLogEmbed.setFooter({
 			text: 'Pretendo Network',
-			iconURL: guild.iconURL()
+			iconURL: guild.iconURL()!
 		});
 
-		await util.sendEventLogMessage(guild, null, eventLogEmbed);
+		await sendEventLogMessage(guild, null, eventLogEmbed);
 		
-		const { count, rows } = await Bans.findAndCountAll({
+		const { count, rows } = await Ban.findAndCountAll({
 			where: {
 				user_id: member.id
 			}
@@ -75,36 +71,36 @@ async function banHandler(interaction) {
 
 		const sendMemberEmbeds = [];
 
-		const banEmbed = new Discord.MessageEmbed();
+		const banEmbed = new EmbedBuilder();
 
 		banEmbed.setTitle('Punishment Details');
 		banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
 		banEmbed.setColor(0xF24E43);
 		banEmbed.setTimestamp(Date.now());
 		banEmbed.setAuthor({
-			name: `Banned by: ${executingMember.user.tag}`,
-			iconURL: executingMember.user.avatarURL()
+			name: `Banned by: ${executor.tag}`,
+			iconURL: executor.avatarURL() ?? undefined
 		});
 		banEmbed.setFooter({
 			text: 'Pretendo Network',
-			iconURL: guild.iconURL()
+			iconURL: guild.iconURL()!
 		});
 		banEmbed.setFields({
 			name: 'Ban Reason',
-			value: reason
+			value: reason ?? ''
 		});
 
 		sendMemberEmbeds.push(banEmbed);
 
 		if (count > 0) {
-			const pastBansEmbed = new Discord.MessageEmbed();
+			const pastBansEmbed = new EmbedBuilder();
 			pastBansEmbed.setTitle('Past Bans');
-			pastBansEmbed.setDescription('For clarifty purposes here is a list of your past bans');
+			pastBansEmbed.setDescription('For clarity purposes here is a list of your past bans');
 			pastBansEmbed.setColor(0xEF7F31);
 			pastBansEmbed.setTimestamp(Date.now());
 			pastBansEmbed.setFooter({
 				text: 'Pretendo Network',
-				iconURL: guild.iconURL()
+				iconURL: guild.iconURL()!
 			});
 
 			for (let i = 0; i < rows.length; i++) {
@@ -113,7 +109,7 @@ async function banHandler(interaction) {
 
 				pastBansEmbed.addFields(
 					{
-						name: `${util.ordinal(i + 1)} Ban`,
+						name: `${ordinal(i + 1)} Ban`,
 						value: ban.reason
 					},
 					{
@@ -137,23 +133,25 @@ async function banHandler(interaction) {
 		}).catch(() => console.log('Failed to DM user'));
 
 		await member.ban({
-			reason
-		});
-
-		await Bans.create({
-			user_id: member.id,
-			admin_user_id: executingMember.id,
 			reason: reason
 		});
 
-		bansListEmbed.addField(`${member.user.username}'s bans`, (count + 1).toString(), true);
+		await Ban.create({
+			user_id: member.id,
+			admin_user_id: executor.id,
+			reason: reason
+		});
+
+		bansListEmbed.addFields([
+			{ name: `${member.user.username}'s bans`, value: (count + 1).toString(), inline: true }
+		]);
 	}
 
-	await interaction.editReply({ embeds: [bansListEmbed], ephemeral: true });
+	await interaction.editReply({ embeds: [bansListEmbed] });
 }
 
 const command = new SlashCommandBuilder()
-	.setDefaultPermission(false)
+	.setDefaultMemberPermissions('0')
 	.setName('ban')
 	.setDescription('Ban user(s)')
 	.addStringOption(option => {
@@ -167,7 +165,7 @@ const command = new SlashCommandBuilder()
 			.setRequired(true);
 	});
 
-module.exports = {
+export default {
 	name: command.name,
 	handler: banHandler,
 	deploy: command.toJSON()

@@ -1,18 +1,16 @@
-const Discord = require('discord.js');
+import { checkNSFW } from '@/check-nsfw';
+import type { Message } from 'discord.js';
 
-const checkNSFW = require('../check-nsfw');
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 
-/**
- *
- * @param {Discord.Message} message
- */
-function messageHandler(message) {
+export default async function messageCreateHandler(message: Message): Promise<void> {
 	// Ignore bot messages
-	if (message.author.bot) return;
+	if (message.author.bot) {
+		return;
+	}
 
 	// check if the message has any URLs
-	const urls = message.cleanContent.match(urlRegex) || [];
+	const urls: string[] = message.cleanContent.match(urlRegex) || [];
 	
 	// if the message has any URLs or attachments check them for NSFW content
 	if (urls.length > 0 || message.attachments.size > 0) {
@@ -23,8 +21,6 @@ function messageHandler(message) {
 			}
 		}
 
-		checkNSFW(message, urls);
+		await checkNSFW(message, urls);
 	}
 }
-
-module.exports = messageHandler;
