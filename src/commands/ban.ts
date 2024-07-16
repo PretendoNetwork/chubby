@@ -87,7 +87,7 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 		});
 		banEmbed.setFields({
 			name: 'Ban Reason',
-			value: reason ?? ''
+			value: reason
 		});
 
 		sendMemberEmbeds.push(banEmbed);
