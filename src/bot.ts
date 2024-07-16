@@ -1,6 +1,6 @@
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, Events } from 'discord.js';
+import guildAuditLogEntryCreateHandler from './events/guildAuditLogEntryCreate';
 import guildMemberRemoveHandler from '@/events/guildMemberRemove';
-import guildMemberUpdateHandler from '@/events/guildMemberUpdate';
 import interactionCreateHandler from '@/events/interactionCreate';
 import messageCreateHandler from '@/events/messageCreate';
 import messageDeleteHandler from '@/events/messageDelete';
@@ -14,18 +14,19 @@ const client = new Client({
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.MessageContent,
-		GatewayIntentBits.GuildMembers
+		GatewayIntentBits.GuildMembers,
+		GatewayIntentBits.GuildModeration
 	]
 });
 
 client.commands = new Collection<string, ClientCommand>();
 
-client.on('ready', readyHandler);
-client.on('guildMemberRemove', guildMemberRemoveHandler);
-client.on('guildMemberUpdate', guildMemberUpdateHandler);
-client.on('interactionCreate', interactionCreateHandler);
-client.on('messageCreate', messageCreateHandler);
-client.on('messageDelete', messageDeleteHandler);
-client.on('messageUpdate', messageUpdateHandler);
+client.on(Events.ClientReady, readyHandler);
+client.on(Events.GuildMemberRemove, guildMemberRemoveHandler);
+client.on(Events.InteractionCreate, interactionCreateHandler);
+client.on(Events.MessageCreate, messageCreateHandler);
+client.on(Events.MessageDelete, messageDeleteHandler);
+client.on(Events.MessageUpdate, messageUpdateHandler);
+client.on(Events.GuildAuditLogEntryCreate, guildAuditLogEntryCreateHandler);
 
 client.login(config.bot_token);
