@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits, Collection, Events } from 'discord.js';
-import guildAuditLogEntryCreateHandler from './events/guildAuditLogEntryCreate';
+import guildAuditLogEntryCreateHandler from '@/events/guildAuditLogEntryCreate';
 import guildMemberRemoveHandler from '@/events/guildMemberRemove';
 import interactionCreateHandler from '@/events/interactionCreate';
 import messageCreateHandler from '@/events/messageCreate';

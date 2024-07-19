@@ -1,49 +1,40 @@
 import { AuditLogEvent, EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
-import type { Guild, User, GuildAuditLogsEntry } from 'discord.js';
+import type { Guild, User, GuildAuditLogsEntry, APIAuditLogChange } from 'discord.js';
 
 export default async function guildAuditLogEntryCreateHandler(auditLogEntry: GuildAuditLogsEntry, guild: Guild): Promise<void> {
-	switch (auditLogEntry.action) { 
-		case AuditLogEvent.MemberUpdate: {
+	if (logIsForEvent(auditLogEntry, AuditLogEvent.MemberUpdate)) {
+		const user = auditLogEntry.target;
+		if (!user) {
+			return;
+		}
 
-			// * Unsure why just checking the action type doesn't narrow the type here, probably too much type inference going on?
-			const user = (auditLogEntry as unknown as GuildAuditLogsEntry<AuditLogEvent.MemberUpdate>).target;
-			if (!user) {
-				return;
-			}
+		const executor = auditLogEntry.executor;
+		if (!executor) {
+			return;
+		}
 
-			const executor = auditLogEntry.executor;
-			if (!executor) {
-				return;
-			}
-
-			// * This checks that a user was timed out
-			const timeoutChange = auditLogEntry.changes.find(change => change.key === 'communication_disabled_until');
-			if (timeoutChange) {
-				// * The types here should always be correct, but I have no idea how to convince the discord.js types of that...
-				if (timeoutChange.new && timeoutChange.new && typeof timeoutChange.new === 'string') {
-					const timeout = new Date(timeoutChange.new);
-					await handleMemberTimedOut(guild, user, executor, auditLogEntry.reason, timeout);
-				}
-			}
-
-			// * This checks that a user has changed their name
-			const nickChange = auditLogEntry.changes.find(change => change.key === 'nick');
+		// * This checks that a user was timed out
+		const timeoutChange = auditLogEntry.changes.find(change => change.key === 'communication_disabled_until');
+		if (timeoutChange) {
 			// * The types here should always be correct, but I have no idea how to convince the discord.js types of that...
-			if (nickChange && typeof nickChange.new === 'string' && (nickChange.old === undefined || typeof nickChange.old === 'string')) {
-				await handleMemberNicknameChange(guild, user, nickChange.old, nickChange.new);
+			if (timeoutChange.new && timeoutChange.new && typeof timeoutChange.new === 'string') {
+				const timeout = new Date(timeoutChange.new);
+				await handleMemberTimedOut(guild, user, executor, auditLogEntry.reason, timeout);
 			}
+		}
 
-			break;
+		// * This checks that a user has changed their name
+		const nickChange = auditLogEntry.changes.find(change => change.key === 'nick');
+		const z = nickChange?.;
+		// * The types here should always be correct, but I have no idea how to convince the discord.js types of that...
+		if (nickChange && typeof nickChange.new === 'string' && (nickChange.old === undefined || typeof nickChange.old === 'string')) {
+			await handleMemberNicknameChange(guild, user, nickChange.old, nickChange.new);
 		}
-		case AuditLogEvent.MemberKick: {
-			await handleMemberKick(auditLogEntry, guild);
-			break;
-		}
-		case AuditLogEvent.MemberBanAdd: {
-			await handleMemberBanAdd(auditLogEntry, guild);
-			break;
-		}
+	} else if (logIsForEvent(auditLogEntry, AuditLogEvent.MemberKick)) {
+		await handleMemberKick(auditLogEntry, guild);
+	} else if (logIsForEvent(auditLogEntry, AuditLogEvent.MemberBanAdd)) {
+		await handleMemberBanAdd(auditLogEntry, guild);
 	}
 }
 
@@ -125,9 +116,8 @@ async function handleMemberNicknameChange(guild: Guild, user: User, oldName?: st
 	await sendEventLogMessage(guild, null, embed);
 }
 
-async function handleMemberKick(auditLogEntry: GuildAuditLogsEntry, guild: Guild): Promise<void> {
-	// * Unsure why just checking the action type doesn't narrow the type here, probably too much type inference going on?
-	const user = (auditLogEntry as unknown as GuildAuditLogsEntry<AuditLogEvent.MemberKick>).target;
+async function handleMemberKick(auditLogEntry: GuildAuditLogsEntry<AuditLogEvent.MemberKick>, guild: Guild): Promise<void> {
+	const user = auditLogEntry.target;
 	if (!user) {
 		return;
 	}
@@ -174,9 +164,8 @@ async function handleMemberKick(auditLogEntry: GuildAuditLogsEntry, guild: Guild
 	await sendEventLogMessage(guild, null, embed);
 }
 
-async function handleMemberBanAdd(auditLogEntry: GuildAuditLogsEntry, guild: Guild): Promise<void> {
-	// * Unsure why just checking the action type doesn't narrow the type here, probably too much type inference going on?
-	const user = (auditLogEntry as unknown as GuildAuditLogsEntry<AuditLogEvent.MemberBanAdd>).target;
+async function handleMemberBanAdd(auditLogEntry: GuildAuditLogsEntry<AuditLogEvent.MemberBanAdd>, guild: Guild): Promise<void> {
+	const user = auditLogEntry.target;
 	if (!user) {
 		return;
 	}
@@ -221,4 +210,8 @@ async function handleMemberBanAdd(auditLogEntry: GuildAuditLogsEntry, guild: Gui
 	});
 
 	await sendEventLogMessage(guild, null, embed);
+}
+
+function logIsForEvent<EventType extends AuditLogEvent>(log: GuildAuditLogsEntry, eventType: EventType): log is GuildAuditLogsEntry<EventType> {
+	return log.action === eventType;
 }
