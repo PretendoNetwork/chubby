@@ -1,192 +1,394 @@
-import path from 'node:path';
 import got from 'got';
-import { node as tensorflow } from '@tensorflow/tfjs-node';
-import { load as loadModel } from 'nsfwjs';
+import sharp from 'sharp';
+import phash from 'sharp-phash';
+import * as tf from '@tensorflow/tfjs-node';
+import * as nsfw from 'nsfwjs';
 import decodeGif from 'decode-gif';
-import jpeg from 'jpeg-js';
-import { AttachmentBuilder, ChannelType, EmbedBuilder, TextChannel } from 'discord.js';
+import sequelize from 'sequelize';
+import { ActionRowBuilder, AttachmentBuilder, ButtonStyle, ChannelType, EmbedBuilder, TextChannel } from 'discord.js';
 import { getDB } from '@/db';
-import config from '@/config.json';
+import { NsfwWarning } from '@/models/nsfwWarnings';
+import { notifyUser } from '@/notifications';
+import { getChannelFromSettings } from '@/util';
+import { NsfwExemption } from '@/models/nsfwExemptions';
+import { ButtonBuilder } from 'discord.js';
+import type { ButtonInteraction } from 'discord.js';
 import type { Tensor3D } from '@tensorflow/tfjs-node';
 import type { Message } from 'discord.js';
 import type { NSFWJS, predictionType } from 'nsfwjs';
 
 let model: NSFWJS;
 const GIF_MAGIC = Buffer.from([0x47, 0x49, 0x46, 0x38]);
+const NSFW_CLASSIFICATIONS = ['Porn', 'Hentai', 'Sexy'];
+
+export const ADD_NSFW_EXEMPTION = 'add-nsfw-exemption';
+export const REMOVE_NSFW_EXEMPTION = 'remove-nsfw-exemption';
+
+export async function loadModel(): Promise<void> {
+	if (!model) {
+		tf.enableProdMode();
+		model = await nsfw.load('InceptionV3');
+	}
+}
 
 export async function checkNSFW(message: Message, urls: string[]): Promise<void> {
-	if (message.channel instanceof TextChannel && message.channel.nsfw) {
+	const nsfwDetectionEnabled = getDB().get('nsfw.enabled') === 'true';
+
+	if (!nsfwDetectionEnabled || (message.channel instanceof TextChannel && message.channel.nsfw)) {
 		return; // * Do not check if the channel is NSFW
 	}
 
-	if (!model) {
-		const quantized = config.quantized_nsfw_model ? 'quantized' : 'normal';
-		const modelPath = path.join(path.resolve(config.nsfw_model_path), quantized);
-		const modelUri = `file://${modelPath}/`;
-		
-		// * We have to set the options to `any` here because although `type` is a valid option
-		// * it's not included in the types, this is also an inline type so we can't enhance it
-		model = await loadModel(modelUri, { type: 'graph' } as any);
-	}
+	let exemptionDistance: number = 0;
+	try {
+		exemptionDistance = parseInt(getDB().get('nsfw.exemption.distance') ?? '0');
+	} catch {}
 
-	const suspectedUrls: string[] = [];
-	const suspectedFiles: AttachmentBuilder[] = [];
-	let predictions: predictionType[] = [];
+	const messageClassifications = new MessageClassifications();
 
 	for (const url of urls) {
-		// Check the headers before requesting data
 		const { headers } = await got.head(url);
 		const contentType = headers['content-type'];
 
-		// Filter out non-image URLs
 		if (contentType?.search(/^image\//) === -1) {
 			continue;
 		}
 
-		// request the image data
 		const data = await got(url).buffer();
+
+		const hash = await phash(data);
+		const exemption = await NsfwExemption.findOne({
+			where: sequelize.where(sequelize.fn('phhammdist', sequelize.col('hash'), hash), { [sequelize.Op.lte]: exemptionDistance })
+		});
+
+		if (exemption) {
+			return;
+		}
 		
-		// Handle GIF frames
 		if (data.subarray(0, 4).equals(GIF_MAGIC)) {
-			// * model.classifyGif is too slow and doesn't let us break out of the classifcation loop
-			// reimplement the GIF exploding and frame classification
 			const decodedGif = decodeGif(data);
 			const { width, height, frames } = decodedGif;
 			for (const frame of frames) {
-				const frameData = Buffer.from(frame.data);
-				const rawImageData = {
-					data: frameData,
-					width: width,
-					height: height,
-				};
+				const rawImage = await sharp(frame.data, { raw: { width, height, channels: 4 } })
+					.removeAlpha()
+					.median() // * Applying a median filter to remove high frequency artifacts from gif's color-map encoding. This seems to massively improve the classification
+					.toBuffer();
+				const image = tf.tensor3d(rawImage, [height, width, 3]);
+				const classification = await messageClassifications.classify(image, url, data);
+				image.dispose(); // * Do not let this image float around memory
 
-				// * decodeGif returns frames as RGB data
-				// * need to convert each frame to an image that TensorFlow can understand
-				const jpegImageData = jpeg.encode(rawImageData);
-				const image = tensorflow.decodeImage(jpegImageData.data, 3) as Tensor3D;
-				const framePredictions = await model.classify(image);
-				image.dispose(); // do not let this image float around memory
-				const frameClassification = framePredictions.sort((a, b) => b.probability - a.probability)[0];
-
-				// if low confidence then do nothing
-				if (frameClassification.probability < 0.8) {
-					continue;
-				}
-
-				// * aggressive NSFW check
-				// * flag the GIF if ANY NSFW frame is found
-				if (frameClassification.className === 'Porn' || frameClassification.className === 'Hentai' || frameClassification.className === 'Sexy') {
-					predictions = framePredictions;
-					suspectedUrls.push(url); // * if suspected as NSFW then track the url
-					const attachment = new AttachmentBuilder(data)
-						.setName('SPOILER_FILE.jpg');
-					suspectedFiles.push(attachment); // * if suspected as NSFW then track the GIF
-					break; // * end the loop if ANY NSFW frame is found
+				if (classification.top.severity === ClassificationSeverity.High) {
+					break;
 				}
 			}
 		} else {
-			// * handle normal images
-			const image = tensorflow.decodeImage(data, 3) as Tensor3D;
-			predictions = await model.classify(image);
-			image.dispose(); // do not let this image float around memory
-
-			// find the highest prediction
-			const classification = predictions.sort((a, b) => b.probability - a.probability)[0];
-
-			// if low confidence then do nothing
-			if (classification.probability < 0.8) {
-				continue;
-			}
-
-			// check if the prediction is black listed
-			if (classification.className === 'Porn' || classification.className === 'Hentai' || classification.className === 'Sexy') {
-				suspectedUrls.push(url); // if suspected as NSFW then track the url
-				const attachment = new AttachmentBuilder(data)
-					.setName('SOILER_FILE.jpg');
-				suspectedFiles.push(attachment); // if suspected as NSFW then track the image
-			}
+			const rawImage = sharp(data);
+			const metadata = await rawImage.metadata();
+			const imageData = await rawImage.raw().removeAlpha().toBuffer();
+			const image = tf.tensor3d(imageData, [metadata.height ?? 0, metadata.width ?? 0, 3]);
+			await messageClassifications.classify(image, url, data);
+			image.dispose(); // * Do not let this image float around memory
 		}
-	}
 
-	// if ANY suspected URLs, punish
-	if (suspectedUrls.length > 0) {
-		punishUserNSFW(message, suspectedUrls, suspectedFiles, predictions);
+		const nsfwImages = messageClassifications.getNsfwImages();
+		if (nsfwImages.length === 0) {
+			return;
+		}
+
+		const topClassifiedImage = messageClassifications.getTopClassifiedImage();
+		await NsfwWarning.create({ user_id: message.author.id, probability: topClassifiedImage.top.probability });
+		await logNsfwAction(message, messageClassifications, hash);
+
+		if (topClassifiedImage.top.severity === ClassificationSeverity.High) {
+			await message.delete();
+
+			const replyContent = `Hello <@${message.author.id}>, I've deleted your message in ${message.channel.url} as I detected that it contained NSFW content. Do not try and post the image again as it will be flagged again!\n\nIf you feel that this has happened in error, please speak to a moderator.`;
+
+			const embed = new EmbedBuilder()
+				.addFields([
+					{
+						name: 'Suspected urls',
+						value: messageClassifications
+							.getNsfwImages()
+							.map(image => image.url)
+							.join('\n')
+					}
+				]);
+
+			const reply = {
+				content: replyContent,
+				embeds: [embed]
+			};
+
+			await notifyUser(message.guild!, message.author, reply);
+		}
 	}
 }
 
-async function punishUserNSFW(message: Message, suspectedUrls: string[], suspectedFiles: AttachmentBuilder[], predictions: predictionType[]): Promise<void> {
-	await message.delete(); // remove message
-
-	const mutedRoleId = getDB().get('roles.muted');
-	const nsfwPunishedRoleId = getDB().get('roles.nsfw-punished');
-	const mutedRole = mutedRoleId && await message.guild!.roles.fetch(mutedRoleId);
-	const nsfwPunishedRole = nsfwPunishedRoleId && await message.guild!.roles.fetch(nsfwPunishedRoleId);
-
-	if (!mutedRole) {
-		console.log('Missing muted role!');
-	} else {
-		message.member!.roles.add(mutedRole);
-	}
-
-	if (!nsfwPunishedRole) {
-		console.log('Missing NSFW punished role!');
-	} else {
-		message.member!.roles.add(nsfwPunishedRole);
-	}
-
-	// log the punishment to the log channel
-	const nsfwLogChannelId = getDB().get('channels.nsfw-logs')!;
-	const nsfwLogChannel = await message.guild!.channels.fetch(nsfwLogChannelId);
-	
+async function logNsfwAction(message: Message, messageClassifications: MessageClassifications, hash: string): Promise<void> {
+	const nsfwLogChannel = await getChannelFromSettings(message.guild!, 'channels.nsfw-logs');
 	if (!nsfwLogChannel || nsfwLogChannel.type !== ChannelType.GuildText) {
-		console.log('Missing NSFW log channel!');
-	} else {
-		const embed = new EmbedBuilder();
-		embed.setTitle(`Suspected NSFW Material sent by ${message.author.tag}`);
-		embed.setColor(0xffa500);
-		embed.addFields([
-			{
-				name: 'Suspected URLs',
-				value: suspectedUrls.join('\n')
-			},
+		console.log('NSFW Event Log channel is not configured');
+		return;
+	}
+
+	const embeds = await createLogEmbeds(message, messageClassifications, hash);
+	
+	const addExemptionButton = new ButtonBuilder()
+		.setCustomId(ADD_NSFW_EXEMPTION)
+		.setStyle(ButtonStyle.Secondary)
+		.setLabel('Add to exemptions');
+
+	const removeExemptionButton = new ButtonBuilder()
+		.setCustomId(REMOVE_NSFW_EXEMPTION)
+		.setStyle(ButtonStyle.Secondary)
+		.setLabel('Remove from exemptions');
+
+	const actionRow = new ActionRowBuilder<ButtonBuilder>()
+		.addComponents(addExemptionButton, removeExemptionButton);
+
+	const files = messageClassifications.getNsfwImages().map(classification => {
+		return new AttachmentBuilder(classification.data)
+			.setName('SPOILER_IMAGE.jpg')
+			.setDescription(`Image top classification is ${classification.top.className} (${(classification.top.probability * 100).toFixed(2)}%)`);
+	});
+
+	nsfwLogChannel.send({ embeds, files, components: [actionRow] }).catch(err => {
+		nsfwLogChannel.send({ content: '`Unable to attach image`', embeds });
+		console.log(err);
+	});
+}
+
+async function createLogEmbeds(message: Message, messageClassifications: MessageClassifications, hash: string): Promise<EmbedBuilder[]> {
+	const topClassifiedImage = messageClassifications.getTopClassifiedImage();
+
+	const numberOfNsfwFlags = await NsfwWarning.count({
+		where: {
+			user_id: message.author.id,
+			created: {
+				[sequelize.Op.gt]: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000)
+			}
+		}
+	});
+	
+	let color = 0xFFA500;
+
+	const embed = new EmbedBuilder()
+		.addFields([
 			{
 				name: 'Message author',
 				value: `<@${message.author.id}>`
-			},
-			{
-				name: 'Sent on',
-				value: new Date().toISOString()
-			},
-			{
-				name: predictions[0].className,
-				value: predictions[0].probability.toString(),
-				inline: true
-			},
-			{
-				name: predictions[1].className,
-				value: predictions[1].probability.toString(),
-				inline: true
-			},
-			{
-				name: predictions[2].className,
-				value: predictions[2].probability.toString(),
-				inline: true
-			},
-			{
-				name: predictions[3].className,
-				value: predictions[3].probability.toString(),
-				inline: true
-			},
-			{
-				name: predictions[4].className,
-				value: predictions[4].probability.toString(),
-				inline: true
 			}
 		]);
 
-		nsfwLogChannel.send({ embeds: [embed], files: suspectedFiles }).catch(err => {
-			nsfwLogChannel.send({ content: '`Unable to attach image`', embeds: [embed] });
-			console.log(err);
-		});
+	if (message.content.length > 0) {
+		embed.addFields([
+			{
+				name: 'Message contents',
+				value: message.content
+			}
+		]);
 	}
+
+	if (topClassifiedImage.top.severity === ClassificationSeverity.High) {
+		color = 0xF24E43;
+	} else {
+		embed.addFields([
+			{
+				name: 'Message link',
+				value: message.url
+			}
+		]);
+	}
+
+	embed
+		.setColor(color)
+		.addFields([
+			{
+				name: 'Suspected URLs',
+				value: messageClassifications
+					.getNsfwImages()
+					.map(classification => classification.url)
+					.join('\n')
+			},
+			{
+				name: 'Sent on',
+				value: `<t:${Math.trunc(new Date().getTime() / 1000)}>`
+			},
+			{
+				name: 'Number of NSFW flags for this user (last 30 days)',
+				value: numberOfNsfwFlags.toString()
+			},
+			{
+				name: 'Thresholds (High / Low)',
+				value: `${messageClassifications.settings.highThreshold * 100}% / ${messageClassifications.settings.lowThreshold * 100}%`,
+			},
+			...topClassifiedImage.classifications.map(classification => {
+				return {
+					name: classification.className,
+					value: colorMessage(`${(classification.probability * 100).toFixed(2)}%`, classification.severity),
+					inline: true
+				};
+			}),
+			{
+				name: 'Hash',
+				value: `\`${binToHex(hash)}\``
+			}
+		]);
+
+	return [embed];
+}
+
+export async function handleAddNsfwExemption(interaction: ButtonInteraction): Promise<void> {
+	await interaction.deferReply();
+	let hash = interaction.message.embeds[0].fields
+		.find(field => field.name === 'Hash')!
+		.value;
+	hash = hexToBin(hash.substring(1, hash.length -1));
+	await NsfwExemption.create({ user_id: interaction.user.id, hash });
+	await interaction.editReply({ content: `Image added to NSFW exemptions by ${interaction.user.id}` });
+}
+
+export async function handleRemoveNsfwExemption(interaction: ButtonInteraction): Promise<void> {
+	await interaction.deferReply();
+	let hash = interaction.message.embeds[0].fields
+		.find(field => field.name === 'Hash')!
+		.value;
+	hash = hexToBin(hash.substring(1, hash.length -1));
+
+	const exemption = await NsfwExemption.findOne({ where: { hash } });
+	if (exemption) {
+		await exemption.destroy();
+		await interaction.editReply({ content: `Image removed from NSFW exemptions by ${interaction.user.id}` });
+	} else {
+		await interaction.editReply({ content: 'Image did not exist in NSFW exemptions' });
+	}
+}
+
+function colorMessage(message: string, type: ClassificationSeverity | null): string {
+	let color: string = '';
+	switch (type) {
+		case ClassificationSeverity.High:
+			color = '31';
+			break;
+		case ClassificationSeverity.Low:
+			color = '33';
+			break;
+	}
+
+	let prefix = '';
+	if (color !== '') {
+		prefix = `\u001b[0;${color}m`;
+	}
+
+	return `\`\`\`ansi\n${prefix}${message}\`\`\``;
+}
+
+function binToHex(string: string): string {
+	const chunks = string.match(/.{8}/g)?.map(chunk => parseInt(chunk, 2)) ?? [];
+	return Buffer.from(chunks).toString('hex');
+}
+
+function hexToBin(string: string): string {
+	return [...Buffer.from(string, 'hex')].map((b) => b.toString(2).padStart(8, '0')).join('');
+}
+
+class ClassifiedImage {
+	readonly settings: ClassificationSettings;
+	readonly url: string;
+	readonly data: Buffer;
+	readonly classifications: ClassificationData[];
+	readonly top: ClassificationData;
+
+	constructor(settings: ClassificationSettings, url: string, data: Buffer, classifications: predictionType[]) {
+		this.settings = settings;
+		this.url = url;
+		this.data = data;
+		this.classifications = classifications.map(classification => {
+			let severity = ClassificationSeverity.None;
+			if (NSFW_CLASSIFICATIONS.includes(classification.className)) {
+				if (classification.probability >= this.settings.highThreshold) {
+					severity = ClassificationSeverity.High;
+				} else if (classification.probability >= this.settings.lowThreshold) {
+					severity = ClassificationSeverity.Low;
+				}
+			}
+			return {
+				className: classification.className,
+				probability: classification.probability,
+				severity
+			};
+		});
+
+		this.top = this.classifications.sort((a, b) => b.probability - a.probability)[0];
+	}
+
+	compare(other: ClassifiedImage): number {
+		if (this.top.severity === other.top.severity) {
+			return this.top.probability - other.top.probability;
+		}
+		return this.top.severity - other.top.severity;
+	}
+}
+
+class MessageClassifications {
+
+	private images: ClassifiedImage[] = [];
+	readonly settings: ClassificationSettings;
+
+	constructor() {
+		// * We fetch the settings each time so that if they're changed they'll be updated
+		let highThreshold = 1;
+		try {
+			highThreshold = parseFloat(getDB().get('nsfw.threshold.high') ?? '1');
+		} catch {}
+
+		let lowThreshold = 0.7;
+		try {
+			lowThreshold = parseFloat(getDB().get('nsfw.threshold.low') ?? '0.7');
+		} catch {}
+
+		this.settings = {
+			highThreshold, lowThreshold
+		};
+	}
+
+	async classify(tensor: Tensor3D, url: string, data: Buffer): Promise<ClassifiedImage> {
+		const classifications = await model.classify(tensor);
+		const classifiedImage = new ClassifiedImage(this.settings, url, data, classifications);
+
+		const existingIndex = this.images.findIndex(image => image.url === url);
+		if (existingIndex >= 0) {
+			const existingImage = this.images[existingIndex];
+			if (classifiedImage.compare(existingImage) > 0) {
+				this.images[existingIndex] = classifiedImage;
+			}
+		} else {
+			this.images.push(classifiedImage);
+		}
+
+		return classifiedImage;
+	}
+
+	getNsfwImages(): ClassifiedImage[] {
+		return this.images.filter(image => image.top.severity > ClassificationSeverity.None);
+	}
+
+	getTopClassifiedImage(): ClassifiedImage {
+		return this.images.sort((a, b) => a.compare(b))[0];
+	}
+}
+
+interface ClassificationSettings {
+	highThreshold: number;
+	lowThreshold: number;
+}
+
+enum ClassificationSeverity {
+	None,
+	Low,
+	High
+}
+
+interface ClassificationData extends predictionType {
+	severity: ClassificationSeverity;
 }

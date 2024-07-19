@@ -17,7 +17,10 @@ export default async function messageDeleteHandler(message: Message | PartialMes
 	const member = await message.member.fetch();
 	const user = member.user;
 
-	const messageContent = message.content.length > 1024 ? message.content.substring(0, 1023) + '…' : message.content;
+	let messageContent = message.content.length > 1024 ? message.content.substring(0, 1023) + '…' : message.content;
+	if (messageContent === '') {
+		messageContent = '\u200b';
+	}
 
 	let channelName = 'No channel name found';
 	if (message.channel instanceof BaseGuildTextChannel) {

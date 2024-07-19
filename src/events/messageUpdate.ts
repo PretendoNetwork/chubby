@@ -10,7 +10,6 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 	}
 
 	if (newMessage.author.bot) {
-		console.log('author is a bot?!');
 		return;
 	}
 

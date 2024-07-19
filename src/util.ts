@@ -1,6 +1,6 @@
 import { getDB, getDBList } from '@/db';
 import { ChannelType } from 'discord.js';
-import type { EmbedBuilder, Guild } from 'discord.js';
+import type { Channel, EmbedBuilder, Guild } from 'discord.js';
 
 const ordinalRules = new Intl.PluralRules('en', {
 	type: 'ordinal'
@@ -25,18 +25,27 @@ export async function sendEventLogMessage(guild: Guild, originId: string | null,
 		return;
 	}
 
-	const logChannelId = getDB().get('channels.event-logs');
-	if (!logChannelId) {
-		console.log('Missing log channel!');
-		return;
-	}
-
-	const logChannel = await guild.channels.fetch(logChannelId);
-	
+	const logChannel = await getChannelFromSettings(guild, 'channels.event-logs');
 	if (!logChannel || logChannel.type !== ChannelType.GuildText) {
 		console.log('Missing log channel!');
 		return;
 	}
 
 	await logChannel.send({ embeds: [embed] });
+}
+
+export async function getChannelFromSettings(guild: Guild, channelName: string): Promise<Channel | null> {
+	const channelId = getDB().get(channelName);
+	if (!channelId) {
+		console.log(`No channel id set for ${channelName}`);
+		return null;
+	}
+
+	const channel = await guild.channels.fetch(channelId);
+	if (!channel) {
+		console.log(`Channel id ${channelId} does not exist in guild ${guild.id}`);
+		return null;
+	}
+
+	return channel;
 }
