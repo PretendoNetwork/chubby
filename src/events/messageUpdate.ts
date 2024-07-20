@@ -1,4 +1,4 @@
-import { EmbedBuilder } from 'discord.js';
+import { BaseGuildTextChannel, EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
 import type { Message, PartialMessage } from 'discord.js';
 
@@ -21,7 +21,11 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 
 		const oldMessageContent = oldMessage.content.length > 1024 ? oldMessage.content.substring(0, 1023) + '…' : oldMessage.content;
 		const newMessageContent = newMessage.content.length > 1024 ? newMessage.content.substring(0, 1023) + '…' : newMessage.content;
-		const channel = newMessage.channel;
+
+		let channelName = 'No channel name found';
+		if (newMessage.channel instanceof BaseGuildTextChannel) {
+			channelName = newMessage.channel.name;
+		}
 	
 		const eventLogEmbed = new EmbedBuilder();
 
@@ -43,7 +47,7 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 			},
 			{
 				name: 'Channel Name',
-				value: (channel as any).name // TODO some better way of doing this?
+				value: channelName
 			},
 			{
 				name: 'Old Message',
