@@ -16,11 +16,10 @@ export default async function guildMemberRemoveHandler(member: GuildMember | Par
 		limit: 10
 	});
 
-	const auditLog = auditLogs.entries.find(log => {
-		return (log.action === AuditLogEvent.MemberBanAdd || log.action === AuditLogEvent.MemberKick) &&
-		log.targetId === member.id &&
-		Date.now() - log.createdTimestamp < 2000;
-	});
+	const auditLog = auditLogs.entries
+		.filter(log => log.action === AuditLogEvent.MemberBanAdd || log.action === AuditLogEvent.MemberKick)
+		.filter(log => Date.now() - log.createdTimestamp < 2000)
+		.find(log => log.targetId === member.id);
 
 	if (auditLog) {
 		// * If we found this audit log, it means that there's already going to be a

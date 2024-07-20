@@ -1,6 +1,6 @@
 import { AuditLogEvent, EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
-import type { Guild, User, GuildAuditLogsEntry, APIAuditLogChange } from 'discord.js';
+import type { Guild, User, GuildAuditLogsEntry } from 'discord.js';
 
 export default async function guildAuditLogEntryCreateHandler(auditLogEntry: GuildAuditLogsEntry, guild: Guild): Promise<void> {
 	if (logIsForEvent(auditLogEntry, AuditLogEvent.MemberUpdate)) {
@@ -18,7 +18,7 @@ export default async function guildAuditLogEntryCreateHandler(auditLogEntry: Gui
 		const timeoutChange = auditLogEntry.changes.find(change => change.key === 'communication_disabled_until');
 		if (timeoutChange) {
 			// * The types here should always be correct, but I have no idea how to convince the discord.js types of that...
-			if (timeoutChange.new && timeoutChange.new && typeof timeoutChange.new === 'string') {
+			if (timeoutChange.new && typeof timeoutChange.new === 'string') {
 				const timeout = new Date(timeoutChange.new);
 				await handleMemberTimedOut(guild, user, executor, auditLogEntry.reason, timeout);
 			}
@@ -26,9 +26,8 @@ export default async function guildAuditLogEntryCreateHandler(auditLogEntry: Gui
 
 		// * This checks that a user has changed their name
 		const nickChange = auditLogEntry.changes.find(change => change.key === 'nick');
-		const z = nickChange?.;
 		// * The types here should always be correct, but I have no idea how to convince the discord.js types of that...
-		if (nickChange && typeof nickChange.new === 'string' && (nickChange.old === undefined || typeof nickChange.old === 'string')) {
+		if (nickChange && isStringOrUndefined(nickChange.old) && isStringOrUndefined(nickChange.new)) {
 			await handleMemberNicknameChange(guild, user, nickChange.old, nickChange.new);
 		}
 	} else if (logIsForEvent(auditLogEntry, AuditLogEvent.MemberKick)) {
@@ -214,4 +213,8 @@ async function handleMemberBanAdd(auditLogEntry: GuildAuditLogsEntry<AuditLogEve
 
 function logIsForEvent<EventType extends AuditLogEvent>(log: GuildAuditLogsEntry, eventType: EventType): log is GuildAuditLogsEntry<EventType> {
 	return log.action === eventType;
+}
+
+function isStringOrUndefined(input: any): input is string | undefined {
+	return input === undefined || typeof input === 'string';
 }
