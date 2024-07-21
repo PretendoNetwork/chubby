@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"resolveJsonModule": true,
+		"sourceMap": true,
+		"module": "commonjs",
+		"esModuleInterop": true,
+		"moduleResolution": "node",
+		"baseUrl": "src",
+		"outDir": "dist",
+		"allowJs": true,
+		"target": "es2022",
+		"noEmitOnError": true,
+		"paths": {
+			"@/*": ["./*"]
+		},
+		"skipLibCheck": true
+	},
+	"include": ["src"]
+}

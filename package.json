@@ -2,22 +2,22 @@
   "name": "chubby",
   "version": "1.0.0",
   "description": "",
-  "main": "src/bot.js",
+  "main": "./dist/bot.js",
   "scripts": {
-    "lint": "./node_modules/.bin/eslint .",
     "start": "node .",
-    "start:dev": "NODE_ENV=development node ."
+    "start:dev": "NODE_ENV=development node .",
+    "lint": "npx eslint .",
+    "build": "npm run lint && npm run clean && npx tsc && npx tsc-alias",
+    "clean": "npx rimraf ./dist"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/builders": "^0.13.0",
-    "@discordjs/rest": "^0.4.1",
     "@tensorflow/tfjs-node": "^3.6.1",
     "decode-gif": "^1.0.1",
     "discord-api-types": "^0.31.2",
-    "discord.js": "^13.6.0",
+    "discord.js": "^14.15.3",
     "got": "^11.8.2",
     "jpeg-js": "^0.3.7",
     "node-schedule": "^2.1.1",
@@ -27,7 +27,15 @@
     "sqlite3": "^5.0.8"
   },
   "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/node": "^18.19.39",
+    "@types/node-schedule": "^2.1.7",
+    "@types/sequelize": "^4.28.20",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.59.11",
     "eslint": "^7.18.0",
-    "eslint-plugin-jsdoc": "^39.2.9"
+    "eslint-plugin-jsdoc": "^39.2.9",
+    "tsc-alias": "1.8.7",
+    "typescript": "^5.1.6"
   }
 }

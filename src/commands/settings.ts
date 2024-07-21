@@ -1,6 +1,6 @@
-const Discord = require('discord.js');
-const db = require('../db');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { getDB } from '@/db';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
 const editableOptions = [
 	'roles.muted',
@@ -13,25 +13,21 @@ const editableOptions = [
 	'matchmaking.lock-timeout-seconds',
 ];
 
-async function verifyInputtedKey(interaction) {
-	const key = interaction.options.getString('key');
+function verifyInputtedKey(interaction: ChatInputCommandInteraction): string {
+	const key = interaction.options.getString('key', true);
 	if (!editableOptions.includes(key)) {
 		throw new Error('Cannot edit this setting - not a valid setting');
 	}
+	return key;
 }
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function settingsHandler(interaction) {
-	const key = interaction.options.getString('key');
+async function settingsHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	if (interaction.options.getSubcommand() === 'get') {
-		await verifyInputtedKey(interaction);
+		const key = verifyInputtedKey(interaction);
 		// this is hellish string concatenation, I know
 		await interaction.reply({
 			content:
-				'```\n' + key + '=' + '\'' + `${db.getDB().get(key)}` + '\'' + '\n```',
+				'```\n' + key + '=' + '\'' + `${getDB().get(key)}` + '\'' + '\n```',
 			ephemeral: true,
 			allowedMentions: {
 				parse: [], // dont allow tagging anything
@@ -41,8 +37,8 @@ async function settingsHandler(interaction) {
 	}
 
 	if (interaction.options.getSubcommand() === 'set') {
-		await verifyInputtedKey(interaction);
-		db.getDB().set(key, interaction.options.getString('value'));
+		const key = verifyInputtedKey(interaction);
+		getDB().set(key, interaction.options.getString('value')!);
 		await interaction.reply({
 			content: `setting \`${key}\` has been saved successfully`,
 			ephemeral: true,
@@ -71,7 +67,7 @@ async function settingsHandler(interaction) {
 
 const command = new SlashCommandBuilder();
 
-command.setDefaultPermission(false);
+command.setDefaultMemberPermissions('0');
 command.setName('settings');
 command.setDescription('Setup the bot');
 command.addSubcommand((cmd) => {
@@ -108,7 +104,7 @@ command.addSubcommand((cmd) => {
 	return cmd;
 });
 
-module.exports = {
+export default {
 	name: command.name,
 	help: 'Change settings of the bot',
 	handler: settingsHandler,

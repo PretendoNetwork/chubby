@@ -1,40 +1,36 @@
-const Discord = require('discord.js');
+import { MatchmakingThread } from '@/models/matchmakingThreads';
+import { sendEventLogMessage } from '@/util';
+import { getDB } from './db';
+import { ChannelType, EmbedBuilder } from 'discord.js';
+import type { Client } from 'discord.js';
 
-const db = require('./db');
-const util = require('./util');
-const MatchmakingThreads = require('./models/matchmakingThreads');
-
-/**
- *
- * @param {Discord.Client} client
- */
-async function checkMatchmakingThreads(client) {
-	let matchmakingLockTimeout = parseInt(db.getDB().get('matchmaking.lock-timeout-seconds'));
+export async function checkMatchmakingThreads(client: Client): Promise<void> {
+	let matchmakingLockTimeout = parseInt(getDB().get('matchmaking.lock-timeout-seconds') ?? '0');
 	if (!matchmakingLockTimeout) {
 		console.log('Missing matchmaking lock timeout! Defaulting to 1 hour.');
 		matchmakingLockTimeout = 60 * 60;
 	}
 
 	const now = Date.now();
-	const matchmakingThreads = await MatchmakingThreads.findAll();
+	const matchmakingThreads = await MatchmakingThread.findAll();
 
 	for (const thread of matchmakingThreads) {
 		let threadChannel;
 		try {
-			threadChannel = await client.channels.fetch(thread.id);
+			threadChannel = await client.channels.fetch(thread.thread_id);
 		} catch (err) {
 			console.log(`Error fetching matchmaking thread channel: ${err}`);
 			threadChannel = null;
 		}
 
-		if (!threadChannel || threadChannel.type !== 'GUILD_PUBLIC_THREAD') {
+		if (!threadChannel || threadChannel.type !== ChannelType.PublicThread) {
 			// Thread is either deleted or not a public thread, which should not happen
-			console.log(`Removing deleted or invalid matchmaking thread from database: ${thread.id}`);
-			await MatchmakingThreads.destroy({ where: { id: thread.id } });
+			console.log(`Removing deleted or invalid matchmaking thread from database: ${thread.thread_id}`);
+			await MatchmakingThread.destroy({ where: { thread_id: thread.thread_id } });
 			continue;
 		}
 
-		const lastMessageSent = new Date(thread.lastMessageSent).getTime();
+		const lastMessageSent = new Date(thread.last_message_sent).getTime();
 		const timeSinceLastMessage = now - lastMessageSent;
 
 		if (timeSinceLastMessage > matchmakingLockTimeout * 1000) {
@@ -42,7 +38,7 @@ async function checkMatchmakingThreads(client) {
 
 			if (!threadChannel.archived && !threadChannel.locked) {
 				// Only send an inactivity message if the thread has not already been closed/locked by moderators
-				const inactivityEmbed = new Discord.MessageEmbed();
+				const inactivityEmbed = new EmbedBuilder();
 				inactivityEmbed.setColor(0x6060ff);
 				inactivityEmbed.setTitle('Matchmaking Thread Locked');
 				inactivityEmbed.setDescription(
@@ -50,56 +46,54 @@ async function checkMatchmakingThreads(client) {
 				);
 				inactivityEmbed.setFooter({
 					text: 'Thanks for using Pretendo!',
-					iconURL: guild.iconURL(),
+					iconURL: guild.iconURL()!
 				});
 				await threadChannel.send({
 					content: `Hi <@${threadChannel.ownerId}>!`,
-					embeds: [inactivityEmbed],
+					embeds: [inactivityEmbed]
 				});
 			}
 
 			// Leave the thread unarchived so that the user can see the bot message
 			await threadChannel.setArchived(false);
 			await threadChannel.setLocked(true, 'Automatic lock of inactive matchmaking thread.');
-			await MatchmakingThreads.destroy({ where: { id: thread.id } });
+			await MatchmakingThread.destroy({ where: { thread_id: thread.thread_id } });
 
-			const eventLogEmbed = new Discord.MessageEmbed();
+			const eventLogEmbed = new EmbedBuilder();
 			eventLogEmbed.setColor(0x6060ff);
 			eventLogEmbed.setTitle('Event Type: _Matchmaking Thread Locked_');
 			eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 			eventLogEmbed.setFields(
 				{
 					name: 'Thread',
-					value: `<#${threadChannel.id}>`,
+					value: `<#${threadChannel.id}>`
 				},
 				{
 					name: 'Thread ID',
-					value: threadChannel.id,
+					value: threadChannel.id
 				},
 				{
 					name: 'Creator',
-					value: `<@${threadChannel.ownerId}>`,
+					value: `<@${threadChannel.ownerId}>`
 				},
 				{
 					name: 'Members',
-					value: threadChannel.memberCount.toString(),
+					value: threadChannel?.memberCount?.toString() ?? 'Unknown'
 				},
 				{
 					name: 'Created at',
-					value: threadChannel.createdAt.toLocaleString(),
+					value: threadChannel?.createdAt?.toLocaleString() ?? 'Unknown'
 				},
 				{
 					name: 'Archived at',
-					value: threadChannel.archivedAt.toLocaleString(),
+					value: threadChannel?.archivedAt?.toLocaleString() ?? 'Unknown'
 				}
 			);
 			eventLogEmbed.setFooter({
 				text: 'Pretendo Network',
-				iconURL: guild.iconURL(),
+				iconURL: guild.iconURL()!
 			});
-			await util.sendEventLogMessage(guild, thread.parentId, eventLogEmbed);
+			await sendEventLogMessage(guild, threadChannel.parentId, eventLogEmbed);
 		}
 	}
 }
-
-module.exports = checkMatchmakingThreads;

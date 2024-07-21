@@ -1,6 +1,8 @@
 {
 	"bot_token": "TOKEN",
+	"nsfw_model_path": "./nsfw_model",
 	"quantized_nsfw_model": false,
+	"json_db_path": "./db.json",
 	"sequelize": {
 		"force": false,
 		"alter": false
