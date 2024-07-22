@@ -1,4 +1,5 @@
 import { MatchmakingThread } from '@/models/matchmakingThreads';
+import { User } from '@/models/users';
 import { sendEventLogMessage } from '@/util';
 import { getDB } from './db';
 import { ChannelType, EmbedBuilder } from 'discord.js';
@@ -24,7 +25,7 @@ export async function checkMatchmakingThreads(client: Client): Promise<void> {
 		}
 
 		if (!threadChannel || threadChannel.type !== ChannelType.PublicThread) {
-			// Thread is either deleted or not a public thread, which should not happen
+			// * Thread is either deleted or not a public thread, which should not happen
 			console.log(`Removing deleted or invalid matchmaking thread from database: ${thread.thread_id}`);
 			await MatchmakingThread.destroy({ where: { thread_id: thread.thread_id } });
 			continue;
@@ -36,27 +37,56 @@ export async function checkMatchmakingThreads(client: Client): Promise<void> {
 		if (timeSinceLastMessage > matchmakingLockTimeout * 1000) {
 			const guild = await threadChannel.guild.fetch();
 
+			// * Only send any inactivity messages if the thread has not already been manually closed/locked by moderators
 			if (!threadChannel.archived && !threadChannel.locked) {
-				// Only send an inactivity message if the thread has not already been closed/locked by moderators
+				if (threadChannel.ownerId) {
+					const creator = await User.findOne({ where: { user_id: threadChannel.ownerId } });
+					if (!creator?.matchmaking_notification_sent) {
+						const notificationEmbed = new EmbedBuilder();
+						notificationEmbed.setColor(0x6060ff);
+						notificationEmbed.setTitle('Your matchmaking thread has been automatically closed');
+						notificationEmbed.setDescription(
+							`Hello <@${threadChannel.ownerId}>! This is just to let you know that your Pretendo matchmaking thread <#${threadChannel.id}> has been automatically closed due to inactivity.\n\n` +
+								`**This is not a moderator action or punishment.** All threads in <#${threadChannel.parentId}> are automatically closed after a period of inactivity to ensure that each thread is dedicated to a single game session.\n\n` +
+								'**If you want to play again, just create a new thread and ping the people you want to invite. Have fun!**\n\n' +
+								'*Note:* This is a **one-time notification** that is sent to all server members to after their first matchmaking thread is closed. You will not be notified when your matchmaking threads are closed in the future.'
+						);
+						notificationEmbed.setFooter({
+							text: 'Thank you for using Pretendo!',
+							iconURL: guild.iconURL()!
+						});
+						const creatorUser = await client.users.fetch(threadChannel.ownerId);
+						try {
+							//TODO - Switch this to the new DM/notification channel system
+							await creatorUser.send({
+								embeds: [notificationEmbed]
+							});
+							await User.upsert({ user_id: threadChannel.ownerId, matchmaking_notification_sent: true });
+						} catch (err) {
+							console.log('Failed to DM user');
+						}
+					}
+				}
+
 				const inactivityEmbed = new EmbedBuilder();
 				inactivityEmbed.setColor(0x6060ff);
-				inactivityEmbed.setTitle('Matchmaking Thread Locked');
+				inactivityEmbed.setTitle('Matchmaking thread closed');
 				inactivityEmbed.setDescription(
-					'This matchmaking thread has been automatically locked due to inactivity.\n\nIf you want to play again, please just create a new thread here and ping whoever you want to add!'
+					'This matchmaking thread has been automatically closed due to inactivity.\n\n' +
+						'If you want to play again, just create a new thread and ping the people you want to invite. Have fun!'
 				);
 				inactivityEmbed.setFooter({
-					text: 'Thanks for using Pretendo!',
+					text: 'Thank you for using Pretendo!',
 					iconURL: guild.iconURL()!
 				});
 				await threadChannel.send({
-					content: `Hi <@${threadChannel.ownerId}>!`,
 					embeds: [inactivityEmbed]
 				});
 			}
 
-			// Leave the thread unarchived so that the user can see the bot message
 			await threadChannel.setArchived(false);
 			await threadChannel.setLocked(true, 'Automatic lock of inactive matchmaking thread.');
+			await threadChannel.setArchived(true);
 			await MatchmakingThread.destroy({ where: { thread_id: thread.thread_id } });
 
 			const eventLogEmbed = new EmbedBuilder();
