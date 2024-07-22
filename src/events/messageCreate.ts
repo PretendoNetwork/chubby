@@ -1,7 +1,5 @@
 import { checkNSFW } from '@/check-nsfw';
-import { getDB } from '@/db';
-import { MatchmakingThread } from '@/models/matchmakingThreads';
-import { ChannelType } from 'discord.js';
+import { handleMatchmakingThreadMessage } from '@/matchmaking-threads';
 import type { Message } from 'discord.js';
 
 const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -28,18 +26,4 @@ export default async function messageCreateHandler(message: Message): Promise<vo
 	}
 
 	await handleMatchmakingThreadMessage(message);
-}
-
-async function handleMatchmakingThreadMessage(message: Message): Promise<void> {
-	const matchmakingChannelId = getDB().get('channels.matchmaking');
-	if (!matchmakingChannelId) {
-		console.log('Missing matchmaking channel!');
-		return;
-	}
-
-	if (message.channel.type !== ChannelType.PublicThread || message.channel.parentId !== matchmakingChannelId) {
-		return;
-	}
-
-	await MatchmakingThread.upsert({ thread_id: message.channelId, last_message_sent: message.createdAt });
 }

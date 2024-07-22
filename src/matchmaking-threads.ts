@@ -3,7 +3,21 @@ import { User } from '@/models/users';
 import { sendEventLogMessage } from '@/util';
 import { getDB } from './db';
 import { ChannelType, EmbedBuilder } from 'discord.js';
-import type { Client } from 'discord.js';
+import type { Client, Message } from 'discord.js';
+
+export async function handleMatchmakingThreadMessage(message: Message): Promise<void> {
+	const matchmakingChannelId = getDB().get('channels.matchmaking');
+	if (!matchmakingChannelId) {
+		console.log('Missing matchmaking channel!');
+		return;
+	}
+
+	if (message.channel.type !== ChannelType.PublicThread || message.channel.parentId !== matchmakingChannelId) {
+		return;
+	}
+
+	await MatchmakingThread.upsert({ thread_id: message.channelId, last_message_sent: message.createdAt });
+}
 
 export async function checkMatchmakingThreads(client: Client): Promise<void> {
 	let matchmakingLockTimeout = parseInt(getDB().get('matchmaking.lock-timeout-seconds') ?? '0');
