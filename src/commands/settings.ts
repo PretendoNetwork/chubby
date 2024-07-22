@@ -5,12 +5,19 @@ import type { ChatInputCommandInteraction } from 'discord.js';
 const editableOptions = [
 	'roles.muted',
 	'roles.nsfw-punished',
+	'roles.supporter',
+	'roles.trusted',
 	'channels.nsfw-punished',
 	'channels.nsfw-logs',
 	'channels.event-logs',
 	'channels.event-logs.blacklist',
 	'channels.matchmaking',
-	'matchmaking.lock-timeout-seconds'
+	'matchmaking.lock-timeout-seconds',
+	'leveling.channels-blacklist',
+	'leveling.xp-required-for-trusted',
+	'leveling.days-required-for-trusted',
+	'leveling.supporter-xp-multiplier',
+	'leveling.message-timeout-seconds'
 ];
 
 function verifyInputtedKey(interaction: ChatInputCommandInteraction): string {
