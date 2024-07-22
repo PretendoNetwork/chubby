@@ -108,15 +108,15 @@ export async function checkMatchmakingThreads(client: Client): Promise<void> {
 				},
 				{
 					name: 'Members',
-					value: threadChannel?.memberCount?.toString() ?? 'Unknown'
+					value: threadChannel.memberCount?.toString() ?? 'Unknown'
 				},
 				{
 					name: 'Created at',
-					value: threadChannel?.createdAt?.toLocaleString() ?? 'Unknown'
+					value: threadChannel.createdAt ? `<t:${Math.floor(threadChannel.createdAt.getTime() / 1000)}>` : 'Unknown'
 				},
 				{
 					name: 'Archived at',
-					value: threadChannel?.archivedAt?.toLocaleString() ?? 'Unknown'
+					value: threadChannel.archivedAt ? `<t:${Math.floor(threadChannel.archivedAt.getTime() / 1000)}>` : 'Unknown'
 				}
 			);
 			eventLogEmbed.setFooter({
