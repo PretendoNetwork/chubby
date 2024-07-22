@@ -84,6 +84,7 @@ export async function checkMatchmakingThreads(client: Client): Promise<void> {
 				});
 			}
 
+			// * Attempting to lock an archived thread will throw an error
 			await threadChannel.setArchived(false);
 			await threadChannel.setLocked(true, 'Automatic lock of inactive matchmaking thread.');
 			await threadChannel.setArchived(true);
