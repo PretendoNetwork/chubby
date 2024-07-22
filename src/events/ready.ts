@@ -23,7 +23,7 @@ export default async function readyHandler(client: Client): Promise<void> {
 		await setupGuild(guild);
 	}
 
-	scheduleJob('*/1 * * * *', async () => {
+	scheduleJob('*/30 * * * *', async () => {
 		await checkMatchmakingThreads(client);
 	});
 
