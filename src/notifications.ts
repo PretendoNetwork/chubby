@@ -51,8 +51,8 @@ async function notifyUserInChannel(guild: Guild, user: User, message: string | M
 async function createNotificationThread(channel: BaseGuildTextChannel, user: User): Promise<ThreadChannel> {
 	const threadSettings: GuildTextThreadCreateOptions<AllowedThreadTypeForTextChannel> = {
 		name: 'notifications',
-		reason: 'Your DMs are closed',
-		autoArchiveDuration: ThreadAutoArchiveDuration.OneHour,
+		reason: `Creating new notification thread for <@${user.id}>`,
+		autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
 		type: ChannelType.PrivateThread
 	};
 

@@ -17,7 +17,8 @@ NotificationThread.init({
 		primaryKey: true
 	},
 	user_id: {
-		type: DataTypes.STRING
+		type: DataTypes.STRING,
+		unique: true
 	},
 	thread_id: {
 		type: DataTypes.STRING
@@ -33,11 +34,5 @@ NotificationThread.init({
 }, {
 	sequelize,
 	tableName: 'notification-threads',
-	timestamps: false,
-	indexes: [
-		{
-			name: 'notification-threads_user_id_idx',
-			fields: ['user_id']
-		}
-	]
+	timestamps: false
 });
