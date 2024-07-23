@@ -56,40 +56,47 @@ export async function checkMatchmakingThreads(): Promise<void> {
 			if (!threadChannel.archived && !threadChannel.locked) {
 				if (threadChannel.ownerId) {
 					const creator = await User.findOne({ where: { user_id: threadChannel.ownerId } });
+
+					let description = `Hello <@${threadChannel.ownerId}>! This is just to let you know that your Pretendo matchmaking thread <#${threadChannel.id}> has been automatically closed due to inactivity.`;
+					description += '\n\n';
+					description += `**This is not a moderator action or punishment.** All threads in <#${threadChannel.parentId}> are automatically closed after a period of inactivity to ensure that each thread is dedicated to a single game session.`;
+					description += '\n\n';
+					description += '**If you want to play again, just create a new thread and ping the people you want to invite. Have fun!**';
+					description += '\n\n';
+					description += '*Note:* This is a **one-time notification** that is sent to all server members to after their first matchmaking thread is closed. You will not be notified when your matchmaking threads are closed in the future.';
+
 					if (!creator?.matchmaking_notification_sent) {
+						const creatorUser = await client.users.fetch(threadChannel.ownerId);
+
 						const notificationEmbed = new EmbedBuilder();
 						notificationEmbed.setColor(0x6060FF);
 						notificationEmbed.setTitle('Your matchmaking thread has been automatically closed');
-						notificationEmbed.setDescription(
-							`Hello <@${threadChannel.ownerId}>! This is just to let you know that your Pretendo matchmaking thread <#${threadChannel.id}> has been automatically closed due to inactivity.\n\n` +
-								`**This is not a moderator action or punishment.** All threads in <#${threadChannel.parentId}> are automatically closed after a period of inactivity to ensure that each thread is dedicated to a single game session.\n\n` +
-								'**If you want to play again, just create a new thread and ping the people you want to invite. Have fun!**\n\n' +
-								'*Note:* This is a **one-time notification** that is sent to all server members to after their first matchmaking thread is closed. You will not be notified when your matchmaking threads are closed in the future.'
-						);
+						notificationEmbed.setDescription(description);
 						notificationEmbed.setFooter({
 							text: 'Thank you for using Pretendo!',
 							iconURL: guild.iconURL()!
 						});
-						const creatorUser = await client.users.fetch(threadChannel.ownerId);
+
 						try {
 							//TODO - Switch this to the new DM/notification channel system
 							await creatorUser.send({
 								embeds: [notificationEmbed]
 							});
 							await User.upsert({ user_id: threadChannel.ownerId, matchmaking_notification_sent: true });
-						} catch (err) {
+						} catch (error) {
 							console.log('Failed to DM user');
 						}
 					}
 				}
 
+				let description = 'This matchmaking thread has been automatically closed due to inactivity.';
+				description += '\n\n';
+				description += 'If you want to play again, just create a new thread and ping the people you want to invite. Have fun!';
+
 				const inactivityEmbed = new EmbedBuilder();
 				inactivityEmbed.setColor(0x6060FF);
 				inactivityEmbed.setTitle('Matchmaking thread closed');
-				inactivityEmbed.setDescription(
-					'This matchmaking thread has been automatically closed due to inactivity.\n\n' +
-						'If you want to play again, just create a new thread and ping the people you want to invite. Have fun!'
-				);
+				inactivityEmbed.setDescription(description);
 				inactivityEmbed.setFooter({
 					text: 'Thank you for using Pretendo!',
 					iconURL: guild.iconURL()!
@@ -143,6 +150,7 @@ export async function checkMatchmakingThreads(): Promise<void> {
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()!
 			});
+
 			await sendEventLogMessage(guild, threadChannel.parentId, eventLogEmbed);
 		}
 	}
