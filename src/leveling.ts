@@ -16,6 +16,7 @@ export async function handleLeveling(message: Message): Promise<void> {
 		console.log('Missing supporter role!');
 		return;
 	}
+
 	const trustedRoleID = getDB().get('roles.trusted');
 	const trustedRole = trustedRoleID && (await message.guild?.roles.fetch(trustedRoleID));
 	if (!trustedRole) {
@@ -23,24 +24,26 @@ export async function handleLeveling(message: Message): Promise<void> {
 		return;
 	}
 
-	const xpRequiredForTrusted = parseInt(getDB().get('leveling.xp-required-for-trusted') ?? '0');
-	if (!xpRequiredForTrusted) {
+	const xpRequiredForTrusted = parseInt(getDB().get('leveling.xp-required-for-trusted') ?? '');
+	if (isNaN(xpRequiredForTrusted)) {
 		console.log('Missing amount of XP required for trusted role!');
 		return;
 	}
-	const timeRequiredForTrusted = parseInt(getDB().get('leveling.days-required-for-trusted') ?? '0') * 24 * 60 * 60 * 1000;
-	if (!timeRequiredForTrusted) {
+
+	const timeRequiredForTrusted = parseInt(getDB().get('leveling.days-required-for-trusted') ?? '') * 24 * 60 * 60 * 1000;
+	if (isNaN(timeRequiredForTrusted)) {
 		console.log('Missing number of days required for trusted role!');
 		return;
 	}
 
-	let messageTimeout = parseInt(getDB().get('leveling.message-timeout-seconds') ?? '0') * 1000;
-	if (!messageTimeout) {
+	let messageTimeout = parseInt(getDB().get('leveling.message-timeout-seconds') ?? '') * 1000;
+	if (isNaN(messageTimeout)) {
 		console.log('Missing leveling message timeout! Defaulting to 1 minute.');
 		messageTimeout = 60 * 1000;
 	}
-	let supporterXPMultiplier = parseInt(getDB().get('leveling.supporter-xp-multiplier') ?? '0');
-	if (!supporterXPMultiplier) {
+
+	let supporterXPMultiplier = parseInt(getDB().get('leveling.supporter-xp-multiplier') ?? '');
+	if (isNaN(supporterXPMultiplier)) {
 		console.log('Missing supporter XP multiplier! Supporters will not earn extra XP.');
 		supporterXPMultiplier = 1;
 	}
@@ -50,6 +53,7 @@ export async function handleLeveling(message: Message): Promise<void> {
 			user_id: message.author.id
 		}
 	});
+
 	if (!user) {
 		user = await User.create({
 			user_id: message.author.id
