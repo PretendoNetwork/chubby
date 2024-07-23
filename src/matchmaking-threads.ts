@@ -17,7 +17,10 @@ export async function handleMatchmakingThreadMessage(message: Message): Promise<
 		return;
 	}
 
-	await MatchmakingThread.upsert({ thread_id: message.channelId, last_message_sent: message.createdAt });
+	await MatchmakingThread.upsert({
+		thread_id: message.channelId,
+		last_message_sent: message.createdAt
+	});
 }
 
 export async function checkMatchmakingThreads(): Promise<void> {
@@ -42,7 +45,11 @@ export async function checkMatchmakingThreads(): Promise<void> {
 		if (!threadChannel || threadChannel.type !== ChannelType.PublicThread) {
 			// * Thread is either deleted or not a public thread, which should not happen
 			console.log(`Removing deleted or invalid matchmaking thread from database: ${thread.thread_id}`);
-			await MatchmakingThread.destroy({ where: { thread_id: thread.thread_id } });
+			await MatchmakingThread.destroy({
+				where: {
+					thread_id: thread.thread_id
+				}
+			});
 			continue;
 		}
 
@@ -55,7 +62,11 @@ export async function checkMatchmakingThreads(): Promise<void> {
 			// * Only send any inactivity messages if the thread has not already been manually closed/locked by moderators
 			if (!threadChannel.archived && !threadChannel.locked) {
 				if (threadChannel.ownerId) {
-					const creator = await User.findOne({ where: { user_id: threadChannel.ownerId } });
+					const creator = await User.findOne({
+						where: {
+							user_id: threadChannel.ownerId
+						}
+					});
 
 					let description = `Hello <@${threadChannel.ownerId}>! This is just to let you know that your Pretendo matchmaking thread <#${threadChannel.id}> has been automatically closed due to inactivity.`;
 					description += '\n\n';
@@ -82,7 +93,10 @@ export async function checkMatchmakingThreads(): Promise<void> {
 							await creatorUser.send({
 								embeds: [notificationEmbed]
 							});
-							await User.upsert({ user_id: threadChannel.ownerId, matchmaking_notification_sent: true });
+							await User.upsert({
+								user_id: threadChannel.ownerId,
+								matchmaking_notification_sent: true
+							});
 						} catch (error) {
 							console.log('Failed to DM user');
 						}
