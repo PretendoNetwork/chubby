@@ -24,7 +24,7 @@ export default async function readyHandler(client: Client): Promise<void> {
 	}
 
 	scheduleJob('*/30 * * * *', async () => {
-		await checkMatchmakingThreads(client);
+		await checkMatchmakingThreads();
 	});
 
 	console.log(`Logged in as ${client.user!.tag}!`);
