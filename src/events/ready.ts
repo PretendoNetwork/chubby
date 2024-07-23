@@ -1,5 +1,6 @@
 import { setupGuild } from '@/setup-guild';
 import { sequelize } from '@/sequelize-instance';
+import { scheduleJob } from 'node-schedule';
 import config from '@/config.json';
 import banCommand from '@/commands/ban';
 import kickCommand from '@/commands/kick';
@@ -8,7 +9,6 @@ import warnCommand from '@/commands/warn';
 import { checkMatchmakingThreads } from '@/matchmaking-threads';
 import type { Client, Collection } from 'discord.js';
 import type { ClientCommand } from '@/types';
-import { scheduleJob } from 'node-schedule';
 
 export default async function readyHandler(client: Client): Promise<void> {
 	loadBotHandlersCollection('commands', client.commands);

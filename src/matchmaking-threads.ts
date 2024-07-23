@@ -1,18 +1,18 @@
+import { ChannelType, EmbedBuilder } from 'discord.js';
 import { MatchmakingThread } from '@/models/matchmakingThreads';
 import { User } from '@/models/users';
 import { sendEventLogMessage } from '@/util';
-import { getDB } from './db';
-import { ChannelType, EmbedBuilder } from 'discord.js';
+import { getDB } from '@/db';
 import type { Client, Message } from 'discord.js';
 
 export async function handleMatchmakingThreadMessage(message: Message): Promise<void> {
-	const matchmakingChannelId = getDB().get('channels.matchmaking');
-	if (!matchmakingChannelId) {
+	const matchmakingChannelID = getDB().get('channels.matchmaking');
+	if (!matchmakingChannelID) {
 		console.log('Missing matchmaking channel!');
 		return;
 	}
 
-	if (message.channel.type !== ChannelType.PublicThread || message.channel.parentId !== matchmakingChannelId) {
+	if (message.channel.type !== ChannelType.PublicThread || message.channel.parentId !== matchmakingChannelID) {
 		return;
 	}
 
@@ -33,8 +33,8 @@ export async function checkMatchmakingThreads(client: Client): Promise<void> {
 		let threadChannel;
 		try {
 			threadChannel = await client.channels.fetch(thread.thread_id);
-		} catch (err) {
-			console.log(`Error fetching matchmaking thread channel: ${err}`);
+		} catch (error) {
+			console.log(`Error fetching matchmaking thread channel: ${error}`);
 			threadChannel = null;
 		}
 
@@ -45,8 +45,8 @@ export async function checkMatchmakingThreads(client: Client): Promise<void> {
 			continue;
 		}
 
-		const lastMessageSent = new Date(thread.last_message_sent).getTime();
-		const timeSinceLastMessage = now - lastMessageSent;
+		const lastMessageSentTime = new Date(thread.last_message_sent).getTime();
+		const timeSinceLastMessage = now - lastMessageSentTime;
 
 		if (timeSinceLastMessage > matchmakingLockTimeout * 1000) {
 			const guild = await threadChannel.guild.fetch();
@@ -57,7 +57,7 @@ export async function checkMatchmakingThreads(client: Client): Promise<void> {
 					const creator = await User.findOne({ where: { user_id: threadChannel.ownerId } });
 					if (!creator?.matchmaking_notification_sent) {
 						const notificationEmbed = new EmbedBuilder();
-						notificationEmbed.setColor(0x6060ff);
+						notificationEmbed.setColor(0x6060FF);
 						notificationEmbed.setTitle('Your matchmaking thread has been automatically closed');
 						notificationEmbed.setDescription(
 							`Hello <@${threadChannel.ownerId}>! This is just to let you know that your Pretendo matchmaking thread <#${threadChannel.id}> has been automatically closed due to inactivity.\n\n` +
@@ -83,7 +83,7 @@ export async function checkMatchmakingThreads(client: Client): Promise<void> {
 				}
 
 				const inactivityEmbed = new EmbedBuilder();
-				inactivityEmbed.setColor(0x6060ff);
+				inactivityEmbed.setColor(0x6060FF);
 				inactivityEmbed.setTitle('Matchmaking thread closed');
 				inactivityEmbed.setDescription(
 					'This matchmaking thread has been automatically closed due to inactivity.\n\n' +
@@ -102,10 +102,14 @@ export async function checkMatchmakingThreads(client: Client): Promise<void> {
 			await threadChannel.setArchived(false);
 			await threadChannel.setLocked(true, 'Automatic lock of inactive matchmaking thread.');
 			await threadChannel.setArchived(true);
-			await MatchmakingThread.destroy({ where: { thread_id: thread.thread_id } });
+			await MatchmakingThread.destroy({
+				where: {
+					thread_id: thread.thread_id
+				}
+			});
 
 			const eventLogEmbed = new EmbedBuilder();
-			eventLogEmbed.setColor(0x6060ff);
+			eventLogEmbed.setColor(0x6060FF);
 			eventLogEmbed.setTitle('Event Type: _Matchmaking Thread Locked_');
 			eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 			eventLogEmbed.setFields(
