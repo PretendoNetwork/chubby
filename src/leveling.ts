@@ -2,7 +2,7 @@ import { getDB, getDBList } from '@/db';
 import { User } from '@/models/users';
 import { EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
-import type { Message } from 'discord.js';
+import type { GuildMember, Message } from 'discord.js';
 
 export async function handleLeveling(message: Message): Promise<void> {
 	const levelingChannelBlacklist = getDBList('leveling.channels-blacklist');
@@ -132,4 +132,56 @@ export async function handleLeveling(message: Message): Promise<void> {
 		});
 		await sendEventLogMessage(guild, null, eventLogEmbed);
 	}
+}
+
+export async function untrustUser(member: GuildMember, newStartDate: Date): Promise<void> {
+	const trustedRoleId = getDB().get('roles.trusted');
+	const trustedRole = trustedRoleId && (await member.guild.roles.fetch(trustedRoleId));
+	if (!trustedRole) {
+		console.log('Missing trusted role!');
+		return;
+	}
+
+	let user = await User.findOne({ where: { user_id: member.id } });
+	if (!user) {
+		user = await User.create({ user_id: member.id });
+	}
+
+	const beforeXp = user.xp;
+	const beforeStartDate = user.trusted_time_start_date;
+
+	await user.update({ xp: 0, trusted_time_start_date: newStartDate });
+	await member.roles.remove(trustedRoleId, 'User has lost the trusted role due to a moderator action.');
+
+	const eventLogEmbed = new EmbedBuilder();
+	eventLogEmbed.setColor(0xb54065);
+	eventLogEmbed.setTitle('Event Type: _User Untrusted_');
+	eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
+	eventLogEmbed.setFields(
+		{
+			name: 'User',
+			value: `<@${member.id}>`
+		},
+		{
+			name: 'User ID',
+			value: member.id
+		},
+		{
+			name: 'User join date',
+			value: member.joinedAt ? `<t:${Math.floor(member.joinedAt.getTime() / 1000)}>` : 'Unknown'
+		},
+		{
+			name: 'Leveling started (before untrust)',
+			value: beforeStartDate ? `<t:${Math.floor(beforeStartDate.getTime() / 1000)}:R>` : 'User has not used leveling'
+		},
+		{
+			name: 'User XP (before untrust)',
+			value: beforeXp.toString()
+		}
+	);
+	eventLogEmbed.setFooter({
+		text: 'Pretendo Network',
+		iconURL: member.guild.iconURL()!
+	});
+	await sendEventLogMessage(member.guild, null, eventLogEmbed);
 }
