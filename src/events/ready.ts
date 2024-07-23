@@ -23,11 +23,13 @@ export default async function readyHandler(client: Client): Promise<void> {
 		await setupGuild(guild);
 	}
 
-	scheduleJob('*/30 * * * *', async () => {
+	scheduleJob('*/10 * * * *', async () => {
 		await checkMatchmakingThreads();
 	});
 
 	console.log(`Logged in as ${client.user!.tag}!`);
+
+	await checkMatchmakingThreads();
 }
 
 function loadBotHandlersCollection(name: string, collection: Collection<string, ClientCommand>): void {
