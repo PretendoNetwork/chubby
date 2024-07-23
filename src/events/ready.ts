@@ -1,6 +1,6 @@
+import { scheduleJob } from 'node-schedule';
 import { setupGuild } from '@/setup-guild';
 import { sequelize } from '@/sequelize-instance';
-import { scheduleJob } from 'node-schedule';
 import config from '@/config.json';
 import banCommand from '@/commands/ban';
 import kickCommand from '@/commands/kick';
