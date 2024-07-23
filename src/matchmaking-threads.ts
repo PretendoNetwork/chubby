@@ -24,10 +24,10 @@ export async function handleMatchmakingThreadMessage(message: Message): Promise<
 }
 
 export async function checkMatchmakingThreads(): Promise<void> {
-	let matchmakingLockTimeout = parseInt(getDB().get('matchmaking.lock-timeout-seconds') ?? '0');
+	let matchmakingLockTimeout = parseInt(getDB().get('matchmaking.lock-timeout-seconds') ?? '0') * 1000;
 	if (!matchmakingLockTimeout) {
 		console.log('Missing matchmaking lock timeout! Defaulting to 1 hour.');
-		matchmakingLockTimeout = 60 * 60;
+		matchmakingLockTimeout = 60 * 60 * 1000;
 	}
 
 	const now = Date.now();
@@ -53,10 +53,26 @@ export async function checkMatchmakingThreads(): Promise<void> {
 			continue;
 		}
 
-		const lastMessageSentTime = new Date(thread.last_message_sent).getTime();
-		const timeSinceLastMessage = now - lastMessageSentTime;
+		const lastMessageSentDate = thread.last_message_sent;
+		const timeSinceLastMessage = now - lastMessageSentDate.getTime();
 
-		if (timeSinceLastMessage > matchmakingLockTimeout * 1000) {
+		if (timeSinceLastMessage > matchmakingLockTimeout) {
+			const realLastMessageSent = await threadChannel.messages.fetch({
+				limit: 1
+			});
+
+			const realLastMessageSentDate = realLastMessageSent.first()?.createdAt;
+			const realTimeSinceLastMessage = realLastMessageSentDate && now - realLastMessageSentDate.getTime();
+
+			if (realTimeSinceLastMessage && realTimeSinceLastMessage < matchmakingLockTimeout) {
+				// * The bot missed the last message due to downtime or some other issue
+				await MatchmakingThread.upsert({
+					thread_id: thread.thread_id,
+					last_message_sent: realLastMessageSentDate
+				});
+				continue;
+			}
+
 			const guild = await threadChannel.guild.fetch();
 
 			// * Only send any inactivity messages if the thread has not already been manually closed/locked by moderators
