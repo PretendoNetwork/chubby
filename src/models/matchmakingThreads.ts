@@ -17,5 +17,9 @@ MatchmakingThread.init(
 			type: DataTypes.DATE
 		}
 	},
-	{ sequelize, tableName: 'matchmaking_threads' }
+	{
+		sequelize,
+		tableName: 'matchmaking_threads',
+		timestamps: false
+	}
 );
