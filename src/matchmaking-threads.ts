@@ -1,9 +1,10 @@
 import { ChannelType, EmbedBuilder } from 'discord.js';
+import { client } from '@/bot';
 import { MatchmakingThread } from '@/models/matchmakingThreads';
 import { User } from '@/models/users';
 import { sendEventLogMessage } from '@/util';
 import { getDB } from '@/db';
-import type { Client, Message } from 'discord.js';
+import type { Message } from 'discord.js';
 
 export async function handleMatchmakingThreadMessage(message: Message): Promise<void> {
 	const matchmakingChannelID = getDB().get('channels.matchmaking');
@@ -19,7 +20,7 @@ export async function handleMatchmakingThreadMessage(message: Message): Promise<
 	await MatchmakingThread.upsert({ thread_id: message.channelId, last_message_sent: message.createdAt });
 }
 
-export async function checkMatchmakingThreads(client: Client): Promise<void> {
+export async function checkMatchmakingThreads(): Promise<void> {
 	let matchmakingLockTimeout = parseInt(getDB().get('matchmaking.lock-timeout-seconds') ?? '0');
 	if (!matchmakingLockTimeout) {
 		console.log('Missing matchmaking lock timeout! Defaulting to 1 hour.');
