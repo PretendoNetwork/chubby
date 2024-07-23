@@ -9,6 +9,8 @@ const editableOptions = [
 	'channels.nsfw-logs',
 	'channels.event-logs',
 	'channels.event-logs.blacklist',
+	'channels.matchmaking',
+	'matchmaking.lock-timeout-seconds'
 ];
 
 function verifyInputtedKey(interaction: ChatInputCommandInteraction): string {

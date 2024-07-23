@@ -9,7 +9,7 @@ import readyHandler from '@/events/ready';
 import config from '@/config.json';
 import type { ClientCommand } from '@/types';
 
-const client = new Client({
+export const client = new Client({
 	intents: [
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMessages,

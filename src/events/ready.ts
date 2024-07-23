@@ -1,3 +1,4 @@
+import { scheduleJob } from 'node-schedule';
 import { setupGuild } from '@/setup-guild';
 import { sequelize } from '@/sequelize-instance';
 import config from '@/config.json';
@@ -5,6 +6,7 @@ import banCommand from '@/commands/ban';
 import kickCommand from '@/commands/kick';
 import settingsCommand from '@/commands/settings';
 import warnCommand from '@/commands/warn';
+import { checkMatchmakingThreads } from '@/matchmaking-threads';
 import type { Client, Collection } from 'discord.js';
 import type { ClientCommand } from '@/types';
 
@@ -21,7 +23,13 @@ export default async function readyHandler(client: Client): Promise<void> {
 		await setupGuild(guild);
 	}
 
+	scheduleJob('*/10 * * * *', async () => {
+		await checkMatchmakingThreads();
+	});
+
 	console.log(`Logged in as ${client.user!.tag}!`);
+
+	await checkMatchmakingThreads();
 }
 
 function loadBotHandlersCollection(name: string, collection: Collection<string, ClientCommand>): void {

@@ -20,6 +20,7 @@
     "discord.js": "^14.15.3",
     "got": "^11.8.2",
     "jpeg-js": "^0.3.7",
+    "node-schedule": "^2.1.1",
     "nsfwjs": "^2.4.0",
     "sequelize": "^6.19.0",
     "simple-json-db": "^2.0.0",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@types/glob": "^8.1.0",
     "@types/node": "^18.19.39",
+    "@types/node-schedule": "^2.1.7",
     "@types/sequelize": "^4.28.20",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.59.11",

@@ -1,4 +1,5 @@
 import { checkNSFW } from '@/check-nsfw';
+import { handleMatchmakingThreadMessage } from '@/matchmaking-threads';
 import type { Message } from 'discord.js';
 
 const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -23,4 +24,6 @@ export default async function messageCreateHandler(message: Message): Promise<vo
 
 		await checkNSFW(message, urls);
 	}
+
+	await handleMatchmakingThreadMessage(message);
 }
