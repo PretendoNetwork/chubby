@@ -113,7 +113,7 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 		if (topClassifiedImage.top.severity === ClassificationSeverity.High) {
 			await message.delete();
 
-			const replyContent = `Hello <@${message.author.id}>, I've deleted your message in ${message.channel.url} as I detected that it contained NSFW content. Do not try and post the image again as it will be flagged again!\n\nIf you feel that this has happened in error, please speak to a moderator.`;
+			const replyContent = `I've deleted your message in ${message.channel.url} as I detected that it contained NSFW content. Do not try and post the image again as it will be flagged again!\n\nIf you feel that this has happened in error, please speak to a moderator.`;
 
 			const embed = new EmbedBuilder()
 				.addFields([

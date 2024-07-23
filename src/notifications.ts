@@ -1,9 +1,17 @@
 import { ChannelType, ThreadAutoArchiveDuration } from 'discord.js';
 import { getChannelFromSettings } from '@/util';
 import { NotificationThread } from '@/models/notificationThreads';
-import type { AllowedThreadTypeForTextChannel, BaseGuildTextChannel, Guild, GuildTextThreadCreateOptions, MessageCreateOptions, MessagePayload, ThreadChannel, User } from 'discord.js';
+import type {
+	AllowedThreadTypeForTextChannel,
+	BaseGuildTextChannel,
+	Guild,
+	GuildTextThreadCreateOptions,
+	MessageCreateOptions,
+	ThreadChannel,
+	User
+} from 'discord.js';
 
-export async function notifyUser(guild: Guild, user: User, message: string | MessageCreateOptions | MessagePayload): Promise<void> {
+export async function notifyUser(guild: Guild, user: User, message: string | MessageCreateOptions): Promise<void> {
 	try {
 		await user.send(message);
 	} catch {
@@ -15,7 +23,7 @@ export async function notifyUser(guild: Guild, user: User, message: string | Mes
 	}
 }
 
-async function notifyUserInChannel(guild: Guild, user: User, message: string | MessageCreateOptions | MessagePayload): Promise<void> {
+async function notifyUserInChannel(guild: Guild, user: User, message: string | MessageCreateOptions): Promise<void> {
 	const notificationsChannel = await getChannelFromSettings(guild, 'channels.notifications');
 	if (!notificationsChannel || notificationsChannel.type !== ChannelType.GuildText) {
 		throw 'Could not find notifications channel';
@@ -42,6 +50,12 @@ async function notifyUserInChannel(guild: Guild, user: User, message: string | M
 
 	if (!thread) {
 		thread = await createNotificationThread(notificationsChannel, user);
+	}
+
+	if (typeof message === 'string') {
+		message = `<@${user.id}>\n${message}`;
+	} else {
+		message.content = `<@${user.id}>\n${message.content}`;
 	}
 
 	await thread.send(message);
