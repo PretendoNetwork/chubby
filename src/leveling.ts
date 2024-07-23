@@ -1,6 +1,6 @@
+import { EmbedBuilder } from 'discord.js';
 import { getDB, getDBList } from '@/db';
 import { User } from '@/models/users';
-import { EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
 import type { GuildMember, Message } from 'discord.js';
 
@@ -10,14 +10,14 @@ export async function handleLeveling(message: Message): Promise<void> {
 		return;
 	}
 
-	const supporterRoleId = getDB().get('roles.supporter');
-	const supporterRole = supporterRoleId && (await message.guild?.roles.fetch(supporterRoleId));
+	const supporterRoleID = getDB().get('roles.supporter');
+	const supporterRole = supporterRoleID && (await message.guild?.roles.fetch(supporterRoleID));
 	if (!supporterRole) {
 		console.log('Missing supporter role!');
 		return;
 	}
-	const trustedRoleId = getDB().get('roles.trusted');
-	const trustedRole = trustedRoleId && (await message.guild?.roles.fetch(trustedRoleId));
+	const trustedRoleID = getDB().get('roles.trusted');
+	const trustedRole = trustedRoleID && (await message.guild?.roles.fetch(trustedRoleID));
 	if (!trustedRole) {
 		console.log('Missing trusted role!');
 		return;
@@ -39,16 +39,23 @@ export async function handleLeveling(message: Message): Promise<void> {
 		console.log('Missing leveling message timeout! Defaulting to 1 minute.');
 		messageTimeout = 60 * 1000;
 	}
-	let supporterXpMultiplier = parseInt(getDB().get('leveling.supporter-xp-multiplier') ?? '0');
-	if (!supporterXpMultiplier) {
+	let supporterXPMultiplier = parseInt(getDB().get('leveling.supporter-xp-multiplier') ?? '0');
+	if (!supporterXPMultiplier) {
 		console.log('Missing supporter XP multiplier! Supporters will not earn extra XP.');
-		supporterXpMultiplier = 1;
+		supporterXPMultiplier = 1;
 	}
 
-	let user = await User.findOne({ where: { user_id: message.author.id } });
+	let user = await User.findOne({
+		where: {
+			user_id: message.author.id
+		}
+	});
 	if (!user) {
-		user = await User.create({ user_id: message.author.id });
+		user = await User.create({
+			user_id: message.author.id
+		});
 	}
+
 	const joinDate = message.member?.joinedAt;
 	if (!joinDate) {
 		// * User has left, no point in tracking their XP
@@ -57,12 +64,14 @@ export async function handleLeveling(message: Message): Promise<void> {
 
 	if (!user.trusted_time_start_date) {
 		// * User has not used the leveling system yet, set their start date to their join date so they don't have to wait
-		await user.update({ trusted_time_start_date: joinDate });
+		user.trusted_time_start_date = joinDate;
+		await user.save();
 	}
 
+	// * Check if this message should give XP
 	if (!user.last_xp_message_sent || message.createdAt.getTime() - user.last_xp_message_sent.getTime() > messageTimeout) {
-		if (message.member?.roles.cache.has(supporterRoleId)) {
-			user.xp += supporterXpMultiplier;
+		if (message.member?.roles.cache.has(supporterRoleID)) {
+			user.xp += supporterXPMultiplier;
 		} else {
 			user.xp += 1;
 		}
@@ -70,39 +79,42 @@ export async function handleLeveling(message: Message): Promise<void> {
 		await user.save();
 	}
 
+	const timeSinceStartDate = new Date().getTime() - user.trusted_time_start_date.getTime();
+	// * Check if the user should become trusted
 	if (
 		user.xp >= xpRequiredForTrusted &&
-		user.trusted_time_start_date && // Should always be set at this point, here for TypeScript
-		new Date().getTime() - user.trusted_time_start_date.getTime() > timeRequiredForTrusted &&
-		!message.member?.roles.cache.has(trustedRoleId)
+		timeSinceStartDate > timeRequiredForTrusted &&
+		!message.member?.roles.cache.has(trustedRoleID)
 	) {
-		await message.member?.roles.add(trustedRole, 'User has earned the trusted role through the leveling system.');
+		await message.member.roles.add(trustedRole, 'User has earned the trusted role through the leveling system.');
 
 		const guild = await message.guild!.fetch();
 
+		let description = `Hello <@${message.author.id}>! You have been given the trusted role in the Pretendo Network Discord server.`;
+		description += '\n\n';
+		description += 'The trusted role is automatically given to users who have been active in the server for a while. **You are now allowed to send images, link embeds, and other media in all channels.**';
+
 		const notificationEmbed = new EmbedBuilder();
-		notificationEmbed.setColor(0x65b540);
+		notificationEmbed.setColor(0x65B540);
 		notificationEmbed.setTitle('Congratulations, you have become trusted in Pretendo!');
-		notificationEmbed.setDescription(
-			`Hello <@${message.author.id}>! You have been given the trusted role in the Pretendo Network Discord server.\n\n` +
-				'The trusted role is automatically given to users who have been active in the server for a while. **You are now allowed to send images, link embeds, and other media in all channels.**'
-		);
+		notificationEmbed.setDescription(description);
 		notificationEmbed.setFooter({
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()!
 		});
+
 		try {
 			//TODO - Switch this to the new DM/notification channel system
 			await message.author.send({
 				embeds: [notificationEmbed]
 			});
-		} catch (err) {
+		} catch (error) {
 			console.log('Failed to DM user');
 		}
 
 		const eventLogEmbed = new EmbedBuilder();
-		eventLogEmbed.setColor(0x65b540);
-		eventLogEmbed.setTitle('Event Type: _User Trusted_');
+		eventLogEmbed.setColor(0x65B540);
+		eventLogEmbed.setTitle('Event Type: _Member Trusted_');
 		eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 		eventLogEmbed.setFields(
 			{
@@ -130,32 +142,42 @@ export async function handleLeveling(message: Message): Promise<void> {
 			text: 'Pretendo Network',
 			iconURL: message.guild!.iconURL()!
 		});
+
 		await sendEventLogMessage(guild, null, eventLogEmbed);
 	}
 }
 
 export async function untrustUser(member: GuildMember, newStartDate: Date): Promise<void> {
-	const trustedRoleId = getDB().get('roles.trusted');
-	const trustedRole = trustedRoleId && (await member.guild.roles.fetch(trustedRoleId));
+	const trustedRoleID = getDB().get('roles.trusted');
+	const trustedRole = trustedRoleID && (await member.guild.roles.fetch(trustedRoleID));
 	if (!trustedRole) {
 		console.log('Missing trusted role!');
 		return;
 	}
 
-	let user = await User.findOne({ where: { user_id: member.id } });
+	let user = await User.findOne({
+		where: {
+			user_id: member.id
+		}
+	});
 	if (!user) {
-		user = await User.create({ user_id: member.id });
+		user = await User.create({
+			user_id: member.id
+		});
 	}
 
 	const beforeXp = user.xp;
 	const beforeStartDate = user.trusted_time_start_date;
 
-	await user.update({ xp: 0, trusted_time_start_date: newStartDate });
-	await member.roles.remove(trustedRoleId, 'User has lost the trusted role due to a moderator action.');
+	await user.update({
+		xp: 0,
+		trusted_time_start_date: newStartDate
+	});
+	await member.roles.remove(trustedRoleID, 'User has lost the trusted role due to a moderator action.');
 
 	const eventLogEmbed = new EmbedBuilder();
-	eventLogEmbed.setColor(0xb54065);
-	eventLogEmbed.setTitle('Event Type: _User Untrusted_');
+	eventLogEmbed.setColor(0xB54065);
+	eventLogEmbed.setTitle('Event Type: _Member Untrusted_');
 	eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 	eventLogEmbed.setFields(
 		{

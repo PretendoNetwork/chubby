@@ -33,5 +33,8 @@ User.init(
 			defaultValue: false
 		}
 	},
-	{ sequelize, tableName: 'users' }
+	{
+		sequelize,
+		tableName: 'users'
+	}
 );
