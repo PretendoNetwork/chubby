@@ -10,4 +10,7 @@ Features:
 
 Requirements:
 
+- Linux OS
 - At least 4096mb available memory
+
+As we rely on the `phhammdist` extension for Sqlite3 (which is included in `lib/phhammdist`) currently this only supports Linux
