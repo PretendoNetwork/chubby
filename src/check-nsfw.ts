@@ -5,13 +5,20 @@ import * as tf from '@tensorflow/tfjs-node';
 import * as nsfw from 'nsfwjs';
 import decodeGif from 'decode-gif';
 import sequelize from 'sequelize';
-import { ActionRowBuilder, AttachmentBuilder, ButtonStyle, ChannelType, EmbedBuilder, TextChannel } from 'discord.js';
+import {
+	ActionRowBuilder,
+	AttachmentBuilder,
+	ButtonStyle,
+	ChannelType,
+	EmbedBuilder,
+	TextChannel,
+	ButtonBuilder
+} from 'discord.js';
 import { getDB } from '@/db';
 import { NsfwWarning } from '@/models/nsfwWarnings';
 import { notifyUser } from '@/notifications';
 import { getChannelFromSettings } from '@/util';
 import { NsfwExemption } from '@/models/nsfwExemptions';
-import { ButtonBuilder } from 'discord.js';
 import type { ButtonInteraction } from 'discord.js';
 import type { Tensor3D } from '@tensorflow/tfjs-node';
 import type { Message } from 'discord.js';
@@ -38,10 +45,10 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 		return; // * Do not check if the channel is NSFW
 	}
 
-	let exemptionDistance: number = 0;
-	try {
-		exemptionDistance = parseInt(getDB().get('nsfw.exemption.distance') ?? '0');
-	} catch {}
+	let exemptionDistance = parseInt(getDB().get('nsfw.exemption.distance') ?? '0');
+	if (isNaN(exemptionDistance)) {
+		exemptionDistance = 0;
+	}
 
 	const messageClassifications = new MessageClassifications();
 
@@ -68,8 +75,13 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 			const decodedGif = decodeGif(data);
 			const { width, height, frames } = decodedGif;
 			for (const frame of frames) {
-				const rawImage = await sharp(frame.data, { raw: { width, height, channels: 4 } })
-					.removeAlpha()
+				const rawImage = await sharp(frame.data, {
+					raw: {
+						width,
+						height,
+						channels: 4 
+					} 
+				}).removeAlpha()
 					.median() // * Applying a median filter to remove high frequency artifacts from gif's color-map encoding. This seems to massively improve the classification
 					.toBuffer();
 				const image = tf.tensor3d(rawImage, [height, width, 3]);
@@ -245,7 +257,7 @@ export async function handleAddNsfwExemption(interaction: ButtonInteraction): Pr
 		.value;
 	hash = hexToBin(hash.substring(1, hash.length -1));
 	await NsfwExemption.create({ user_id: interaction.user.id, hash });
-	await interaction.editReply({ content: `Image added to NSFW exemptions by ${interaction.user.id}` });
+	await interaction.editReply({ content: `Image added to NSFW exemptions by <@${interaction.user.id}>` });
 }
 
 export async function handleRemoveNsfwExemption(interaction: ButtonInteraction): Promise<void> {
@@ -258,7 +270,7 @@ export async function handleRemoveNsfwExemption(interaction: ButtonInteraction):
 	const exemption = await NsfwExemption.findOne({ where: { hash } });
 	if (exemption) {
 		await exemption.destroy();
-		await interaction.editReply({ content: `Image removed from NSFW exemptions by ${interaction.user.id}` });
+		await interaction.editReply({ content: `Image removed from NSFW exemptions by <@${interaction.user.id}>` });
 	} else {
 		await interaction.editReply({ content: 'Image did not exist in NSFW exemptions' });
 	}
@@ -284,7 +296,10 @@ function colorMessage(message: string, type: ClassificationSeverity | null): str
 }
 
 function binToHex(string: string): string {
-	const chunks = string.match(/.{8}/g)?.map(chunk => parseInt(chunk, 2)) ?? [];
+	const chunks = string
+		.padStart(64, '0')
+		.match(/.{8}/g)
+		?.map(chunk => parseInt(chunk, 2)) ?? [];
 	return Buffer.from(chunks).toString('hex');
 }
 
@@ -331,21 +346,20 @@ class ClassifiedImage {
 }
 
 class MessageClassifications {
-
 	private images: ClassifiedImage[] = [];
 	readonly settings: ClassificationSettings;
 
 	constructor() {
 		// * We fetch the settings each time so that if they're changed they'll be updated
-		let highThreshold = 1;
-		try {
-			highThreshold = parseFloat(getDB().get('nsfw.threshold.high') ?? '1');
-		} catch {}
+		let highThreshold = parseFloat(getDB().get('nsfw.threshold.high') ?? '1');
+		if (isNaN(highThreshold)) {
+			highThreshold = 1;
+		}
 
-		let lowThreshold = 0.7;
-		try {
-			lowThreshold = parseFloat(getDB().get('nsfw.threshold.low') ?? '0.7');
-		} catch {}
+		let lowThreshold = parseFloat(getDB().get('nsfw.threshold.low') ?? '0.7');
+		if (isNaN(lowThreshold)) {
+			lowThreshold = 0.7;
+		}
 
 		this.settings = {
 			highThreshold, lowThreshold

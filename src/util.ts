@@ -35,15 +35,15 @@ export async function sendEventLogMessage(guild: Guild, originId: string | null,
 }
 
 export async function getChannelFromSettings(guild: Guild, channelName: string): Promise<Channel | null> {
-	const channelId = getDB().get(channelName);
-	if (!channelId) {
+	const channelID = getDB().get(channelName);
+	if (!channelID) {
 		console.log(`No channel id set for ${channelName}`);
 		return null;
 	}
 
-	const channel = await guild.channels.fetch(channelId);
+	const channel = await guild.channels.fetch(channelID);
 	if (!channel) {
-		console.log(`Channel id ${channelId} does not exist in guild ${guild.id}`);
+		console.log(`Channel id ${channelID} does not exist in guild ${guild.id}`);
 		return null;
 	}
 

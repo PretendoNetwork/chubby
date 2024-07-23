@@ -6,7 +6,7 @@ import type { AllowedThreadTypeForTextChannel, BaseGuildTextChannel, Guild, Guil
 export async function notifyUser(guild: Guild, user: User, message: string | MessageCreateOptions | MessagePayload): Promise<void> {
 	try {
 		await user.send(message);
-	} catch (_) {
+	} catch {
 		try {
 			await notifyUserInChannel(guild, user, message);
 		} catch (e) {
@@ -49,7 +49,6 @@ async function notifyUserInChannel(guild: Guild, user: User, message: string | M
 }
 
 async function createNotificationThread(channel: BaseGuildTextChannel, user: User): Promise<ThreadChannel> {
-
 	const threadSettings: GuildTextThreadCreateOptions<AllowedThreadTypeForTextChannel> = {
 		name: 'notifications',
 		reason: 'Your DMs are closed',
