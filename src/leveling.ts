@@ -1,7 +1,7 @@
 import { EmbedBuilder } from 'discord.js';
 import { getDB, getDBList } from '@/db';
 import { User } from '@/models/users';
-import { sendEventLogMessage } from '@/util';
+import { getRoleFromSettings, sendEventLogMessage } from '@/util';
 import { sequelize } from '@/sequelize-instance';
 import { notifyUser } from '@/notifications';
 import type { GuildMember, Message } from 'discord.js';
@@ -12,28 +12,22 @@ export async function handleLeveling(message: Message): Promise<void> {
 		return;
 	}
 
-	const trustedRoleID = getDB().get('roles.trusted');
-	const trustedRole = trustedRoleID && (await message.guild?.roles.fetch(trustedRoleID));
+	const trustedRole = await getRoleFromSettings(message.guild!, 'roles.trusted');
 	if (!trustedRole) {
-		console.log('Missing trusted role!');
 		return;
 	}
 
-	const untrustedRoleID = getDB().get('roles.untrusted');
-	const untrustedRole = untrustedRoleID && (await message.guild?.roles.fetch(untrustedRoleID));
+	const untrustedRole = await getRoleFromSettings(message.guild!, 'roles.untrusted');
 	if (!untrustedRole) {
-		console.log('Missing no XP role!');
 		return;
 	}
 
-	if (message.member?.roles.cache.has(trustedRoleID) || message.member?.roles.cache.has(untrustedRoleID)) {
+	if (message.member?.roles.cache.has(trustedRole.id) || message.member?.roles.cache.has(untrustedRole.id)) {
 		return;
 	}
 
-	const supporterRoleID = getDB().get('roles.supporter');
-	const supporterRole = supporterRoleID && (await message.guild?.roles.fetch(supporterRoleID));
+	const supporterRole = await getRoleFromSettings(message.guild!, 'roles.supporter');
 	if (!supporterRole) {
-		console.log('Missing supporter role!');
 		return;
 	}
 
@@ -86,7 +80,7 @@ export async function handleLeveling(message: Message): Promise<void> {
 	// * Check if this message should give XP
 	if (!user.last_xp_message_sent || message.createdAt.getTime() - user.last_xp_message_sent.getTime() > messageTimeout) {
 		let xp = 1;
-		if (message.member?.roles.cache.has(supporterRoleID)) {
+		if (message.member?.roles.cache.has(supporterRole.id)) {
 			xp = supporterXPMultiplier;
 		}
 
@@ -108,7 +102,7 @@ export async function handleLeveling(message: Message): Promise<void> {
 	if (
 		user.xp >= xpRequiredForTrusted &&
 		timeSinceStartDate > timeRequiredForTrusted &&
-		!message.member?.roles.cache.has(trustedRoleID)
+		!message.member?.roles.cache.has(trustedRole.id)
 	) {
 		await message.member.roles.add(trustedRole, 'User has earned the trusted role through the leveling system.');
 
@@ -168,10 +162,8 @@ export async function handleLeveling(message: Message): Promise<void> {
 }
 
 export async function untrustUser(member: GuildMember, newStartDate: Date): Promise<void> {
-	const trustedRoleID = getDB().get('roles.trusted');
-	const trustedRole = trustedRoleID && (await member.guild.roles.fetch(trustedRoleID));
-	if (!trustedRole) {
-		console.log('Missing trusted role!');
+	const trustedRoleID = await getRoleFromSettings(member.guild, 'roles.trusted');
+	if (!trustedRoleID) {
 		return;
 	}
 
