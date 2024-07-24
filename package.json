@@ -4,7 +4,7 @@
   "description": "",
   "main": "./dist/bot.js",
   "scripts": {
-    "start": "node .",
+    "start": "node --max-old-space-size=4096 .",
     "start:dev": "NODE_ENV=development node .",
     "lint": "npx eslint .",
     "build": "npm run lint && npm run clean && npx tsc && npx tsc-alias",
@@ -14,15 +14,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@tensorflow/tfjs-node": "^3.6.1",
+    "@tensorflow/tfjs-node": "^4.20.0",
     "decode-gif": "^1.0.1",
     "discord-api-types": "^0.31.2",
     "discord.js": "^14.15.3",
     "got": "^11.8.2",
-    "jpeg-js": "^0.3.7",
     "node-schedule": "^2.1.1",
-    "nsfwjs": "^2.4.0",
+    "nsfwjs": "^4.1.0",
     "sequelize": "^6.19.0",
+    "sharp": "^0.33.4",
+    "sharp-phash": "^2.1.0",
     "simple-json-db": "^2.0.0",
     "sqlite3": "^5.0.8"
   },

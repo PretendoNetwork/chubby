@@ -1,10 +1,13 @@
-import { commandHandler } from '@/handlers/command-handler';
+import buttonHandler from '@/handlers/button-handler';
+import commandHandler from '@/handlers/command-handler';
 import type { Interaction } from 'discord.js'; 
 
 export default async function interactionCreateHandler(interaction: Interaction): Promise<void> {
 	try {
 		if (interaction.isCommand()) {
 			await commandHandler(interaction);
+		} else if (interaction.isButton()) {
+			await buttonHandler(interaction);
 		}
 	} catch (error: any) {
 		if (!interaction.isCommand()) {

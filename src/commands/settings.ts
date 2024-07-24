@@ -3,6 +3,10 @@ import { getDB } from '@/db';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
 const editableOptions = [
+	'nsfw.enabled',
+	'nsfw.threshold.high',
+	'nsfw.threshold.low',
+	'nsfw.exemption.distance',
 	'roles.muted',
 	'roles.nsfw-punished',
 	'roles.supporter',
