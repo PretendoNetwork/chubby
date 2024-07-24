@@ -1,6 +1,6 @@
 import type { CommandInteraction } from 'discord.js';
 
-export async function commandHandler(interaction: CommandInteraction): Promise<void> {
+export default async function commandHandler(interaction: CommandInteraction): Promise<void> {
 	const { commandName } = interaction;
 
 	const commands = interaction.client.commands;
