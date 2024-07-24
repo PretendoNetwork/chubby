@@ -2,6 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { getDB, getDBList } from '@/db';
 import { User } from '@/models/users';
 import { sendEventLogMessage } from '@/util';
+import { sequelize } from '@/sequelize-instance';
 import type { GuildMember, Message } from 'discord.js';
 
 export async function handleLeveling(message: Message): Promise<void> {
@@ -48,23 +49,21 @@ export async function handleLeveling(message: Message): Promise<void> {
 		supporterXPMultiplier = 1;
 	}
 
-	let user = await User.findOne({
-		where: {
-			user_id: message.author.id
-		}
-	});
-
-	if (!user) {
-		user = await User.create({
-			user_id: message.author.id
-		});
-	}
-
 	const joinDate = message.member?.joinedAt;
 	if (!joinDate) {
 		// * User has left, no point in tracking their XP
 		return;
 	}
+
+	const [user] = await User.findOrCreate({
+		where: {
+			user_id: message.author.id
+		},
+		defaults: {
+			user_id: message.author.id,
+			trusted_time_start_date: joinDate
+		}
+	});
 
 	if (!user.trusted_time_start_date) {
 		// * User has not used the leveling system yet, set their start date to their join date so they don't have to wait
@@ -74,17 +73,26 @@ export async function handleLeveling(message: Message): Promise<void> {
 
 	// * Check if this message should give XP
 	if (!user.last_xp_message_sent || message.createdAt.getTime() - user.last_xp_message_sent.getTime() > messageTimeout) {
+		let xp = 1;
 		if (message.member?.roles.cache.has(supporterRoleID)) {
-			user.xp += supporterXPMultiplier;
-		} else {
-			user.xp += 1;
+			xp = supporterXPMultiplier;
 		}
-		user.last_xp_message_sent = message.createdAt;
-		await user.save();
+
+		const transaction = await sequelize.transaction();
+		try {
+			await user.reload({ transaction });
+			user.xp += xp;
+			user.last_xp_message_sent = message.createdAt;
+			await user.save({ transaction });
+			await transaction.commit();
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
+		}
 	}
 
-	const timeSinceStartDate = new Date().getTime() - user.trusted_time_start_date.getTime();
 	// * Check if the user should become trusted
+	const timeSinceStartDate = new Date().getTime() - user.trusted_time_start_date.getTime();
 	if (
 		user.xp >= xpRequiredForTrusted &&
 		timeSinceStartDate > timeRequiredForTrusted &&
@@ -159,16 +167,14 @@ export async function untrustUser(member: GuildMember, newStartDate: Date): Prom
 		return;
 	}
 
-	let user = await User.findOne({
+	const [user] = await User.findOrCreate({
 		where: {
+			user_id: member.id
+		},
+		defaults: {
 			user_id: member.id
 		}
 	});
-	if (!user) {
-		user = await User.create({
-			user_id: member.id
-		});
-	}
 
 	const beforeXp = user.xp;
 	const beforeStartDate = user.trusted_time_start_date;
