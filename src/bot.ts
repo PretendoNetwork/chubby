@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, Collection, Events } from 'discord.js';
 import guildAuditLogEntryCreateHandler from '@/events/guildAuditLogEntryCreate';
 import guildMemberRemoveHandler from '@/events/guildMemberRemove';
+import guildMemberUpdateHandler from '@/events/guildMemberUpdate';
 import interactionCreateHandler from '@/events/interactionCreate';
 import messageCreateHandler from '@/events/messageCreate';
 import messageDeleteHandler from '@/events/messageDelete';
@@ -23,6 +24,7 @@ client.commands = new Collection<string, ClientCommand>();
 
 client.on(Events.ClientReady, readyHandler);
 client.on(Events.GuildMemberRemove, guildMemberRemoveHandler);
+client.on(Events.GuildMemberUpdate, guildMemberUpdateHandler);
 client.on(Events.InteractionCreate, interactionCreateHandler);
 client.on(Events.MessageCreate, messageCreateHandler);
 client.on(Events.MessageDelete, messageDeleteHandler);

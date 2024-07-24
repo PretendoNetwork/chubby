@@ -11,17 +11,28 @@ export async function handleLeveling(message: Message): Promise<void> {
 		return;
 	}
 
-	const supporterRoleID = getDB().get('roles.supporter');
-	const supporterRole = supporterRoleID && (await message.guild?.roles.fetch(supporterRoleID));
-	if (!supporterRole) {
-		console.log('Missing supporter role!');
-		return;
-	}
-
 	const trustedRoleID = getDB().get('roles.trusted');
 	const trustedRole = trustedRoleID && (await message.guild?.roles.fetch(trustedRoleID));
 	if (!trustedRole) {
 		console.log('Missing trusted role!');
+		return;
+	}
+
+	const untrustedRoleID = getDB().get('roles.untrusted');
+	const untrustedRole = untrustedRoleID && (await message.guild?.roles.fetch(untrustedRoleID));
+	if (!untrustedRole) {
+		console.log('Missing no XP role!');
+		return;
+	}
+
+	if (message.member?.roles.cache.has(trustedRoleID) || message.member?.roles.cache.has(untrustedRoleID)) {
+		return;
+	}
+
+	const supporterRoleID = getDB().get('roles.supporter');
+	const supporterRole = supporterRoleID && (await message.guild?.roles.fetch(supporterRoleID));
+	if (!supporterRole) {
+		console.log('Missing supporter role!');
 		return;
 	}
 
