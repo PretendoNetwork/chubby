@@ -3,6 +3,7 @@ import { getDB, getDBList } from '@/db';
 import { User } from '@/models/users';
 import { sendEventLogMessage } from '@/util';
 import { sequelize } from '@/sequelize-instance';
+import { notifyUser } from '@/notifications';
 import type { GuildMember, Message } from 'discord.js';
 
 export async function handleLeveling(message: Message): Promise<void> {
@@ -126,14 +127,10 @@ export async function handleLeveling(message: Message): Promise<void> {
 			iconURL: guild.iconURL()!
 		});
 
-		try {
-			//TODO - Switch this to the new DM/notification channel system
-			await message.author.send({
-				embeds: [notificationEmbed]
-			});
-		} catch (error) {
-			console.log('Failed to DM user');
-		}
+		notifyUser(guild, message.author, {
+			content: '',
+			embeds: [notificationEmbed]
+		});
 
 		const eventLogEmbed = new EmbedBuilder();
 		eventLogEmbed.setColor(0x65B540);

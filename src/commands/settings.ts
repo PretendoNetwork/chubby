@@ -17,6 +17,7 @@ const editableOptions = [
 	'channels.event-logs',
 	'channels.event-logs.blacklist',
 	'channels.matchmaking',
+	'channels.notifications',
 	'matchmaking.lock-timeout-seconds',
 	'leveling.channels-blacklist',
 	'leveling.xp-required-for-trusted',
