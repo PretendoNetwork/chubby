@@ -3,7 +3,6 @@ import { sequelize } from '@/sequelize-instance';
 import type { CreationOptional, InferAttributes, InferCreationAttributes } from 'sequelize';
 
 export class NotificationThread extends Model<InferAttributes<NotificationThread>, InferCreationAttributes<NotificationThread>> {
-	declare id: CreationOptional<number>;
 	declare user_id: string;
 	declare thread_id: string;
 	declare updated: CreationOptional<Date>;
@@ -11,17 +10,13 @@ export class NotificationThread extends Model<InferAttributes<NotificationThread
 }
 
 NotificationThread.init({
-	id: {
-		type: DataTypes.INTEGER,
-		autoIncrement: true,
+	thread_id: {
+		type: DataTypes.STRING,
 		primaryKey: true
 	},
 	user_id: {
 		type: DataTypes.STRING,
 		unique: true
-	},
-	thread_id: {
-		type: DataTypes.STRING
 	},
 	updated: {
 		type: DataTypes.DATE,
