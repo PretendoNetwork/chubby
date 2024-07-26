@@ -2,6 +2,7 @@ import { EmbedBuilder, MessageMentions } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Ban } from '@/models/bans';
 import { sendEventLogMessage, ordinal } from '@/util';
+import { untrustUser } from '@/leveling';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
 async function banHandler(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -23,6 +24,8 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 	for (const userId of userIds) {
 		const member = await interaction.guild!.members.fetch(userId);
 		const user = member.user;
+
+		await untrustUser(member, interaction.createdAt);
 
 		const eventLogEmbed = new EmbedBuilder();
 

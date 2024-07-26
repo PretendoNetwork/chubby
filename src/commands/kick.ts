@@ -3,6 +3,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
 import { ordinal, sendEventLogMessage } from '@/util';
+import { untrustUser } from '@/leveling';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
 async function kickHandler(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -24,6 +25,8 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 	for (const userId of userIds) {
 		const member = await interaction.guild!.members.fetch(userId);
 		const user = member.user;
+
+		await untrustUser(member, interaction.createdAt);
 
 		const eventLogEmbed = new EmbedBuilder();
 

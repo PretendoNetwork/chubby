@@ -1,6 +1,6 @@
 import { getDB, getDBList } from '@/db';
 import { ChannelType } from 'discord.js';
-import type { Channel, EmbedBuilder, Guild } from 'discord.js';
+import type { Channel, EmbedBuilder, Guild, Role } from 'discord.js';
 
 const ordinalRules = new Intl.PluralRules('en', {
 	type: 'ordinal'
@@ -48,4 +48,20 @@ export async function getChannelFromSettings(guild: Guild, channelName: string):
 	}
 
 	return channel;
+}
+
+export async function getRoleFromSettings(guild: Guild, roleName: string): Promise<Role | null> {
+	const roleID = getDB().get(roleName);
+	if (!roleID) {
+		console.log(`No role id set for ${roleName}`);
+		return null;
+	}
+
+	const role = await guild.roles.fetch(roleID);
+	if (!role) {
+		console.log(`Role id ${roleID} does not exist in guild ${guild.id}`);
+		return null;
+	}
+
+	return role;
 }
