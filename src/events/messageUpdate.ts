@@ -1,12 +1,15 @@
 import { BaseGuildTextChannel, EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
 import type { Message, PartialMessage } from 'discord.js';
+import { MessageAuditRelationship } from '@/models/messageAuditRelationship';
 
 export default async function messageUpdateHandler(oldMessage: Message | PartialMessage, newMessage: Message | PartialMessage): Promise<void> {
-	if (oldMessage.partial || newMessage.partial) {
-		// * This should never happen as we don't opt into partial structures
-		// * but we need this to be here to convince the compiler that the rest is safe
-		return;
+	if (oldMessage.partial) {
+		oldMessage = await oldMessage.fetch();
+	}
+
+	if (newMessage.partial) {
+		newMessage = await newMessage.fetch();
 	}
 
 	if (newMessage.author.bot) {
@@ -64,6 +67,14 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 			iconURL: guild.iconURL()!
 		});
 
-		await sendEventLogMessage(guild, newMessage.channelId, eventLogEmbed);
+		const audit = await sendEventLogMessage(guild, newMessage.channelId, eventLogEmbed);
+		if (!audit) {
+			return;
+		}
+
+		await MessageAuditRelationship.create({ 
+			message_id: newMessage.id,
+			log_event_id: audit.id
+		});
 	}
 }

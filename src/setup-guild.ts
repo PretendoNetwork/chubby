@@ -22,11 +22,15 @@ export async function setupGuild(guild: Guild): Promise<void> {
 
 async function deployCommands(guild: Guild): Promise<void> {
 
-	const deploy = guild.client.commands.map((command) => {
+	const commands = guild.client.commands.map((command) => {
 		return command.deploy;
 	});
 
+	const contextMenus = guild.client.contextMenus.map((contextMenu) => {
+		return contextMenu.deploy;
+	});
+
 	await rest.put(Routes.applicationGuildCommands(guild.members.me!.id, guild.id), {
-		body: deploy,
+		body: [...commands, ...contextMenus],
 	});
 }
