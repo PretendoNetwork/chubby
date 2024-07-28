@@ -1,7 +1,7 @@
-import { BaseGuildTextChannel, EmbedBuilder } from 'discord.js';
-import { sendEventLogMessage } from '@/util';
-import type { Message, PartialMessage } from 'discord.js';
+import { BaseGuildTextChannel, ChannelType, EmbedBuilder } from 'discord.js';
+import { getChannelFromSettings, sendEventLogMessage } from '@/util';
 import { MessageAuditRelationship } from '@/models/messageAuditRelationship';
+import type { Message, PartialMessage } from 'discord.js';
 
 export default async function messageUpdateHandler(oldMessage: Message | PartialMessage, newMessage: Message | PartialMessage): Promise<void> {
 	if (oldMessage.partial) {
@@ -66,6 +66,28 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()!
 		});
+
+		const previousLogRelationship = await MessageAuditRelationship.findOne({
+			where: {
+				message_id: oldMessage.id
+			},
+			order: [['created', 'desc']]
+		});
+
+		if (previousLogRelationship) {
+			const auditLogChannel = await getChannelFromSettings(guild, 'channels.event-logs');
+			if (auditLogChannel && auditLogChannel.type === ChannelType.GuildText) {
+				const auditMessage = await auditLogChannel.messages.fetch(previousLogRelationship.log_event_id);
+				if (auditMessage) {
+					eventLogEmbed.addFields([
+						{
+							name: 'Previous audit event',
+							value: auditMessage.url
+						}
+					]);
+				}
+			}
+		}
 
 		const audit = await sendEventLogMessage(guild, newMessage.channelId, eventLogEmbed);
 		if (!audit) {
