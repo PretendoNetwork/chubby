@@ -72,6 +72,8 @@ export default async function reactionRemoveHandler(reaction: MessageReaction | 
 }
 
 async function createThread(audit: Message): Promise<ThreadChannel> {
+	// * This must be wrapped in a try to prevent a race condition which
+	// * occurs when many reactions are removed from the same message in quick succession
 	try {
 		return await audit.startThread({ name: 'Event detail thread', reason: 'Thread for adding reaction removal events' });
 	} catch {
