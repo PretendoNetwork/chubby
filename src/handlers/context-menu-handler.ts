@@ -6,11 +6,11 @@ export default async function messageContextMenuHandler(interaction: ContextMenu
 	const contextMenus = interaction.client.contextMenus;
 	const contextMenu = contextMenus.get(commandName);
 
-	// do nothing if no context menu
+	// * Do nothing if no context menu
 	if (!contextMenu) {
 		throw new Error(`Missing command handler for \`${commandName}\``);
 	}
 
-	// run the context menu
+	// * Run the context menu
 	await contextMenu.handler(interaction);
 }
