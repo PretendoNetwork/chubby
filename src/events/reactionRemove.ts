@@ -72,7 +72,11 @@ export default async function reactionRemoveHandler(reaction: MessageReaction | 
 }
 
 async function createThread(audit: Message): Promise<ThreadChannel> {
-	return audit.startThread({ name: 'Reaction removal thread', reason: 'Thread for reaction removal' });
+	try {
+		return await audit.startThread({ name: 'Event detail thread', reason: 'Thread for adding reaction removal events' });
+	} catch {
+		return audit.thread!;
+	}
 }
 
 function createEmbed(reaction: MessageReaction, message: Message): EmbedBuilder {
