@@ -5,16 +5,16 @@ import banCommand from '@/commands/ban';
 import kickCommand from '@/commands/kick';
 import settingsCommand from '@/commands/settings';
 import warnCommand from '@/commands/warn';
+import messageLogContextMenu from '@/context-menus/messages/message-log';
 import { checkMatchmakingThreads } from '@/matchmaking-threads';
 import { loadModel } from '@/check-nsfw';
 import type { Database } from 'sqlite3';
-import type { Client, Collection } from 'discord.js';
-import type { ClientCommand } from '@/types';
+import type { Client } from 'discord.js';
 import config from '@/config.json';
 
 export default async function readyHandler(client: Client): Promise<void> {
 	console.log('Registering global commands');
-	loadBotHandlersCollection('commands', client.commands);
+	loadBotHandlersCollection('commands', client);
 
 	console.log('Establishing DB connection');
 	await sequelize.sync(config.sequelize);
@@ -40,9 +40,11 @@ export default async function readyHandler(client: Client): Promise<void> {
 	await checkMatchmakingThreads();
 }
 
-function loadBotHandlersCollection(name: string, collection: Collection<string, ClientCommand>): void {
-	collection.set(banCommand.name, banCommand);
-	collection.set(kickCommand.name, kickCommand);
-	collection.set(settingsCommand.name, settingsCommand);
-	collection.set(warnCommand.name, warnCommand);
+function loadBotHandlersCollection(name: string, client: Client): void {
+	client.commands.set(banCommand.name, banCommand);
+	client.commands.set(kickCommand.name, kickCommand);
+	client.commands.set(settingsCommand.name, settingsCommand);
+	client.commands.set(warnCommand.name, warnCommand);
+
+	client.contextMenus.set(messageLogContextMenu.name, messageLogContextMenu);
 }

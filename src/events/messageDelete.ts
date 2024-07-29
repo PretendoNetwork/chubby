@@ -4,8 +4,6 @@ import type { Message, PartialMessage } from 'discord.js';
 
 export default async function messageDeleteHandler(message: Message | PartialMessage): Promise<void> {
 	if (message.partial) {
-		// * This should never happen as we don't opt into partial structures
-		// * but we need this to be here to convince the compiler that the rest is safe
 		return;
 	}
 
