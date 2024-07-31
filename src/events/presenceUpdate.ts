@@ -4,7 +4,6 @@ import { ModPingSettings } from '@/models/modPingSettings';
 
 export default async function presenceUpdateHandler(oldPresence: Presence | null, newPresence: Presence): Promise<void> {
 	if (!newPresence || !newPresence.member) return;
-
 	const member = newPresence.member as GuildMember;
 
 	const settings = await ModPingSettings.findOne({
@@ -43,11 +42,12 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 	} else {
 		shouldHaveRole = false;
 	}
-	if (shouldHaveRole && !hasRole) {
+
+	if (shouldHaveRole && !hasRole || hasRole == null) {
 		await member.roles.add(role);
-		console.log(`Added ${role.name} to ${member.user.tag}`);
-	} else if (!shouldHaveRole && hasRole) {
+		console.log(`Added @${role.name} to ${member.user.tag}`);
+	} else if (!shouldHaveRole && hasRole || hasRole == null) {
 		await member.roles.remove(role);
-		console.log(`Removed ${role.name} from ${member.user.tag}`);
+		console.log(`Removed @${role.name} from ${member.user.tag}`);
 	}
 }
