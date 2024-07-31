@@ -14,7 +14,7 @@ ModPingSettings.init(
             primaryKey: true
         },
         settings: {
-            type: DataTypes.TEXT
+            type: DataTypes.STRING
         }
     },
     {
