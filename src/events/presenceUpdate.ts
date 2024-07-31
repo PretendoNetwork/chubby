@@ -6,6 +6,16 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 	if (!newPresence || !newPresence.member) return;
 
 	const member = newPresence.member as GuildMember;
+
+	const settings = await ModPingSettings.findOne({
+		where: { user_id: member.id }
+	});
+
+	if (!settings) return;
+	
+
+	const { online, idle, dnd, offline } = JSON.parse(settings.settings);
+
 	const roleId = getDB().get('roles.mod-ping');
 
 	if (!roleId) {
@@ -13,19 +23,15 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 		return;
 	}
 
-	const settings = await ModPingSettings.findOne({
-		where: { user_id: member.id }
-	});
-
-	if (!settings) return;
-
-	const { online, idle, dnd, offline } = JSON.parse(settings.settings);
-
 	const role = member.guild.roles.cache.get(roleId);
-	if (!role) return;
+	if (!role) {
+		console.log('Role not found!');
+		return;
+	}
 
 	const hasRole = member.roles.cache.has(roleId);
-	let shouldHaveRole = false;
+	let shouldHaveRole;
+	
 	if (newPresence.status === 'online' && online) {
 		shouldHaveRole = true;
 	} else if (newPresence.status === 'idle' && idle) {
@@ -34,8 +40,9 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 		shouldHaveRole = true;
 	} else if (newPresence.status === 'offline' && offline) {
 		shouldHaveRole = true;
+	} else {
+		shouldHaveRole = false;
 	}
-
 	if (shouldHaveRole && !hasRole) {
 		await member.roles.add(role);
 		console.log(`Added ${role.name} to ${member.user.tag}`);
