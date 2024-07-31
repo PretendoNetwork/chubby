@@ -12,6 +12,7 @@ const editableOptions = [
 	'roles.supporter',
 	'roles.trusted',
 	'roles.untrusted',
+	'roles.mod-ping',
 	'channels.nsfw-punished',
 	'channels.nsfw-logs',
 	'channels.event-logs',
