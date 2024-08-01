@@ -49,16 +49,16 @@ async function setStageHandler(interaction: ChatInputCommandInteraction): Promis
 		throw new Error('Slow mode only applies to text channels');
 	}
 
-	const slowMode = await SlowMode.findOne({
+	const [ slowMode, ] = await SlowMode.findOrCreate({
 		where: {
 			channel_id: channel.id
 		},
-		include: 'stages'
+		include: 'stages',
+		defaults: {
+			channel_id: channel.id,
+			enabled: false
+		}
 	});
-
-	if (!slowMode) {
-		throw new Error(`No slow mode set for <#${channel.id}>`);
-	}
 
 	const threshold = interaction.options.getInteger('threshold', true);
 	const limit = interaction.options.getInteger('limit', true);
@@ -213,21 +213,21 @@ async function enableAutoSlowModeHandler(interaction: ChatInputCommandInteractio
 		throw new Error('Slow mode only applies to text channels');
 	}
 
-	let slowMode = await SlowMode.findOne({
+	const [slowMode, created] = await SlowMode.findOrCreate({
 		where: {
 			channel_id: channel.id
 		},
-		include: 'stages'
+		include: 'stages',
+		defaults: {
+			channel_id: channel.id,
+			enabled: false
+		}
 	});
 
-	if (slowMode) {
+	const enabled = slowMode.enabled;
+
+	if (!created && !slowMode.enabled) {
 		slowMode.enabled = true;
-	} else {
-		slowMode = await SlowMode.create({
-			channel_id: channel.id,
-			window: 60000,
-			enabled: true
-		});
 	}
 
 	const window = interaction.options.getInteger('window');
@@ -235,10 +235,14 @@ async function enableAutoSlowModeHandler(interaction: ChatInputCommandInteractio
 		slowMode.window = window;
 	}
 
-	await slowMode.save();
+	if (slowMode.changed()) {
+		await slowMode.save();
+	}
 
-	// * This returns a Promise but is specifically not awaited as it should spawn its own loop
-	handleSlowMode(interaction.guild!, slowMode);
+	if (!enabled) {
+		// * This returns a Promise but is specifically not awaited as it should spawn its own loop
+		handleSlowMode(interaction.guild!, slowMode);
+	}
 
 	const auditLogEmbed = new EmbedBuilder()
 		.setColor(0xC0C0C0)
@@ -420,23 +424,25 @@ async function slowModeStatsHandler(interaction: ChatInputCommandInteraction): P
 			iconURL: interaction.guild!.iconURL()!
 		});
 	
-	if (slowMode && slowMode.enabled) {
-		if (slowMode.users) {
-			embed.addFields([
-				{
-					name: 'Participating Users',
-					value: slowMode.users.toString()
-				}
-			]);
-		}
-		
-		if (slowMode.rate) {
-			embed.addFields([
-				{
-					name: 'Current Rate',
-					value: slowMode.rate.toString()
-				}
-			]);
+	if (slowMode) {
+		if (slowMode.enabled) {
+			if (slowMode.users) {
+				embed.addFields([
+					{
+						name: 'Participating Users',
+						value: slowMode.users.toString()
+					}
+				]);
+			}
+			
+			if (slowMode.rate) {
+				embed.addFields([
+					{
+						name: 'Current Rate',
+						value: slowMode.rate.toString()
+					}
+				]);
+			}
 		}
 
 		embed.addFields([
@@ -449,24 +455,24 @@ async function slowModeStatsHandler(interaction: ChatInputCommandInteraction): P
 				value: `${(slowMode.window / 1000).toString()} seconds`
 			}
 		]);
-
-		if (slowMode.stages && slowMode.stages.length > 0) {
-			const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map(stage => {
-				return `1 message every ${stage.limit}s above ${stage.threshold} messages per minute`;
-			}).join('\n');
-		
-			embed.addFields([
-				{
-					name: 'Configured stages',
-					value: stagesMessage
-				}
-			]);
-		}
 	} else {
 		embed.addFields([
 			{
 				name: 'Current limit',
 				value: `1 message every ${channel.rateLimitPerUser} seconds`
+			}
+		]);
+	}
+
+	if (slowMode && slowMode.stages && slowMode.stages.length > 0) {
+		const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map(stage => {
+			return `1 message every ${stage.limit}s above ${stage.threshold} messages per minute`;
+		}).join('\n');
+	
+		embed.addFields([
+			{
+				name: 'Configured stages',
+				value: stagesMessage
 			}
 		]);
 	}
@@ -571,7 +577,7 @@ const command = new SlashCommandBuilder()
 					.setDescription('Unset a stage for the given channel')
 					.addIntegerOption(option => {
 						option.setName('threshold')
-							.setDescription('The index of the threshold to remove')
+							.setDescription('The value of the threshold to remove')
 							.setMinValue(0)
 							.setRequired(true);
 						return option;
