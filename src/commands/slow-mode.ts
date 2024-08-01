@@ -60,14 +60,14 @@ async function setStageHandler(interaction: ChatInputCommandInteraction): Promis
 		throw new Error(`No slow mode set for <#${channel.id}>`);
 	}
 
-	const threshold = interaction.options.getNumber('threshold', true);
-	const limit = interaction.options.getNumber('limit', true);
+	const threshold = interaction.options.getInteger('threshold', true);
+	const limit = interaction.options.getInteger('limit', true);
 
 	let oldLimit: number | null = null;
 	let stage = slowMode.stages?.find(stage => stage.threshold === threshold);
 	if (stage) {
 		oldLimit = stage.limit;
-		stage.limit = interaction.options.getNumber('limit', true);
+		stage.limit = interaction.options.getInteger('limit', true);
 		await stage.save();
 	} else {
 		stage = await SlowModeStage.create({
@@ -150,7 +150,7 @@ async function unsetStageHandler(interaction: ChatInputCommandInteraction): Prom
 		throw new Error(`No slow mode set for <#${channel.id}>`);
 	}
 
-	const threshold = interaction.options.getNumber('threshold', true);
+	const threshold = interaction.options.getInteger('threshold', true);
 
 	const stage = slowMode.stages?.find(stage => stage.threshold === threshold);
 	if (!stage) {
@@ -230,7 +230,7 @@ async function enableAutoSlowModeHandler(interaction: ChatInputCommandInteractio
 		});
 	}
 
-	const window = interaction.options.getNumber('window');
+	const window = interaction.options.getInteger('window');
 	if (window) {
 		slowMode.window = window;
 	}
@@ -300,7 +300,7 @@ async function enableStaticSlowModeHandler(interaction: ChatInputCommandInteract
 		await slowMode.save();
 	}
 
-	const limit = interaction.options.getNumber('limit', true);
+	const limit = interaction.options.getInteger('limit', true);
 	channel.setRateLimitPerUser(limit);
 
 	const auditLogEmbed = new EmbedBuilder()
@@ -479,10 +479,11 @@ const command = new SlashCommandBuilder()
 							.setDescription('The channel to enable auto slow mode for');
 						return option;
 					})
-					.addNumberOption(option => {
+					.addIntegerOption(option => {
 						option.setName('window')
 							.setDescription('The time window to use for calculating message rate')
-							.setMinValue(10000);
+							.setMinValue(10000)
+							.setMaxValue(1000 * 60 * 60);
 						return option;
 					});
 				return cmd;
@@ -490,10 +491,11 @@ const command = new SlashCommandBuilder()
 			.addSubcommand(cmd =>{
 				cmd.setName('static')
 					.setDescription('Enable static slow mode')
-					.addNumberOption(option => {
+					.addIntegerOption(option => {
 						option.setName('limit')
 							.setDescription('The static limit to set the channel slow mode to')
 							.setMinValue(1)
+							.setMaxValue(21600)
 							.setRequired(true);
 						return option;
 					})
@@ -532,18 +534,19 @@ const command = new SlashCommandBuilder()
 			.addSubcommand(cmd => {
 				cmd.setName('set')
 					.setDescription('Set the properties of a stage for the given channel')
-					.addNumberOption(option => {
+					.addIntegerOption(option => {
 						option.setName('threshold')
 							.setDescription('the threshold in messages per section that must be reached to enable this stage')
 							.setRequired(true)
 							.setMinValue(0);
 						return option;
 					})
-					.addNumberOption(option => {
+					.addIntegerOption(option => {
 						option.setName('limit')
 							.setDescription('the limit to apply to the channel once the threshold has been reached')
 							.setRequired(true)
-							.setMinValue(0);
+							.setMinValue(1)
+							.setMaxValue(21600);
 						return option;
 					})
 					.addChannelOption(option => {
@@ -556,9 +559,10 @@ const command = new SlashCommandBuilder()
 			.addSubcommand(cmd => {
 				cmd.setName('unset')
 					.setDescription('Unset a stage for the given channel')
-					.addNumberOption(option => {
+					.addIntegerOption(option => {
 						option.setName('threshold')
 							.setDescription('The index of the threshold to remove')
+							.setMinValue(0)
 							.setRequired(true);
 						return option;
 					})
