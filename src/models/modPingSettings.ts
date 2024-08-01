@@ -3,8 +3,8 @@ import { sequelize } from '@/sequelize-instance';
 import type { InferAttributes, InferCreationAttributes } from 'sequelize';
 
 export class ModPingSettings extends Model<InferAttributes<ModPingSettings>, InferCreationAttributes<ModPingSettings>> {
-    declare user_id: string;
-    declare online: boolean;
+	declare user_id: string;
+	declare online: boolean;
 	declare idle: boolean;
 	declare dnd: boolean;
 	declare offline: boolean;
