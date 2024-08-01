@@ -10,9 +10,11 @@ import messageLogContextMenu from '@/context-menus/messages/message-log';
 import slowModeCommand from '@/commands/slow-mode';
 import { checkMatchmakingThreads } from '@/matchmaking-threads';
 import { loadModel } from '@/check-nsfw';
+import { SlowMode } from '@/models/slow-mode';
+import handleSlowMode from '@/slow-mode';
+import config from '@/config.json';
 import type { Database } from 'sqlite3';
 import type { Client } from 'discord.js';
-import config from '@/config.json';
 
 export default async function readyHandler(client: Client): Promise<void> {
 	console.log('Registering global commands');
@@ -40,6 +42,8 @@ export default async function readyHandler(client: Client): Promise<void> {
 	console.log(`Logged in as ${client.user!.tag}!`);
 
 	await checkMatchmakingThreads();
+
+	await setupSlowMode(client);
 }
 
 function loadBotHandlersCollection(client: Client): void {
@@ -51,4 +55,15 @@ function loadBotHandlersCollection(client: Client): void {
 	client.commands.set(slowModeCommand.name, slowModeCommand);
 
 	client.contextMenus.set(messageLogContextMenu.name, messageLogContextMenu);
+}
+
+async function setupSlowMode(client: Client): Promise<void> {
+	const slowModes = await SlowMode.findAll({
+		where: {
+			enabled: true
+		},
+		include: { all: true }
+	});
+
+	slowModes.forEach(slowMode => handleSlowMode(client, slowMode));
 }
