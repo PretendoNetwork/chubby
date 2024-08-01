@@ -11,8 +11,7 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 
 	const settings = await ModPingSettings.findOne({
 		where: { 
-			user_id: 
-			member.id 
+			user_id: member.id 
 		}
 	});
 
@@ -34,8 +33,7 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 	if (!hasAllowedRole) {
 		await ModPingSettings.destroy({
 			where: { 
-				user_id: 
-				member.id 
+				user_id: member.id 
 			}
 		});
 		await member.roles.remove(role);
