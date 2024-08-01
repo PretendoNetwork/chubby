@@ -82,10 +82,10 @@ async function handleAutoCurrent(interaction: ChatInputCommandInteraction): Prom
 	});
 	if (settings) {
 		const { online, idle, dnd, offline } = settings;
-		return `Current settings:\n
-		- ${online ? '✅' : '❌'} Online\n
-		- ${idle ? '✅' : '❌'} Idle\n
-		- ${dnd ? '✅' : '❌'} Do Not Disturb\n
+		return `Current settings:
+		- ${online ? '✅' : '❌'} Online
+		- ${idle ? '✅' : '❌'} Idle
+		- ${dnd ? '✅' : '❌'} Do Not Disturb
 		- ${offline ? '✅' : '❌'} Offline`;
 	} else {
 		return 'You have auto-assign disabled.';
