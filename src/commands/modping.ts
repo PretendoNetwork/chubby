@@ -1,26 +1,31 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import type { ChatInputCommandInteraction, GuildMember } from 'discord.js';
 import { ModPingSettings } from '@/models/modPingSettings';
 import { getRoleFromSettings } from '@/util';
+import type { ChatInputCommandInteraction, GuildMember } from 'discord.js';
 
-async function handleToggle(interaction: ChatInputCommandInteraction, role: any): Promise<string> {
+async function handleToggle(interaction: ChatInputCommandInteraction, Role: any): Promise<string> {
 	const member = interaction.member as GuildMember;
 	let message;
-	if (member.roles.cache.has(role.id)) {
-		await member.roles.remove(role);
-		message = `<@&${role.id}> has been removed from you.`;
+	if (member.roles.cache.has(Role.id)) {
+		await member.roles.remove(Role);
+		message = `<@&${Role.id}> has been removed from you.`;
 	} else {
 		await member.roles.add(role);
-		message = `<@&${role.id}> has been assigned to you.`;
+		message = `<@&${Role.id}> has been assigned to you.`;
 	}
-	const settings = await ModPingSettings.findOne({ where: { user_id: member.id } });
+	const settings = await ModPingSettings.findOne({ 
+		where: { 
+			user_id: 
+			member.id 
+		} 
+	});
 	if (settings) {
 		message += '\nAuto-assign will override this if you change statuses.';
 	}
 	return message;
 }
 
-async function handleAutoAssign(interaction: ChatInputCommandInteraction, role: any): Promise<string> {
+async function handleAutoAssign(interaction: ChatInputCommandInteraction, Role: any): Promise<string> {
 	const userId = interaction.user.id;
 	const online = interaction.options.getBoolean('online') ?? true;
 	const idle = interaction.options.getBoolean('idle') ?? true;
@@ -44,10 +49,10 @@ async function handleAutoAssign(interaction: ChatInputCommandInteraction, role: 
 	if (statusList.length === 0 || statusList.length === 4) {
 		return 'Sorry, this setup won\'t work. You need to have at least one status that isn\'t the same as the rest.';
 	} else if (statusList.length === 1) {
-		return `<@&${role.id}> will be assigned when you are ${statusList[0]}.`;
+		return `<@&${Role.id}> will be assigned when you are ${statusList[0]}.`;
 	} else {
 		const lastStatus = statusList.pop();
-		const message = `<@&${role.id}> will be assigned when you are ${statusList.join(', ')} or ${lastStatus}.`;
+		const message = `<@&${Role.id}> will be assigned when you are ${statusList.join(', ')} or ${lastStatus}.`;
 		await ModPingSettings.upsert({
 			user_id: userId,
 			online,
@@ -61,13 +66,23 @@ async function handleAutoAssign(interaction: ChatInputCommandInteraction, role: 
 
 async function handleAutoDisable(interaction: ChatInputCommandInteraction): Promise<string> {
 	const userId = interaction.user.id;
-	await ModPingSettings.destroy({ where: { user_id: userId } });
+	await ModPingSettings.destroy({ 
+		where: { 
+			user_id: 
+			userId 
+		} 
+	});
 	return 'Auto-assign has been disabled.';
 }
 
 async function handleAutoCurrent(interaction: ChatInputCommandInteraction): Promise<string> {
 	const userId = interaction.user.id;
-	const settings = await ModPingSettings.findOne({ where: { user_id: userId } });
+	const settings = await ModPingSettings.findOne({ 
+		where: { 
+			user_id: 
+			userId 
+		} 
+	});
 	if (settings) {
 		const { online, idle, dnd, offline } = settings;
 		return `Current settings:\n

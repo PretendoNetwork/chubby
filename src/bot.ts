@@ -12,7 +12,6 @@ import readyHandler from '@/events/ready';
 import config from '@/config.json';
 import type { ClientContextMenu, ClientCommand } from '@/types';
 
-
 export const client = new Client({
 	partials: [
 		Partials.Reaction,

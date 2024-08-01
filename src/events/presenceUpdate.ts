@@ -1,7 +1,7 @@
-import type { Presence } from 'discord.js';
 import { getDBList } from '@/db';
 import { ModPingSettings } from '@/models/modPingSettings';
 import { getRoleFromSettings } from '@/util';
+import type { Presence } from 'discord.js';
 
 export default async function presenceUpdateHandler(oldPresence: Presence | null, newPresence: Presence): Promise<void> {
 	if (!newPresence?.member) {
@@ -10,7 +10,10 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 	const member = newPresence.member;
 
 	const settings = await ModPingSettings.findOne({
-		where: { user_id: member.id }
+		where: { 
+			user_id: 
+			member.id 
+		}
 	});
 
 	if (!settings) {
@@ -30,12 +33,14 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 
 	if (!hasAllowedRole) {
 		await ModPingSettings.destroy({
-			where: { user_id: member.id }
+			where: { 
+				user_id: 
+				member.id 
+			}
 		});
 		await member.roles.remove(role);
 		console.log(`Deleted auto-assign for ${member.user.tag} as they have been demoted`);
 		return;
-
 	}
 
 	let shouldHaveRole;
