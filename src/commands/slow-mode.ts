@@ -421,18 +421,28 @@ async function slowModeStatsHandler(interaction: ChatInputCommandInteraction): P
 		});
 	
 	if (slowMode && slowMode.enabled) {
+		if (slowMode.users) {
+			embed.addFields([
+				{
+					name: 'Participating Users',
+					value: slowMode.users.toString()
+				}
+			]);
+		}
+		
+		if (slowMode.rate) {
+			embed.addFields([
+				{
+					name: 'Current Rate',
+					value: slowMode.rate.toString()
+				}
+			]);
+		}
+
 		embed.addFields([
 			{
-				name: 'Participating Users',
-				value: slowMode.users.toString()
-			},
-			{
-				name: 'Current Rate',
-				value: slowMode.rate.toString()
-			},
-			{
 				name: 'Current Limit',
-				value: `1 message every ${slowMode.limit} seconds`
+				value: `1 message every ${channel.rateLimitPerUser} seconds`
 			},
 			{
 				name: 'Window',

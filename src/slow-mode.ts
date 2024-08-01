@@ -41,10 +41,6 @@ export default async function handleSlowMode(guild: Guild, slowMode: SlowMode): 
 			slowMode.users = users.size;
 			slowMode.rate = rate;
 
-			if (stage) {
-				slowMode.limit = stage.limit;
-			}
-
 			await slowMode.save({ transaction });
 		});
 	}
