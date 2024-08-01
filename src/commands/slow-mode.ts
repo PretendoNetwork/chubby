@@ -109,7 +109,7 @@ async function setStageHandler(interaction: ChatInputCommandInteraction): Promis
 		]);
 	}
 
-	if (slowMode.stages) {
+	if (slowMode.stages && slowMode.stages.length > 0) {
 		const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map(stage => {
 			return `1 message every ${stage.limit}s above ${stage.threshold} messages per minute`;
 		}).join('\n');
@@ -183,7 +183,7 @@ async function unsetStageHandler(interaction: ChatInputCommandInteraction): Prom
 			iconURL: interaction.guild!.iconURL()!
 		});
 
-	if (slowMode.stages) {
+	if (slowMode.stages && slowMode.stages.length > 0) {
 		const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map(stage => {
 			return `1 message every ${stage.limit}s above ${stage.threshold} messages per minute`;
 		}).join('\n');
@@ -258,7 +258,7 @@ async function enableAutoSlowModeHandler(interaction: ChatInputCommandInteractio
 			iconURL: interaction.guild!.iconURL()!
 		});
 
-	if (slowMode.stages) {
+	if (slowMode.stages && slowMode.stages.length > 0) {
 		const stagesMessage = slowMode.stages.map(stage => {
 			return `1 message every ${stage.limit}s above ${stage.threshold} messages per minute`;
 		}).join('\n');
@@ -440,7 +440,7 @@ async function slowModeStatsHandler(interaction: ChatInputCommandInteraction): P
 			}
 		]);
 
-		if (slowMode.stages) {
+		if (slowMode.stages && slowMode.stages.length > 0) {
 			const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map(stage => {
 				return `1 message every ${stage.limit}s above ${stage.threshold} messages per minute`;
 			}).join('\n');
