@@ -19,7 +19,7 @@ import type {
 	NonAttribute
 } from 'sequelize';
 
-export class SlowMode extends Model<InferAttributes<SlowMode, { omit: 'stages' }>, InferCreationAttributes<SlowMode, { omit: 'stages' }>> {
+export class SlowMode extends Model<InferAttributes<SlowMode>, InferCreationAttributes<SlowMode>> {
 	declare id: CreationOptional<number>;
 	declare channel_id: string;
 	declare window: CreationOptional<number>;
