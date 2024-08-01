@@ -28,7 +28,7 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 		return;
 	}
 	const allowedRoles = getDBList('roles.mod-ping-allowed');
-	const hasAllowedRole = member.roles.cache.some(role => allowedRoles.includes(role.id));
+	const hasAllowedRole = member.roles.cache.hasAny(...allowedRoles);
 
 	if (!hasAllowedRole) {
 		await ModPingSettings.destroy({
@@ -41,7 +41,7 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 		return;
 	}
 
-	let shouldHaveRole;
+	let shouldHaveRole = false;
 
 	if (newPresence.status === 'online' && online) {
 		shouldHaveRole = true;
@@ -51,15 +51,11 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 		shouldHaveRole = true;
 	} else if (newPresence.status === 'offline' && offline) {
 		shouldHaveRole = true;
-	} else {
-		shouldHaveRole = false;
-	}
-
+	} 
+	
 	if (shouldHaveRole) {
 		await member.roles.add(role);
-		console.log(`Added @${role.name} to ${member.user.tag}`);
 	} else {
 		await member.roles.remove(role);
-		console.log(`Removed @${role.name} from ${member.user.tag}`);
 	}
 }
