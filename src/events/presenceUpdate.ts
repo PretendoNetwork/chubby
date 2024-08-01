@@ -1,36 +1,45 @@
-import { GuildMember, Presence } from 'discord.js';
-import { getDB } from '@/db';
+import type { Presence } from 'discord.js';
+import { getDBList } from '@/db';
 import { ModPingSettings } from '@/models/modPingSettings';
+import { getRoleFromSettings } from '@/util';
 
 export default async function presenceUpdateHandler(oldPresence: Presence | null, newPresence: Presence): Promise<void> {
-	if (!newPresence || !newPresence.member) return;
-	const member = newPresence.member as GuildMember;
+	if (!newPresence?.member) {
+		return;
+	}
+	const member = newPresence.member;
 
 	const settings = await ModPingSettings.findOne({
 		where: { user_id: member.id }
 	});
 
-	if (!settings) return;
-	
-
-	const { online, idle, dnd, offline } = JSON.parse(settings.settings);
-
-	const roleId = getDB().get('roles.mod-ping');
-
-	if (!roleId) {
-		console.log('Missing mod-ping role ID!');
+	if (!settings) {
 		return;
 	}
+    
+	const { online, idle, dnd, offline } = settings;
 
-	const role = member.guild.roles.cache.get(roleId);
+	const role = await getRoleFromSettings(member.guild!, 'roles.mod-ping');
+
 	if (!role) {
-		console.log('Role not found!');
+		console.log('Missing mod-ping role in settings!');
 		return;
 	}
+	const allowedRoles = getDBList('roles.mod-ping-allowed');
+	const hasAllowedRole = member.roles.cache.some(role => allowedRoles.includes(role.id));
 
-	const hasRole = member.roles.cache.has(roleId);
+	if (!hasAllowedRole) {
+		await ModPingSettings.destroy({
+			where: { user_id: member.id }
+		});
+		await member.roles.remove(role);
+		console.log(`Deleted auto-assign for ${member.user.tag} as they have been demoted`);
+		return;
+
+	}
+
 	let shouldHaveRole;
-	
+
 	if (newPresence.status === 'online' && online) {
 		shouldHaveRole = true;
 	} else if (newPresence.status === 'idle' && idle) {
@@ -43,10 +52,10 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 		shouldHaveRole = false;
 	}
 
-	if (shouldHaveRole && !hasRole || hasRole == null) {
+	if (shouldHaveRole) {
 		await member.roles.add(role);
 		console.log(`Added @${role.name} to ${member.user.tag}`);
-	} else if (!shouldHaveRole && hasRole || hasRole == null) {
+	} else {
 		await member.roles.remove(role);
 		console.log(`Removed @${role.name} from ${member.user.tag}`);
 	}
