@@ -10,7 +10,7 @@ async function handleToggle(interaction: ChatInputCommandInteraction, Role: any)
 		await member.roles.remove(Role);
 		message = `<@&${Role.id}> has been removed from you.`;
 	} else {
-		await member.roles.add(role);
+		await member.roles.add(Role);
 		message = `<@&${Role.id}> has been assigned to you.`;
 	}
 	const settings = await ModPingSettings.findOne({ 
