@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ModPingSettings } from '@/models/modPingSettings';
 import { getRoleFromSettings } from '@/util';
-import type { ChatInputCommandInteraction, GuildMember, Role } from 'discord.js';
+import type { ChatInputCommandInteraction, Role } from 'discord.js';
 
 async function handleToggle(interaction: ChatInputCommandInteraction, role: Role): Promise<string> {
 	const member = await interaction.guild!.members.fetch(interaction.user.id);
@@ -119,7 +119,7 @@ async function interactionHandler(interaction: ChatInputCommandInteraction): Pro
 }
 
 const command = new SlashCommandBuilder();
-command.setDefaultMemberPermissions('0')
+command.setDefaultMemberPermissions('0');
 command.setName('mod-ping');
 command.setDescription('Manage your @Mod-Ping role.');
 command.addSubcommand((cmd) => 
