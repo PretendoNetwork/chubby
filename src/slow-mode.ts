@@ -1,10 +1,10 @@
 import { ChannelType, PermissionsBitField } from 'discord.js';
 import { sequelize } from '@/sequelize-instance';
 import type { SlowMode } from '@/models/slow-mode';
-import type { Guild, Message } from 'discord.js';
+import type { Client, Message } from 'discord.js';
 
-export default async function handleSlowMode(guild: Guild, slowMode: SlowMode): Promise<void> {
-	const channel = await guild.channels.fetch(slowMode.channel_id);
+export default async function handleSlowMode(client: Client, slowMode: SlowMode): Promise<void> {
+	const channel = await client.channels.fetch(slowMode.channel_id);
 	if (channel === null || channel.type !== ChannelType.GuildText) {
 		return;
 	}

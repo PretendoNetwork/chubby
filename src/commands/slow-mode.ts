@@ -241,7 +241,7 @@ async function enableAutoSlowModeHandler(interaction: ChatInputCommandInteractio
 
 	if (!enabled) {
 		// * This returns a Promise but is specifically not awaited as it should spawn its own loop
-		handleSlowMode(interaction.guild!, slowMode);
+		handleSlowMode(interaction.client, slowMode);
 	}
 
 	const auditLogEmbed = new EmbedBuilder()

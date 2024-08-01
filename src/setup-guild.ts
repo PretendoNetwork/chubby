@@ -1,8 +1,6 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v10';
-import handleSlowMode from '@/slow-mode';
-import { SlowMode } from '@/models/slow-mode';
 import { bot_token as botToken } from '@/config.json';
 import type { Guild } from 'discord.js';
 
@@ -20,9 +18,6 @@ export async function setupGuild(guild: Guild): Promise<void> {
 
 	// * Setup commands
 	await deployCommands(guild);
-
-	// * Setup slow mode
-	await setupSlowMode(guild);
 }
 
 async function deployCommands(guild: Guild): Promise<void> {
@@ -38,15 +33,4 @@ async function deployCommands(guild: Guild): Promise<void> {
 	await rest.put(Routes.applicationGuildCommands(guild.members.me!.id, guild.id), {
 		body: [...commands, ...contextMenus],
 	});
-}
-
-async function setupSlowMode(guild: Guild): Promise<void> {
-	const slowModes = await SlowMode.findAll({
-		where: {
-			enabled: true
-		},
-		include: { all: true }
-	});
-
-	slowModes.forEach(slowMode => handleSlowMode(guild, slowMode));
 }
