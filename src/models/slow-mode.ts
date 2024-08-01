@@ -24,9 +24,8 @@ export class SlowMode extends Model<InferAttributes<SlowMode, { omit: 'stages' }
 	declare channel_id: string;
 	declare window: CreationOptional<number>;
 	declare enabled: CreationOptional<boolean>;
-	declare users: CreationOptional<number>;
-	declare rate: CreationOptional<number>;
-	declare limit: CreationOptional<number>;
+	declare users?: CreationOptional<number>;
+	declare rate?: CreationOptional<number>;
 
 	declare getStages: HasManyGetAssociationsMixin<SlowModeStage>; // Note the null assertions!
 	declare addStage: HasManyAddAssociationMixin<SlowModeStage, number>;
@@ -64,13 +63,12 @@ SlowMode.init({
 		defaultValue: 60000
 	},
 	users: {
-		type: DataTypes.NUMBER
+		type: DataTypes.NUMBER,
+		allowNull: true
 	},
 	rate: {
-		type: DataTypes.NUMBER
-	},
-	limit: {
-		type: DataTypes.NUMBER
+		type: DataTypes.NUMBER,
+		allowNull: true
 	}
 }, { sequelize, tableName: 'slow-mode' });
 
