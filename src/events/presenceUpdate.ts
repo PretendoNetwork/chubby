@@ -7,8 +7,8 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 	if (!newPresence?.member) {
 		return;
 	}
-	const member = newPresence.member;
 
+	const member = newPresence.member;
 	const settings = await ModPingSettings.findOne({
 		where: { 
 			user_id: member.id 
