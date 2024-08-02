@@ -78,6 +78,7 @@ async function handleAutoDisable(interaction: ChatInputCommandInteraction): Prom
 			user_id: userID
 		} 
 	});
+
 	return 'Auto-assign has been disabled.';
 }
 
