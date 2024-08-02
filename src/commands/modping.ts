@@ -59,6 +59,7 @@ async function handleAutoAssign(interaction: ChatInputCommandInteraction, role: 
 			dnd,
 			offline
 		});
+
 		return message;
 	}
 }
