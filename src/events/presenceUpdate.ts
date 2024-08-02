@@ -20,7 +20,6 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 	}
     
 	const { online, idle, dnd, offline } = settings;
-
 	const role = await getRoleFromSettings(member.guild!, 'roles.mod-ping');
 
 	if (!role) {
