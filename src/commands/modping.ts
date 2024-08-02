@@ -6,6 +6,7 @@ import type { ChatInputCommandInteraction, Role } from 'discord.js';
 async function handleToggle(interaction: ChatInputCommandInteraction, role: Role): Promise<string> {
 	const member = await interaction.guild!.members.fetch(interaction.user.id);
 	let message;
+
 	if (member.roles.cache.has(role.id)) {
 		await member.roles.remove(role);
 		message = `<@&${role.id}> has been removed from you.`;
@@ -13,14 +14,17 @@ async function handleToggle(interaction: ChatInputCommandInteraction, role: Role
 		await member.roles.add(role);
 		message = `<@&${role.id}> has been assigned to you.`;
 	}
+
 	const settings = await ModPingSettings.findOne({ 
 		where: { 
 			user_id: member.id 
 		} 
 	});
+
 	if (settings) {
 		message += '\nAuto-assign will override this if you change statuses.';
 	}
+
 	return message;
 }
 
