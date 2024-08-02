@@ -74,10 +74,10 @@ async function handleAutoDisable(interaction: ChatInputCommandInteraction): Prom
 }
 
 async function handleAutoCurrent(interaction: ChatInputCommandInteraction): Promise<string> {
-	const userId = interaction.user.id;
+	const userID = interaction.user.id;
 	const settings = await ModPingSettings.findOne({ 
 		where: { 
-			user_id: userId 
+			user_id: userID
 		} 
 	});
 	if (settings) {
