@@ -128,7 +128,10 @@ async function interactionHandler(interaction: ChatInputCommandInteraction): Pro
 		}
 	}
 
-	await interaction.reply({ content: message, ephemeral: true });
+	await interaction.reply({
+		content: message,
+		ephemeral: true
+	});
 }
 
 const command = new SlashCommandBuilder();
