@@ -39,12 +39,15 @@ async function handleAutoAssign(interaction: ChatInputCommandInteraction, role: 
 	if (online) {
 		statusList.push('Online');
 	}
+
 	if (idle) {
 		statusList.push('Idle');
 	}
+
 	if (dnd) {
 		statusList.push('Do Not Disturb');
 	}
+
 	if (offline) {
 		statusList.push('Offline');
 	}
