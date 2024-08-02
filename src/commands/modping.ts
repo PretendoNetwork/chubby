@@ -88,6 +88,7 @@ async function handleAutoCurrent(interaction: ChatInputCommandInteraction): Prom
 			user_id: userID
 		} 
 	});
+
 	if (settings) {
 		const { online, idle, dnd, offline } = settings;
 		return `Current settings:
