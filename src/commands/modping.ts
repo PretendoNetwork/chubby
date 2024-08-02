@@ -53,7 +53,7 @@ async function handleAutoAssign(interaction: ChatInputCommandInteraction, role: 
 		const lastStatus = statusList.pop();
 		const message = `<@&${role.id}> will be assigned when you are ${statusList.join(', ')} or ${lastStatus}.`;
 		await ModPingSettings.upsert({
-			user_id: userId,
+			user_id: userID,
 			online,
 			idle,
 			dnd,
