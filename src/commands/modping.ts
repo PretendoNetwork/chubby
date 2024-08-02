@@ -64,10 +64,10 @@ async function handleAutoAssign(interaction: ChatInputCommandInteraction, role: 
 }
 
 async function handleAutoDisable(interaction: ChatInputCommandInteraction): Promise<string> {
-	const userId = interaction.user.id;
+	const userID = interaction.user.id;
 	await ModPingSettings.destroy({ 
 		where: { 
-			user_id: userId 
+			user_id: userID
 		} 
 	});
 	return 'Auto-assign has been disabled.';
