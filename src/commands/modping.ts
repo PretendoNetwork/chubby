@@ -25,7 +25,7 @@ async function handleToggle(interaction: ChatInputCommandInteraction, role: Role
 }
 
 async function handleAutoAssign(interaction: ChatInputCommandInteraction, role: Role): Promise<string> {
-	const userId = interaction.user.id;
+	const userID = interaction.user.id;
 	const online = interaction.options.getBoolean('online') ?? true;
 	const idle = interaction.options.getBoolean('idle') ?? true;
 	const dnd = interaction.options.getBoolean('do_not_disturb') ?? false;
