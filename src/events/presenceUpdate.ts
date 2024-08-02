@@ -27,6 +27,7 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 		console.log('Missing mod-ping role in settings!');
 		return;
 	}
+
 	const allowedRoles = getDBList('roles.mod-ping-allowed');
 	const hasAllowedRole = member.roles.cache.hasAny(...allowedRoles);
 
