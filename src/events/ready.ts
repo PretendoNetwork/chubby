@@ -5,6 +5,7 @@ import banCommand from '@/commands/ban';
 import kickCommand from '@/commands/kick';
 import settingsCommand from '@/commands/settings';
 import warnCommand from '@/commands/warn';
+import modpingCommand from '@/commands/modping';
 import messageLogContextMenu from '@/context-menus/messages/message-log';
 import { checkMatchmakingThreads } from '@/matchmaking-threads';
 import { loadModel } from '@/check-nsfw';
@@ -45,6 +46,7 @@ function loadBotHandlersCollection(name: string, client: Client): void {
 	client.commands.set(kickCommand.name, kickCommand);
 	client.commands.set(settingsCommand.name, settingsCommand);
 	client.commands.set(warnCommand.name, warnCommand);
+	client.commands.set(modpingCommand.name, modpingCommand);
 
 	client.contextMenus.set(messageLogContextMenu.name, messageLogContextMenu);
 }
