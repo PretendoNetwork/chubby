@@ -7,15 +7,18 @@ import settingsCommand from '@/commands/settings';
 import warnCommand from '@/commands/warn';
 import modpingCommand from '@/commands/modping';
 import messageLogContextMenu from '@/context-menus/messages/message-log';
+import slowModeCommand from '@/commands/slow-mode';
 import { checkMatchmakingThreads } from '@/matchmaking-threads';
 import { loadModel } from '@/check-nsfw';
+import { SlowMode } from '@/models/slow-mode';
+import handleSlowMode from '@/slow-mode';
+import config from '@/config.json';
 import type { Database } from 'sqlite3';
 import type { Client } from 'discord.js';
-import config from '@/config.json';
 
 export default async function readyHandler(client: Client): Promise<void> {
 	console.log('Registering global commands');
-	loadBotHandlersCollection('commands', client);
+	loadBotHandlersCollection(client);
 
 	console.log('Establishing DB connection');
 	await sequelize.sync(config.sequelize);
@@ -39,14 +42,28 @@ export default async function readyHandler(client: Client): Promise<void> {
 	console.log(`Logged in as ${client.user!.tag}!`);
 
 	await checkMatchmakingThreads();
+
+	await setupSlowMode(client);
 }
 
-function loadBotHandlersCollection(name: string, client: Client): void {
+function loadBotHandlersCollection(client: Client): void {
 	client.commands.set(banCommand.name, banCommand);
 	client.commands.set(kickCommand.name, kickCommand);
 	client.commands.set(settingsCommand.name, settingsCommand);
 	client.commands.set(warnCommand.name, warnCommand);
 	client.commands.set(modpingCommand.name, modpingCommand);
+	client.commands.set(slowModeCommand.name, slowModeCommand);
 
 	client.contextMenus.set(messageLogContextMenu.name, messageLogContextMenu);
+}
+
+async function setupSlowMode(client: Client): Promise<void> {
+	const slowModes = await SlowMode.findAll({
+		where: {
+			enabled: true
+		},
+		include: { all: true }
+	});
+
+	slowModes.forEach(slowMode => handleSlowMode(client, slowMode));
 }

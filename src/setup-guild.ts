@@ -7,16 +7,16 @@ import type { Guild } from 'discord.js';
 const rest = new REST({ version: '10' }).setToken(botToken);
 
 export async function setupGuild(guild: Guild): Promise<void> {
-	// do nothing if the bot does not have the correct permissions
+	// * Do nothing if the bot does not have the correct permissions
 	if (!guild.members.me!.permissions.has([PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ManageChannels])) {
 		console.log('Bot does not have permissions to set up in guild', guild.name);
 		return;
 	}
 
-	// Populate members cache
+	// * Populate members cache
 	await guild.members.fetch();
 
-	// Setup commands
+	// * Setup commands
 	await deployCommands(guild);
 }
 
