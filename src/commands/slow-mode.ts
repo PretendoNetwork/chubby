@@ -561,7 +561,7 @@ const command = new SlashCommandBuilder()
 						option.setName('limit')
 							.setDescription('the limit to apply to the channel once the threshold has been reached')
 							.setRequired(true)
-							.setMinValue(1)
+							.setMinValue(0)
 							.setMaxValue(21600);
 						return option;
 					})
