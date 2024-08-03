@@ -44,4 +44,6 @@ export default async function handleSlowMode(client: Client, slowMode: SlowMode)
 			await slowMode.save({ transaction });
 		});
 	}
+
+	console.log(`Slow mode stopped for ${channel.name}`);
 }
