@@ -2,7 +2,8 @@ import { SlowMode, SlowModeStage } from '@/models/slow-mode';
 import handleSlowMode from '@/slow-mode';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { sendEventLogMessage } from '@/util';
-import { ChannelType, EmbedBuilder, type ChatInputCommandInteraction } from 'discord.js';
+import { ChannelType, EmbedBuilder } from 'discord.js';
+import type { GuildTextBasedChannel, ChatInputCommandInteraction } from 'discord.js';
 
 async function slowModeHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	switch (interaction.options.getSubcommandGroup()) {
@@ -406,11 +407,24 @@ async function slowModeStatsHandler(interaction: ChatInputCommandInteraction): P
 	});
 
 	if (channel.rateLimitPerUser === 0) {
-		if (!slowMode || !slowMode.enabled) {
+		if (!slowMode) {
 			throw new Error(`No slow mode set for <#${channel.id}>`);
 		}
 	}
 
+	let embed: EmbedBuilder;
+	if (slowMode && slowMode.enabled) {
+		embed = autoSlowModeStats(slowMode, channel);
+	} else if (channel.rateLimitPerUser > 0) {
+		embed = staticSlowModeStats(slowMode, channel);
+	} else {
+		embed = disabledSlowModeStats(slowMode, channel);
+	}
+
+	await interaction.followUp({ embeds: [embed] });
+}
+
+function autoSlowModeStats(slowMode: SlowMode, channel: GuildTextBasedChannel): EmbedBuilder {
 	const embed = new EmbedBuilder()
 		.setTitle('Slow mode stats')
 		.setFields([
@@ -418,52 +432,101 @@ async function slowModeStatsHandler(interaction: ChatInputCommandInteraction): P
 				name: 'Channel',
 				value: `<#${channel.id}>`
 			},
-		])
-		.setFooter({
-			text: 'Pretendo Network',
-			iconURL: interaction.guild!.iconURL()!
-		});
-	
-	if (slowMode) {
-		if (slowMode.enabled) {
-			if (slowMode.users) {
-				embed.addFields([
-					{
-						name: 'Participating Users',
-						value: slowMode.users.toString()
-					}
-				]);
-			}
-			
-			if (slowMode.rate) {
-				embed.addFields([
-					{
-						name: 'Current Rate',
-						value: slowMode.rate.toString()
-					}
-				]);
-			}
-		}
-
-		embed.addFields([
 			{
-				name: 'Current Limit',
-				value: `1 message every ${channel.rateLimitPerUser} seconds`
+				name: 'Slow mode type',
+				value: 'Auto'
 			},
 			{
 				name: 'Window',
 				value: `${(slowMode.window / 1000).toString()} seconds`
 			}
-		]);
-	} else {
+		])
+		.setFooter({
+			text: 'Pretendo Network',
+			iconURL: channel.guild.iconURL()!
+		});
+
+	if (slowMode.users !== undefined) {
 		embed.addFields([
 			{
-				name: 'Current limit',
-				value: `1 message every ${channel.rateLimitPerUser} seconds`
+				name: 'Participating Users',
+				value: slowMode.users.toString()
+			}
+		]);
+	}
+	
+	if (slowMode.rate !== undefined) {
+		embed.addFields([
+			{
+				name: 'Current Rate',
+				value: slowMode.rate.toString()
 			}
 		]);
 	}
 
+	embed.addFields([
+		{
+			name: 'Current limit',
+			value: `1 message every ${channel.rateLimitPerUser} seconds`
+		}
+	]);
+
+	addConfiguredStagesToEmbed(embed, slowMode);
+
+	return embed;
+}
+
+function staticSlowModeStats(slowMode: SlowMode | null, channel: GuildTextBasedChannel): EmbedBuilder {
+	const embed = new EmbedBuilder()
+		.setTitle('Slow mode stats')
+		.setFields([
+			{
+				name: 'Channel',
+				value: `<#${channel.id}>`
+			},
+			{
+				name: 'Slow mode type',
+				value: 'Static'
+			},
+			{
+				name: 'Current limit',
+				value: `1 message every ${channel.rateLimitPerUser} seconds`
+			}
+		])
+		.setFooter({
+			text: 'Pretendo Network',
+			iconURL: channel.guild.iconURL()!
+		});
+
+	addConfiguredStagesToEmbed(embed, slowMode);
+
+	return embed;
+}
+
+function disabledSlowModeStats(slowMode: SlowMode | null, channel: GuildTextBasedChannel): EmbedBuilder {
+	const embed = new EmbedBuilder()
+		.setTitle('Slow mode stats')
+		.setFields([
+			{
+				name: 'Channel',
+				value: `<#${channel.id}>`
+			},
+			{
+				name: 'Slow mode type',
+				value: 'Disabled'
+			}
+		])
+		.setFooter({
+			text: 'Pretendo Network',
+			iconURL: channel.guild.iconURL()!
+		});
+
+	addConfiguredStagesToEmbed(embed, slowMode);
+
+	return embed;
+}
+
+function addConfiguredStagesToEmbed(embed: EmbedBuilder, slowMode: SlowMode | null): void {
 	if (slowMode && slowMode.stages && slowMode.stages.length > 0) {
 		const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map(stage => {
 			return `1 message every ${stage.limit}s above ${stage.threshold} messages per minute`;
@@ -471,13 +534,11 @@ async function slowModeStatsHandler(interaction: ChatInputCommandInteraction): P
 	
 		embed.addFields([
 			{
-				name: 'Configured stages',
+				name: 'Configured auto slow mode stages',
 				value: stagesMessage
-			}
+			},
 		]);
 	}
-
-	await interaction.followUp({ embeds: [embed] });
 }
 
 const command = new SlashCommandBuilder()
