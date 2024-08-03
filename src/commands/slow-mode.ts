@@ -158,7 +158,7 @@ async function unsetStageHandler(interaction: ChatInputCommandInteraction): Prom
 	}
 
 	const oldLimit = stage.limit;
-	await slowMode.destroy();
+	await stage.destroy();
 	await slowMode.reload({ include: 'stages' });
 
 	const auditLogEmbed = new EmbedBuilder()
