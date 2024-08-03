@@ -27,7 +27,7 @@ export class SlowMode extends Model<InferAttributes<SlowMode>, InferCreationAttr
 	declare users?: CreationOptional<number>;
 	declare rate?: CreationOptional<number>;
 
-	declare getStages: HasManyGetAssociationsMixin<SlowModeStage>; // Note the null assertions!
+	declare getStages: HasManyGetAssociationsMixin<SlowModeStage>;
 	declare addStage: HasManyAddAssociationMixin<SlowModeStage, number>;
 	declare addStages: HasManyAddAssociationsMixin<SlowModeStage, number>;
 	declare setStages: HasManySetAssociationsMixin<SlowModeStage, number>;

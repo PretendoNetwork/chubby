@@ -6,32 +6,26 @@ import { ChannelType, EmbedBuilder } from 'discord.js';
 import type { GuildTextBasedChannel, ChatInputCommandInteraction } from 'discord.js';
 
 async function slowModeHandler(interaction: ChatInputCommandInteraction): Promise<void> {
-	switch (interaction.options.getSubcommandGroup()) {
-		case 'stage': {
-			switch (interaction.options.getSubcommand()) {
-				case 'set':
-					return setStageHandler(interaction);
-				case 'unset':
-					return unsetStageHandler(interaction);
-			}
-			break;
+	const subcommandGroup = interaction.options.getSubcommandGroup();
+	const subcommand = interaction.options.getSubcommand();
+
+	if (subcommandGroup === 'stage') {
+		if (subcommand === 'set') {
+			return setStageHandler(interaction);
+		} else if (subcommand === 'unset') {
+			return unsetStageHandler(interaction);
 		}
-		case 'enable': {
-			switch (interaction.options.getSubcommand()) {
-				case 'auto':
-					return enableAutoSlowModeHandler(interaction);
-				case 'static':
-					return enableStaticSlowModeHandler(interaction);
-			}
-			break;
+	} else if (subcommandGroup === 'enable') {
+		if (subcommand === 'auto') {
+			return enableAutoSlowModeHandler(interaction);
+		} else {
+			return enableStaticSlowModeHandler(interaction);
 		}
-		case null: {
-			switch (interaction.options.getSubcommand()) {
-				case 'disable':
-					return disableSlowModeHandler(interaction);
-				case 'stats':
-					return slowModeStatsHandler(interaction);
-			}
+	} else {
+		if (subcommand === 'disable') {
+			return disableSlowModeHandler(interaction);
+		} else if (subcommand === 'stats') {
+			return slowModeStatsHandler(interaction);
 		}
 	}
 
@@ -50,7 +44,7 @@ async function setStageHandler(interaction: ChatInputCommandInteraction): Promis
 		throw new Error('Slow mode only applies to text channels');
 	}
 
-	const [ slowMode, ] = await SlowMode.findOrCreate({
+	const [slowMode, _] = await SlowMode.findOrCreate({
 		where: {
 			channel_id: channel.id
 		},
