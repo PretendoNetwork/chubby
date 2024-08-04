@@ -4,6 +4,7 @@ import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
 import { ordinal, sendEventLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
+import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
 async function kickHandler(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -77,7 +78,7 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 		if (count >= 2) { // Atleast 2 previous kicks, this would be the 3rd strike. Ban
 			eventLogEmbed.setColor(0xF24E43);
 			eventLogEmbed.setTitle('Event Type: _Member Banned_');
-			
+
 			const banEmbed = new EmbedBuilder();
 
 			banEmbed.setTitle('Punishment Details');
@@ -172,9 +173,9 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 			sendMemberEmbeds.push(pastKicksEmbed);
 		}
 
-		await member.send({
+		await notifyUser(guild, user, {
 			embeds: sendMemberEmbeds
-		}).catch(() => console.log('Failed to DM user'));
+		});
 
 		if (isKick) {
 			await member.kick(reason);

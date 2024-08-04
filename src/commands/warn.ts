@@ -5,6 +5,7 @@ import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
 import { ordinal, sendEventLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
+import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
 async function warnHandler(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -176,9 +177,9 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 				);
 			}
 
-			await member.send({
+			await notifyUser(guild, user, {
 				embeds: [punishmentEmbed, pastWarningsEmbed]
-			}).catch(() => console.log('Failed to DM user'));
+			});
 
 			if (isKick) {
 				await member.kick(reason);
@@ -237,9 +238,9 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 				}
 			);
 
-			await member.send({
+			await notifyUser(guild, user, {
 				embeds: [punishmentEmbed]
-			}).catch(() => console.log('Failed to DM user'));
+			});
 		}
 
 		await Warning.create({

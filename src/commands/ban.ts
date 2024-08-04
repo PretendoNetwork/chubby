@@ -3,6 +3,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { Ban } from '@/models/bans';
 import { sendEventLogMessage, ordinal } from '@/util';
 import { untrustUser } from '@/leveling';
+import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
 async function banHandler(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -65,7 +66,7 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 		});
 
 		await sendEventLogMessage(guild, null, eventLogEmbed);
-		
+
 		const { count, rows } = await Ban.findAndCountAll({
 			where: {
 				user_id: member.id
@@ -131,9 +132,9 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 			sendMemberEmbeds.push(pastBansEmbed);
 		}
 
-		await member.send({
+		await notifyUser(guild, user, {
 			embeds: sendMemberEmbeds
-		}).catch(() => console.log('Failed to DM user'));
+		});
 
 		await member.ban({
 			reason: reason
