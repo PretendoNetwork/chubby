@@ -2,7 +2,7 @@ import { MessageMentions, EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
-import { ordinal, sendEventLogMessage } from '@/util';
+import { ordinal, sendModLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction } from 'discord.js';
@@ -135,7 +135,7 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 			sendMemberEmbeds.push(kickEmbed);
 		}
 
-		await sendEventLogMessage(guild, null, eventLogEmbed);
+		await sendModLogMessage(guild, eventLogEmbed);
 
 		if (count > 0) {
 			const pastKicksEmbed = new EmbedBuilder();
