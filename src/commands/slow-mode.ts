@@ -1,7 +1,7 @@
 import { SlowMode, SlowModeStage } from '@/models/slow-mode';
 import handleSlowMode from '@/slow-mode';
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { sendEventLogMessage } from '@/util';
+import { sendModLogMessage } from '@/util';
 import { ChannelType, EmbedBuilder } from 'discord.js';
 import type { GuildTextBasedChannel, ChatInputCommandInteraction } from 'discord.js';
 
@@ -116,8 +116,8 @@ async function setStageHandler(interaction: ChatInputCommandInteraction): Promis
 			}
 		]);
 	}
-		
-	await sendEventLogMessage(interaction.guild!, channel.id, auditLogEmbed);
+
+	await sendModLogMessage(interaction.guild!, auditLogEmbed);
 
 	await interaction.followUp({ content: `Set a limit of 1 message every ${limit} seconds above ${threshold} messages per minute on <#${channel.id}>` });
 }
@@ -190,8 +190,8 @@ async function unsetStageHandler(interaction: ChatInputCommandInteraction): Prom
 			}
 		]);
 	}
-		
-	await sendEventLogMessage(interaction.guild!, channel.id, auditLogEmbed);
+
+	await sendModLogMessage(interaction.guild!, auditLogEmbed);
 
 	await interaction.followUp({ content: `Unset the limit at ${threshold} messages per minute on <#${channel.id}>` });
 }
@@ -270,7 +270,7 @@ async function enableAutoSlowModeHandler(interaction: ChatInputCommandInteractio
 		]);
 	}
 
-	await sendEventLogMessage(interaction.guild!, channel.id, auditLogEmbed);
+	await sendModLogMessage(interaction.guild!, auditLogEmbed);
 
 	await interaction.followUp({ content: `Auto slow mode enabled for <#${channel.id}>` });
 }
@@ -324,7 +324,7 @@ async function enableStaticSlowModeHandler(interaction: ChatInputCommandInteract
 			iconURL: interaction.guild!.iconURL()!
 		});
 
-	await sendEventLogMessage(interaction.guild!, channel.id, auditLogEmbed);
+	await sendModLogMessage(interaction.guild!, auditLogEmbed);
 
 	await interaction.followUp({ content: `Static slow mode enabled for <#${channel.id}>` });
 }
@@ -376,7 +376,7 @@ async function disableSlowModeHandler(interaction: ChatInputCommandInteraction):
 			iconURL: interaction.guild!.iconURL()!
 		});
 
-	await sendEventLogMessage(interaction.guild!, channel.id, auditLogEmbed);
+	await sendModLogMessage(interaction.guild!, auditLogEmbed);
 
 	await interaction.followUp({ content: `Slow mode disabled for <#${channel.id}>` });
 }

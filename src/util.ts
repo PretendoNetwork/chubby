@@ -45,6 +45,16 @@ export async function sendEventLogMessage(guild: Guild, originId: string | null,
 	return logChannel.send({ content, embeds: [embed] });
 }
 
+export async function sendModLogMessage(guild: Guild, embed: EmbedBuilder, content?: string): Promise<Message | null> {
+	const logChannel = await getChannelFromSettings(guild, 'channels.mod-logs');
+	if (!logChannel || logChannel.type !== ChannelType.GuildText) {
+		console.log('Missing mod log channel!');
+		return null;
+	}
+
+	return logChannel.send({ content, embeds: [embed] });
+}
+
 export async function getChannelFromSettings(guild: Guild, channelName: string): Promise<Channel | null> {
 	const channelID = getDB().get(channelName);
 	if (!channelID) {

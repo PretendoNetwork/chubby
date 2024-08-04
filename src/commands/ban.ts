@@ -1,7 +1,7 @@
 import { EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Ban } from '@/models/bans';
-import { banMessageDeleteChoices, sendEventLogMessage, ordinal } from '@/util';
+import { banMessageDeleteChoices, sendModLogMessage, ordinal } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
@@ -84,7 +84,7 @@ export async function banHandler(interaction: CommandInteraction | ModalSubmitIn
 			iconURL: guild.iconURL()!
 		});
 
-		await sendEventLogMessage(guild, null, eventLogEmbed);
+		await sendModLogMessage(guild, eventLogEmbed);
 
 		const { count, rows } = await Ban.findAndCountAll({
 			where: {

@@ -1,7 +1,7 @@
 import { EmbedBuilder } from 'discord.js';
 import { getDB, getDBList } from '@/db';
 import { User } from '@/models/users';
-import { getRoleFromSettings, sendEventLogMessage } from '@/util';
+import { getRoleFromSettings, sendEventLogMessage, sendModLogMessage } from '@/util';
 import { sequelize } from '@/sequelize-instance';
 import { notifyUser } from '@/notifications';
 import type { GuildMember, Message } from 'discord.js';
@@ -214,5 +214,5 @@ export async function untrustUser(member: GuildMember, newStartDate: Date): Prom
 		text: 'Pretendo Network',
 		iconURL: member.guild.iconURL()!
 	});
-	await sendEventLogMessage(member.guild, null, eventLogEmbed);
+	await sendModLogMessage(member.guild, eventLogEmbed);
 }

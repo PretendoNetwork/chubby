@@ -1,5 +1,5 @@
 import { AuditLogEvent, EmbedBuilder } from 'discord.js';
-import { sendEventLogMessage } from '@/util';
+import { sendEventLogMessage, sendModLogMessage } from '@/util';
 import type { Guild, User, GuildAuditLogsEntry } from 'discord.js';
 
 export default async function guildAuditLogEntryCreateHandler(auditLogEntry: GuildAuditLogsEntry, guild: Guild): Promise<void> {
@@ -76,7 +76,7 @@ async function handleMemberTimedOut(guild: Guild, user: User, executor: User, re
 		}
 	);
 
-	await sendEventLogMessage(guild, null, embed);
+	await sendModLogMessage(guild, embed);
 }
 
 async function handleMemberNicknameChange(guild: Guild, user: User, oldName?: string, newName?: string): Promise<void> {
@@ -160,7 +160,7 @@ async function handleMemberKick(auditLogEntry: GuildAuditLogsEntry<AuditLogEvent
 		iconURL: guild.iconURL()!
 	});
 
-	await sendEventLogMessage(guild, null, embed);
+	await sendModLogMessage(guild, embed);
 }
 
 async function handleMemberBanAdd(auditLogEntry: GuildAuditLogsEntry<AuditLogEvent.MemberBanAdd>, guild: Guild): Promise<void> {
@@ -208,7 +208,7 @@ async function handleMemberBanAdd(auditLogEntry: GuildAuditLogsEntry<AuditLogEve
 		iconURL: guild.iconURL()!
 	});
 
-	await sendEventLogMessage(guild, null, embed);
+	await sendModLogMessage(guild, embed);
 }
 
 function logIsForEvent<EventType extends AuditLogEvent>(log: GuildAuditLogsEntry, eventType: EventType): log is GuildAuditLogsEntry<EventType> {
