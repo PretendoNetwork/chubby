@@ -122,7 +122,6 @@ export async function handleLeveling(message: Message): Promise<void> {
 		});
 
 		notifyUser(guild, message.author, {
-			content: '',
 			embeds: [notificationEmbed]
 		});
 
