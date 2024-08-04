@@ -55,7 +55,7 @@ async function notifyUserInChannel(guild: Guild, user: User, message: string | M
 	if (typeof message === 'string') {
 		message = `<@${user.id}>\n${message}`;
 	} else {
-		message.content = `<@${user.id}>\n${message.content}`;
+		message.content = `<@${user.id}>\n${message.content ?? ''}`;
 	}
 
 	await thread.send(message);
