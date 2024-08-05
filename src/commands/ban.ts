@@ -15,6 +15,7 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 	const executor = interaction.user;
 	const users = interaction.options.getString('users', true);
 	const reason = interaction.options.getString('reason', true);
+	const deleteMessages = interaction.options.getNumber('delete_messages');
 
 	const userIds = [...new Set(Array.from(users!.matchAll(new RegExp(MessageMentions.UsersPattern, 'g')), match => match[1]))];
 
@@ -54,6 +55,10 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 			{
 				name: 'Reason',
 				value: reason
+			},
+			{
+				name: 'Delete Messages (seconds)',
+				value: deleteMessages?.toString() ?? 'No'
 			},
 			{
 				name: 'From bot /ban command',
@@ -137,7 +142,8 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 		});
 
 		await member.ban({
-			reason: reason
+			reason: reason,
+			deleteMessageSeconds: deleteMessages ?? undefined
 		});
 
 		await Ban.create({
@@ -167,6 +173,20 @@ const command = new SlashCommandBuilder()
 		return option.setName('reason')
 			.setDescription('Reason for the ban')
 			.setRequired(true);
+	})
+	.addNumberOption(option => {
+		return option.setName('delete_messages')
+			.setDescription('How much of their recent message history to delete')
+			.addChoices(
+				{ name: 'Previous 30 Minutes', value: 30 * 60 },
+				{ name: 'Previous Hour', value: 60 * 60 },
+				{ name: 'Previous 3 Hours', value: 3 * 60 * 60 },
+				{ name: 'Previous 6 Hours', value: 6 * 60 * 60 },
+				{ name: 'Previous 12 Hours', value: 12 * 60 * 60 },
+				{ name: 'Previous Day', value: 24 * 60 * 60 },
+				{ name: 'Previous 3 Days', value: 3 * 24 * 60 * 60 },
+				{ name: 'Previous Week', value: 7 * 24 * 60 * 60 },
+			);
 	});
 
 export default {
