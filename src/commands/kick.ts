@@ -18,7 +18,7 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 	const reason = interaction.options.getString('reason', true);
 	const deleteMessages = interaction.options.getNumber('delete_messages');
 
-	const userIds = [...new Set(Array.from(users.matchAll(new RegExp(/\d{17,18}/, 'g')), match => match[0]))];
+	const userIds = [...new Set(Array.from(users.matchAll(new RegExp(/\d{17,18}/g)), match => match[0]))];
 
 	const kicksListEmbed = new EmbedBuilder();
 	kicksListEmbed.setTitle('User Kicks :thumbsdown:');

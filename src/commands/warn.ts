@@ -18,7 +18,7 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 	const users = interaction.options.getString('users', true);
 	const reason = interaction.options.getString('reason', true);
 
-	const userIds = [...new Set(Array.from(users.matchAll(new RegExp(/\d{17,18}/, 'g')), match => match[0]))];
+	const userIds = [...new Set(Array.from(users.matchAll(new RegExp(/\d{17,18}/g)), match => match[0]))];
 
 	const warningListEmbed = new EmbedBuilder();
 	warningListEmbed.setTitle('User Warnings :thumbsdown:');
