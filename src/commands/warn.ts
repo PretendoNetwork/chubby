@@ -165,7 +165,7 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			isBan = true;
 		}
 
-		await sendModLogMessage(guild, eventLogEmbed);
+		await sendModLogMessage(guild, null, eventLogEmbed);
 
 		if (punishmentEmbed) {
 			const pastWarningsEmbed = new EmbedBuilder();

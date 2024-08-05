@@ -150,7 +150,7 @@ export async function kickHandler(interaction: CommandInteraction | ModalSubmitI
 			sendMemberEmbeds.push(kickEmbed);
 		}
 
-		await sendModLogMessage(guild, eventLogEmbed);
+		await sendModLogMessage(guild, null, eventLogEmbed);
 
 		if (count > 0) {
 			const pastKicksEmbed = new EmbedBuilder();

@@ -214,5 +214,5 @@ export async function untrustUser(member: GuildMember, newStartDate: Date): Prom
 		text: 'Pretendo Network',
 		iconURL: member.guild.iconURL()!
 	});
-	await sendModLogMessage(member.guild, eventLogEmbed);
+	await sendModLogMessage(member.guild, null, eventLogEmbed);
 }

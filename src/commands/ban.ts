@@ -84,7 +84,7 @@ export async function banHandler(interaction: CommandInteraction | ModalSubmitIn
 			iconURL: guild.iconURL()!
 		});
 
-		await sendModLogMessage(guild, eventLogEmbed);
+		await sendModLogMessage(guild, null, eventLogEmbed);
 
 		const { count, rows } = await Ban.findAndCountAll({
 			where: {
