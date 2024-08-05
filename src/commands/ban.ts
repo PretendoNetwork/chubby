@@ -17,7 +17,7 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 	const reason = interaction.options.getString('reason', true);
 	const deleteMessages = interaction.options.getNumber('delete_messages');
 
-	const userIds = [...new Set(Array.from(users!.matchAll(new RegExp(/\d{17,18}/, 'g')), match => match[0]))];
+	const userIds = [...new Set(Array.from(users!.matchAll(new RegExp(/\d{17,18}/g)), match => match[0]))];
 
 	const bansListEmbed = new EmbedBuilder();
 	bansListEmbed.setTitle('User Bans :thumbsdown:');
