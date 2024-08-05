@@ -1,6 +1,6 @@
 import { getDB, getDBList } from '@/db';
 import { ChannelType } from 'discord.js';
-import type { Channel, EmbedBuilder, Guild, Role, Message } from 'discord.js';
+import type { Channel, EmbedBuilder, Guild, Role, Message, APIApplicationCommandOptionChoice } from 'discord.js';
 
 const ordinalRules = new Intl.PluralRules('en', {
 	type: 'ordinal'
@@ -12,6 +12,17 @@ const suffixes: Record<string, string> = {
 	few: 'rd',
 	other: 'th'
 };
+
+export const banMessageDeleteChoices: Array<APIApplicationCommandOptionChoice<number>> = [
+	{ name: 'Previous 30 Minutes', value: 30 * 60 },
+	{ name: 'Previous Hour', value: 60 * 60 },
+	{ name: 'Previous 3 Hours', value: 3 * 60 * 60 },
+	{ name: 'Previous 6 Hours', value: 6 * 60 * 60 },
+	{ name: 'Previous 12 Hours', value: 12 * 60 * 60 },
+	{ name: 'Previous Day', value: 24 * 60 * 60 },
+	{ name: 'Previous 3 Days', value: 3 * 24 * 60 * 60 },
+	{ name: 'Previous Week', value: 7 * 24 * 60 * 60 },
+];
 
 export function ordinal(number: number): string {
 	const category = ordinalRules.select(number);

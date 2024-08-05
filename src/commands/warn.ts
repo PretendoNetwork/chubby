@@ -15,10 +15,19 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 
 	const guild = await interaction.guild!.fetch();
 	const executor = interaction.user;
-	const users = interaction.options.getString('users', true);
+	const subcommand = interaction.options.getSubcommand();
 	const reason = interaction.options.getString('reason', true);
 
-	const userIds = [...new Set(Array.from(users.matchAll(new RegExp(/\d{17,18}/g)), match => match[0]))];
+	let userIds;
+	if (subcommand === 'user') {
+		const user = interaction.options.getUser('user', true);
+		userIds = [user.id];
+	} else if (subcommand === 'multiuser') {
+		const users = interaction.options.getString('users', true);
+		userIds = [...new Set(Array.from(users.matchAll(new RegExp(/\d{17,18}/g)), match => match[0]))];
+	} else {
+		throw new Error(`Unknown warn subcommand: ${subcommand}`);
+	}
 
 	const warningListEmbed = new EmbedBuilder();
 	warningListEmbed.setTitle('User Warnings :thumbsdown:');
@@ -261,15 +270,33 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('warn')
 	.setDescription('Warn user(s)')
-	.addStringOption(option => {
-		return option.setName('users')
-			.setDescription('User(s) to warn')
-			.setRequired(true);
+	.addSubcommand(subcommand => {
+		return subcommand.setName('user')
+			.setDescription('Warn a user')
+			.addUserOption(option => {
+				return option.setName('user')
+					.setDescription('User to warn')
+					.setRequired(true);
+			})
+			.addStringOption(option => {
+				return option.setName('reason')
+					.setDescription('Reason for the warning')
+					.setRequired(true);
+			});
 	})
-	.addStringOption(option => {
-		return option.setName('reason')
-			.setDescription('Reason for the warning')
-			.setRequired(true);
+	.addSubcommand(subcommand => {
+		return subcommand.setName('multiuser')
+			.setDescription('Warn multiple users')
+			.addStringOption(option => {
+				return option.setName('users')
+					.setDescription('User(s) to warn')
+					.setRequired(true);
+			})
+			.addStringOption(option => {
+				return option.setName('reason')
+					.setDescription('Reason for the warning')
+					.setRequired(true);
+			});
 	});
 
 export default {
