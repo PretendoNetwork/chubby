@@ -2,7 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
-import { ordinal, sendEventLogMessage } from '@/util';
+import { banMessageDeleteChoices, ordinal, sendEventLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction } from 'discord.js';
@@ -14,11 +14,20 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 
 	const guild = await interaction.guild!.fetch();
 	const executor = interaction.user;
-	const users = interaction.options.getString('users', true);
+	const subcommand = interaction.options.getSubcommand();
 	const reason = interaction.options.getString('reason', true);
 	const deleteMessages = interaction.options.getNumber('delete_messages');
 
-	const userIds = [...new Set(Array.from(users.matchAll(new RegExp(/\d{17,18}/g)), match => match[0]))];
+	let userIds;
+	if (subcommand === 'user') {
+		const user = interaction.options.getUser('user', true);
+		userIds = [user.id];
+	} else if (subcommand === 'multiuser') {
+		const users = interaction.options.getString('users', true);
+		userIds = [...new Set(Array.from(users.matchAll(new RegExp(/\d{17,18}/g)), match => match[0]))];
+	} else {
+		throw new Error(`Unknown kick subcommand: ${subcommand}`);
+	}
 
 	const kicksListEmbed = new EmbedBuilder();
 	kicksListEmbed.setTitle('User Kicks :thumbsdown:');
@@ -226,30 +235,38 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('kick')
 	.setDescription('Kick user(s)')
-	.addStringOption(option => {
-		return option.setName('users')
-			.setDescription('User(s) to kick')
-			.setRequired(true);
-	})
-	.addStringOption(option => {
-		return option.setName('reason')
-			.setDescription('Reason for the kick')
-			.setRequired(true);
-	})
-	.addNumberOption(option => {
-		return option.setName('delete_messages')
-			.setDescription('How much of their recent message history to delete')
-			.addChoices(
-				{ name: 'Previous 30 Minutes', value: 30 * 60 },
-				{ name: 'Previous Hour', value: 60 * 60 },
-				{ name: 'Previous 3 Hours', value: 3 * 60 * 60 },
-				{ name: 'Previous 6 Hours', value: 6 * 60 * 60 },
-				{ name: 'Previous 12 Hours', value: 12 * 60 * 60 },
-				{ name: 'Previous Day', value: 24 * 60 * 60 },
-				{ name: 'Previous 3 Days', value: 3 * 24 * 60 * 60 },
-				{ name: 'Previous Week', value: 7 * 24 * 60 * 60 },
-			);
-	});
+	.addSubcommand(subcommand =>
+		subcommand.setName('user')
+			.setDescription('Kick user')
+			.addUserOption(option =>
+				option.setName('user')
+					.setDescription('User to kick')
+					.setRequired(true))
+			.addStringOption(option =>
+				option.setName('reason')
+					.setDescription('Reason for the kick')
+					.setRequired(true))
+			.addNumberOption(option =>
+				option.setName('delete_messages')
+					.setDescription('How much of their recent message history to delete')
+					.addChoices(banMessageDeleteChoices))
+	)
+	.addSubcommand(subcommand =>
+		subcommand.setName('multiuser')
+			.setDescription('Kick multiple users')
+			.addStringOption(option =>
+				option.setName('users')
+					.setDescription('User(s) to kick')
+					.setRequired(true))
+			.addStringOption(option =>
+				option.setName('reason')
+					.setDescription('Reason for the kick')
+					.setRequired(true))
+			.addNumberOption(option =>
+				option.setName('delete_messages')
+					.setDescription('How much of their recent message history to delete')
+					.addChoices(banMessageDeleteChoices))
+	);
 
 export default {
 	name: command.name,
