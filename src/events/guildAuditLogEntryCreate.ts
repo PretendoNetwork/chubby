@@ -76,7 +76,7 @@ async function handleMemberTimedOut(guild: Guild, user: User, executor: User, re
 		}
 	);
 
-	await sendModLogMessage(guild, embed);
+	await sendModLogMessage(guild, null, embed);
 }
 
 async function handleMemberNicknameChange(guild: Guild, user: User, oldName?: string, newName?: string): Promise<void> {
@@ -160,7 +160,7 @@ async function handleMemberKick(auditLogEntry: GuildAuditLogsEntry<AuditLogEvent
 		iconURL: guild.iconURL()!
 	});
 
-	await sendModLogMessage(guild, embed);
+	await sendModLogMessage(guild, null, embed);
 }
 
 async function handleMemberBanAdd(auditLogEntry: GuildAuditLogsEntry<AuditLogEvent.MemberBanAdd>, guild: Guild): Promise<void> {
@@ -208,7 +208,7 @@ async function handleMemberBanAdd(auditLogEntry: GuildAuditLogsEntry<AuditLogEve
 		iconURL: guild.iconURL()!
 	});
 
-	await sendModLogMessage(guild, embed);
+	await sendModLogMessage(guild, null, embed);
 }
 
 function logIsForEvent<EventType extends AuditLogEvent>(log: GuildAuditLogsEntry, eventType: EventType): log is GuildAuditLogsEntry<EventType> {

@@ -117,7 +117,7 @@ async function setStageHandler(interaction: ChatInputCommandInteraction): Promis
 		]);
 	}
 
-	await sendModLogMessage(interaction.guild!, auditLogEmbed);
+	await sendModLogMessage(interaction.guild!, channel.id, auditLogEmbed);
 
 	await interaction.followUp({ content: `Set a limit of 1 message every ${limit} seconds above ${threshold} messages per minute on <#${channel.id}>` });
 }
@@ -191,7 +191,7 @@ async function unsetStageHandler(interaction: ChatInputCommandInteraction): Prom
 		]);
 	}
 
-	await sendModLogMessage(interaction.guild!, auditLogEmbed);
+	await sendModLogMessage(interaction.guild!, channel.id, auditLogEmbed);
 
 	await interaction.followUp({ content: `Unset the limit at ${threshold} messages per minute on <#${channel.id}>` });
 }
@@ -270,7 +270,7 @@ async function enableAutoSlowModeHandler(interaction: ChatInputCommandInteractio
 		]);
 	}
 
-	await sendModLogMessage(interaction.guild!, auditLogEmbed);
+	await sendModLogMessage(interaction.guild!, channel.id, auditLogEmbed);
 
 	await interaction.followUp({ content: `Auto slow mode enabled for <#${channel.id}>` });
 }
@@ -324,7 +324,7 @@ async function enableStaticSlowModeHandler(interaction: ChatInputCommandInteract
 			iconURL: interaction.guild!.iconURL()!
 		});
 
-	await sendModLogMessage(interaction.guild!, auditLogEmbed);
+	await sendModLogMessage(interaction.guild!, channel.id, auditLogEmbed);
 
 	await interaction.followUp({ content: `Static slow mode enabled for <#${channel.id}>` });
 }
@@ -376,7 +376,7 @@ async function disableSlowModeHandler(interaction: ChatInputCommandInteraction):
 			iconURL: interaction.guild!.iconURL()!
 		});
 
-	await sendModLogMessage(interaction.guild!, auditLogEmbed);
+	await sendModLogMessage(interaction.guild!, channel.id, auditLogEmbed);
 
 	await interaction.followUp({ content: `Slow mode disabled for <#${channel.id}>` });
 }

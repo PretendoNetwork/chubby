@@ -91,7 +91,7 @@ export default async function messageDeleteHandler(message: Message | PartialMes
 	});
 
 	if (isDeletedByModerator) {
-		await sendModLogMessage(guild, eventLogEmbed);
+		await sendModLogMessage(guild, message.channelId, eventLogEmbed);
 	} else {
 		await sendEventLogMessage(guild, message.channelId, eventLogEmbed);
 	}

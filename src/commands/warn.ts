@@ -142,7 +142,7 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 			isBan = true;
 		}
 
-		await sendModLogMessage(guild, eventLogEmbed);
+		await sendModLogMessage(guild, null, eventLogEmbed);
 
 		if (punishmentEmbed) {
 			const pastWarningsEmbed = new EmbedBuilder();

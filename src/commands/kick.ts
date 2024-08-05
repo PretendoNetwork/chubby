@@ -135,7 +135,7 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 			sendMemberEmbeds.push(kickEmbed);
 		}
 
-		await sendModLogMessage(guild, eventLogEmbed);
+		await sendModLogMessage(guild, null, eventLogEmbed);
 
 		if (count > 0) {
 			const pastKicksEmbed = new EmbedBuilder();

@@ -65,7 +65,7 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 			iconURL: guild.iconURL()!
 		});
 
-		await sendModLogMessage(guild, eventLogEmbed);
+		await sendModLogMessage(guild, null, eventLogEmbed);
 
 		const { count, rows } = await Ban.findAndCountAll({
 			where: {
