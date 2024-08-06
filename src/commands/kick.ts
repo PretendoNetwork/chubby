@@ -5,15 +5,9 @@ import { Ban } from '@/models/bans';
 import { banMessageDeleteChoices, ordinal, sendEventLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
-import type { ChatInputCommandInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
 
-async function kickHandler(interaction: ChatInputCommandInteraction): Promise<void> {
-	await interaction.deferReply({
-		ephemeral: true
-	});
-
-	const guild = await interaction.guild!.fetch();
-	const executor = interaction.user;
+async function kickCommandHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const subcommand = interaction.options.getSubcommand();
 	const reason = interaction.options.getString('reason', true);
 	const deleteMessages = interaction.options.getNumber('delete_messages');
@@ -28,6 +22,17 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 	} else {
 		throw new Error(`Unknown kick subcommand: ${subcommand}`);
 	}
+
+	await kickHandler(interaction, userIDs, reason, deleteMessages);
+}
+
+export async function kickHandler(interaction: CommandInteraction | ModalSubmitInteraction, userIDs: string[], reason: string, deleteMessages?: number | null): Promise<void> {
+	await interaction.deferReply({
+		ephemeral: true
+	});
+
+	const guild = await interaction.guild!.fetch();
+	const executor = interaction.user;
 
 	const kicksListEmbed = new EmbedBuilder();
 	kicksListEmbed.setTitle('User Kicks :thumbsdown:');
@@ -228,7 +233,7 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 		]);
 	}
 
-	await interaction.editReply({ embeds: [kicksListEmbed] });
+	await interaction.followUp({ embeds: [kicksListEmbed], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()
@@ -270,6 +275,6 @@ const command = new SlashCommandBuilder()
 
 export default {
 	name: command.name,
-	handler: kickHandler,
+	handler: kickCommandHandler,
 	deploy: command.toJSON()
 };

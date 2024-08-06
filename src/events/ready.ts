@@ -8,6 +8,9 @@ import warnCommand from '@/commands/warn';
 import modpingCommand from '@/commands/modping';
 import messageLogContextMenu from '@/context-menus/messages/message-log';
 import slowModeCommand from '@/commands/slow-mode';
+import warnContextMenu from '@/context-menus/users/warn';
+import kickContextMenu from '@/context-menus/users/kick';
+import banContextMenu from '@/context-menus/users/ban';
 import { checkMatchmakingThreads } from '@/matchmaking-threads';
 import { loadModel } from '@/check-nsfw';
 import { SlowMode } from '@/models/slow-mode';
@@ -55,6 +58,9 @@ function loadBotHandlersCollection(client: Client): void {
 	client.commands.set(slowModeCommand.name, slowModeCommand);
 
 	client.contextMenus.set(messageLogContextMenu.name, messageLogContextMenu);
+	client.contextMenus.set(warnContextMenu.name, warnContextMenu);
+	client.contextMenus.set(kickContextMenu.name, kickContextMenu);
+	client.contextMenus.set(banContextMenu.name, banContextMenu);
 }
 
 async function setupSlowMode(client: Client): Promise<void> {
