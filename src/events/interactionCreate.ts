@@ -1,7 +1,7 @@
 import buttonHandler from '@/handlers/button-handler';
 import commandHandler from '@/handlers/command-handler';
 import messageContextMenuHandler from '@/handlers/context-menu-handler';
-import type { Interaction } from 'discord.js'; 
+import type { Interaction } from 'discord.js';
 
 export default async function interactionCreateHandler(interaction: Interaction): Promise<void> {
 	try {
@@ -24,7 +24,7 @@ export default async function interactionCreateHandler(interaction: Interaction)
 
 		try {
 			if (interaction.replied || interaction.deferred) {
-				await interaction.editReply(payload);
+				await interaction.followUp(payload);
 			} else {
 				await interaction.reply(payload);
 			}

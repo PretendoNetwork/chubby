@@ -4,15 +4,9 @@ import { Ban } from '@/models/bans';
 import { banMessageDeleteChoices, sendEventLogMessage, ordinal } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
-import type { ChatInputCommandInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
 
-async function banHandler(interaction: ChatInputCommandInteraction): Promise<void> {
-	await interaction.deferReply({
-		ephemeral: true
-	});
-
-	const guild = await interaction.guild!.fetch();
-	const executor = interaction.user;
+async function banCommandHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const subcommand = interaction.options.getSubcommand();
 	const reason = interaction.options.getString('reason', true);
 	const deleteMessages = interaction.options.getNumber('delete_messages');
@@ -27,6 +21,17 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 	} else {
 		throw new Error(`Unknown ban subcommand: ${subcommand}`);
 	}
+
+	await banHandler(interaction, userIDs, reason, deleteMessages);
+}
+
+export async function banHandler(interaction: CommandInteraction | ModalSubmitInteraction, userIDs: string[], reason: string, deleteMessages?: number | null): Promise<void> {
+	await interaction.deferReply({
+		ephemeral: true
+	});
+
+	const guild = await interaction.guild!.fetch();
+	const executor = interaction.user;
 
 	const bansListEmbed = new EmbedBuilder();
 	bansListEmbed.setTitle('User Bans :thumbsdown:');
@@ -166,7 +171,7 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 		]);
 	}
 
-	await interaction.editReply({ embeds: [bansListEmbed] });
+	await interaction.followUp({ embeds: [bansListEmbed], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()
@@ -208,6 +213,6 @@ const command = new SlashCommandBuilder()
 
 export default {
 	name: command.name,
-	handler: banHandler,
+	handler: banCommandHandler,
 	deploy: command.toJSON()
 };

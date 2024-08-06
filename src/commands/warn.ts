@@ -6,15 +6,9 @@ import { Ban } from '@/models/bans';
 import { ordinal, sendEventLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
-import type { ChatInputCommandInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
 
-async function warnHandler(interaction: ChatInputCommandInteraction): Promise<void> {
-	await interaction.deferReply({
-		ephemeral: true
-	});
-
-	const guild = await interaction.guild!.fetch();
-	const executor = interaction.user;
+async function warnCommandHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const subcommand = interaction.options.getSubcommand();
 	const reason = interaction.options.getString('reason', true);
 
@@ -28,6 +22,17 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 	} else {
 		throw new Error(`Unknown warn subcommand: ${subcommand}`);
 	}
+
+	await warnHandler(interaction, userIDs, reason);
+}
+
+export async function warnHandler(interaction: CommandInteraction | ModalSubmitInteraction, userIDs: string[], reason: string): Promise<void> {
+	await interaction.deferReply({
+		ephemeral: true
+	});
+
+	const guild = await interaction.guild!.fetch();
+	const executor = interaction.user;
 
 	const warningListEmbed = new EmbedBuilder();
 	warningListEmbed.setTitle('User Warnings :thumbsdown:');
@@ -263,7 +268,7 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 		]);
 	}
 
-	await interaction.editReply({ embeds: [warningListEmbed] });
+	await interaction.followUp({ embeds: [warningListEmbed], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()
@@ -301,6 +306,6 @@ const command = new SlashCommandBuilder()
 
 export default {
 	name: command.name,
-	handler: warnHandler,
+	handler: warnCommandHandler,
 	deploy: command.toJSON()
 };
