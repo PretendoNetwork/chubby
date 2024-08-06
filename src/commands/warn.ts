@@ -24,7 +24,7 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 		userIds = [user.id];
 	} else if (subcommand === 'multiuser') {
 		const users = interaction.options.getString('users', true);
-		userIds = [...new Set(Array.from(users.matchAll(new RegExp(/\d{17,18}/g)), match => match[0]))];
+		userIds = [...new Set(Array.from(users.matchAll(/\d{17,18}/g), match => match[0]))];
 	} else {
 		throw new Error(`Unknown warn subcommand: ${subcommand}`);
 	}
