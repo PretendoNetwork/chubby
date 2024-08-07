@@ -114,11 +114,7 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 			sendMemberEmbeds.push(banEmbed);
 		} else { // Just kick
 			eventLogEmbed.setColor(0xEF7F31);
-			if (deleteMessages) {
-				eventLogEmbed.setTitle('Event Type: _Member Soft-Banned_');
-			} else {
-				eventLogEmbed.setTitle('Event Type: _Member Kicked_');
-			}
+			eventLogEmbed.setTitle('Event Type: _Member Kicked_');
 
 			const kickEmbed = new EmbedBuilder();
 
@@ -189,10 +185,10 @@ async function kickHandler(interaction: ChatInputCommandInteraction): Promise<vo
 		if (isKick) {
 			if (deleteMessages) {
 				await member.ban({
-					reason: `Soft-ban: ${reason}`,
+					reason: `Kick with message deletion: ${reason}`,
 					deleteMessageSeconds: deleteMessages ?? undefined
 				});
-				await guild.members.unban(member, 'Soft-ban removed');
+				await guild.members.unban(member, 'Remove ban for kick with message deletion');
 			} else {
 				await member.kick(reason);
 			}
@@ -242,7 +238,7 @@ const command = new SlashCommandBuilder()
 	})
 	.addNumberOption(option => {
 		return option.setName('delete_messages')
-			.setDescription('How much of their recent message history to delete (turns this kick into a soft-ban)')
+			.setDescription('How much of their recent message history to delete')
 			.addChoices(
 				{ name: 'Previous 30 Minutes', value: 30 * 60 },
 				{ name: 'Previous Hour', value: 60 * 60 },
