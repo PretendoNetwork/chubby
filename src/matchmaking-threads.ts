@@ -4,6 +4,7 @@ import { MatchmakingThread } from '@/models/matchmakingThreads';
 import { User } from '@/models/users';
 import { sendEventLogMessage } from '@/util';
 import { getDB } from '@/db';
+import { notifyUser } from '@/notifications';
 import type { Message } from 'discord.js';
 
 export async function handleMatchmakingThreadMessage(message: Message): Promise<void> {
@@ -104,18 +105,14 @@ export async function checkMatchmakingThreads(): Promise<void> {
 							iconURL: guild.iconURL()!
 						});
 
-						try {
-							//TODO - Switch this to the new DM/notification channel system
-							await creatorUser.send({
-								embeds: [notificationEmbed]
-							});
-							await User.upsert({
-								user_id: threadChannel.ownerId,
-								matchmaking_notification_sent: true
-							});
-						} catch (error) {
-							console.log('Failed to DM user');
-						}
+						await notifyUser(guild, creatorUser, {
+							embeds: [notificationEmbed]
+						});
+
+						await User.upsert({
+							user_id: threadChannel.ownerId,
+							matchmaking_notification_sent: true
+						});
 					}
 				}
 
