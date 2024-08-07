@@ -3,7 +3,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { Warning } from '@/models/warnings';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
-import { ordinal, sendEventLogMessage } from '@/util';
+import { ordinal, sendModLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction } from 'discord.js';
@@ -142,7 +142,7 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 			isBan = true;
 		}
 
-		await sendEventLogMessage(guild, null, eventLogEmbed);
+		await sendModLogMessage(guild, null, eventLogEmbed);
 
 		if (punishmentEmbed) {
 			const pastWarningsEmbed = new EmbedBuilder();

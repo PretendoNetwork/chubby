@@ -18,6 +18,7 @@ const editableOptions = [
 	'channels.nsfw-logs',
 	'channels.event-logs',
 	'channels.event-logs.blacklist',
+	'channels.mod-logs',
 	'channels.matchmaking',
 	'channels.notifications',
 	'matchmaking.lock-timeout-seconds',
