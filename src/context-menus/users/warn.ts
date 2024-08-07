@@ -30,8 +30,9 @@ export async function warnContextMenuHandler(interaction: UserContextMenuCommand
 
 	let modalSubmitInteraction;
 	try {
+		// * Interaction tokens are only valid for 15 minutes, leave some time for warn processing
 		modalSubmitInteraction = await interaction.awaitModalSubmit({
-			time: 5 * 60 * 1000,
+			time: 14.5 * 60 * 1000,
 			filter: modalSubmitInteraction =>
 				modalSubmitInteraction.customId === 'warnModal' &&
 				modalSubmitInteraction.user.id === interaction.user.id

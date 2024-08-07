@@ -40,8 +40,9 @@ export async function banContextMenuHandler(interaction: UserContextMenuCommandI
 
 	let modalSubmitInteraction;
 	try {
+		// * Interaction tokens are only valid for 15 minutes, leave some time for ban processing
 		modalSubmitInteraction = await interaction.awaitModalSubmit({
-			time: 5 * 60 * 1000,
+			time: 14.5 * 60 * 1000,
 			filter: modalSubmitInteraction =>
 				modalSubmitInteraction.customId === 'banModal' &&
 				modalSubmitInteraction.user.id === interaction.user.id
