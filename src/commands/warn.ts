@@ -18,13 +18,13 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 	const subcommand = interaction.options.getSubcommand();
 	const reason = interaction.options.getString('reason', true);
 
-	let userIds;
+	let userIDs;
 	if (subcommand === 'user') {
 		const user = interaction.options.getUser('user', true);
-		userIds = [user.id];
+		userIDs = [user.id];
 	} else if (subcommand === 'multiuser') {
 		const users = interaction.options.getString('users', true);
-		userIds = [...new Set(Array.from(users.matchAll(/\d{17,18}/g), match => match[0]))];
+		userIDs = [...new Set(Array.from(users.matchAll(/\d{17,18}/g), match => match[0]))];
 	} else {
 		throw new Error(`Unknown warn subcommand: ${subcommand}`);
 	}
@@ -33,8 +33,8 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 	warningListEmbed.setTitle('User Warnings :thumbsdown:');
 	warningListEmbed.setColor(0xFFA500);
 
-	for (const userId of userIds) {
-		const member = await interaction.guild!.members.fetch(userId);
+	for (const userID of userIDs) {
+		const member = await interaction.guild!.members.fetch(userID);
 		const user = member.user;
 
 		await untrustUser(member, interaction.createdAt);
