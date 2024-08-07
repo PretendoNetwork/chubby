@@ -1,4 +1,4 @@
-import { EmbedBuilder, MessageMentions } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Warning } from '@/models/warnings';
 import { Kick } from '@/models/kicks';
@@ -15,17 +15,26 @@ async function warnHandler(interaction: ChatInputCommandInteraction): Promise<vo
 
 	const guild = await interaction.guild!.fetch();
 	const executor = interaction.user;
-	const users = interaction.options.getString('users', true);
+	const subcommand = interaction.options.getSubcommand();
 	const reason = interaction.options.getString('reason', true);
 
-	const userIds = [...new Set(Array.from(users.matchAll(new RegExp(MessageMentions.UsersPattern, 'g')), match => match[1]))];
+	let userIDs;
+	if (subcommand === 'user') {
+		const user = interaction.options.getUser('user', true);
+		userIDs = [user.id];
+	} else if (subcommand === 'multiuser') {
+		const users = interaction.options.getString('users', true);
+		userIDs = [...new Set(Array.from(users.matchAll(/\d{17,18}/g), match => match[0]))];
+	} else {
+		throw new Error(`Unknown warn subcommand: ${subcommand}`);
+	}
 
 	const warningListEmbed = new EmbedBuilder();
 	warningListEmbed.setTitle('User Warnings :thumbsdown:');
 	warningListEmbed.setColor(0xFFA500);
 
-	for (const userId of userIds) {
-		const member = await interaction.guild!.members.fetch(userId);
+	for (const userID of userIDs) {
+		const member = await interaction.guild!.members.fetch(userID);
 		const user = member.user;
 
 		await untrustUser(member, interaction.createdAt);
@@ -261,15 +270,33 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('warn')
 	.setDescription('Warn user(s)')
-	.addStringOption(option => {
-		return option.setName('users')
-			.setDescription('User(s) to warn')
-			.setRequired(true);
+	.addSubcommand(subcommand => {
+		return subcommand.setName('user')
+			.setDescription('Warn a user')
+			.addUserOption(option => {
+				return option.setName('user')
+					.setDescription('User to warn')
+					.setRequired(true);
+			})
+			.addStringOption(option => {
+				return option.setName('reason')
+					.setDescription('Reason for the warning')
+					.setRequired(true);
+			});
 	})
-	.addStringOption(option => {
-		return option.setName('reason')
-			.setDescription('Reason for the warning')
-			.setRequired(true);
+	.addSubcommand(subcommand => {
+		return subcommand.setName('multiuser')
+			.setDescription('Warn multiple users')
+			.addStringOption(option => {
+				return option.setName('users')
+					.setDescription('User(s) to warn')
+					.setRequired(true);
+			})
+			.addStringOption(option => {
+				return option.setName('reason')
+					.setDescription('Reason for the warning')
+					.setRequired(true);
+			});
 	});
 
 export default {
