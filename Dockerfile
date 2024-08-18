@@ -34,10 +34,11 @@ RUN npm run build
 FROM base AS final
 ARG app_dir
 
+RUN mkdir database && chown node:node database
+
 ENV NODE_ENV=production
 USER node
 
-RUN mkdir database
 
 COPY package.json .
 
