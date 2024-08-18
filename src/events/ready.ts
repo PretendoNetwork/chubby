@@ -15,7 +15,7 @@ import { checkMatchmakingThreads } from '@/matchmaking-threads';
 import { loadModel } from '@/check-nsfw';
 import { SlowMode } from '@/models/slow-mode';
 import handleSlowMode from '@/slow-mode';
-import config from '@/config.json';
+import config from '@/config';
 import type { Database } from 'sqlite3';
 import type { Client } from 'discord.js';
 
