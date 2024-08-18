@@ -1,10 +1,10 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v10';
-import { bot_token as botToken } from '@/config.json';
+import config from '@/config';
 import type { Guild } from 'discord.js';
 
-const rest = new REST({ version: '10' }).setToken(botToken);
+const rest = new REST({ version: '10' }).setToken(config.bot_token);
 
 export async function setupGuild(guild: Guild): Promise<void> {
 	// * Do nothing if the bot does not have the correct permissions
