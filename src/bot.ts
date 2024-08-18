@@ -9,7 +9,7 @@ import messageDeleteHandler from '@/events/messageDelete';
 import messageUpdateHandler from '@/events/messageUpdate';
 import reactionRemoveHandler from '@/events/reactionRemove';
 import readyHandler from '@/events/ready';
-import config from '@/config.json';
+import config from '@/config';
 import type { ClientContextMenu, ClientCommand } from '@/types';
 
 export const client = new Client({

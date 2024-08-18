@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node --max-old-space-size=4096 .",
     "start:dev": "NODE_ENV=development node .",
-    "lint": "npx eslint .",
-    "build": "npm run lint && npm run clean && npx tsc && npx tsc-alias",
+    "lint": "eslint .",
+    "build": "npm run lint && npm run clean && tsc && tsc-alias",
     "clean": "npx rimraf ./dist"
   },
   "keywords": [],
