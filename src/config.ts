@@ -10,7 +10,9 @@ interface Config {
 	}
 }
 
-const rawConfigData = readFileSync(path.join(process.cwd(), './config.json'), { encoding: 'utf-8' });
+const rawConfigData = readFileSync(path.join(process.cwd(), './config.json'), {
+	encoding: 'utf-8'
+});
 const configData: Config = JSON.parse(rawConfigData);
 
 export default configData;
