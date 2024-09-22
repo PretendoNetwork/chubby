@@ -12,6 +12,11 @@ import readyHandler from '@/events/ready';
 import config from '@/config';
 import type { ClientContextMenu, ClientCommand } from '@/types';
 
+process.on('SIGINT', () => {
+	console.log('Exiting...');
+	process.exit(0);
+});
+
 export const client = new Client({
 	partials: [
 		Partials.Reaction,
