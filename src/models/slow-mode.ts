@@ -41,7 +41,7 @@ export class SlowMode extends Model<InferAttributes<SlowMode>, InferCreationAttr
 
 	declare static associations: {
 		stages: Association<SlowMode, SlowModeStage>;
-	}
+	};
 }
 
 SlowMode.init({
