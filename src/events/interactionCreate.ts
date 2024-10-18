@@ -1,10 +1,16 @@
-import { commandHandler } from '@/handlers/command-handler';
-import type { Interaction } from 'discord.js'; 
+import buttonHandler from '@/handlers/button-handler';
+import commandHandler from '@/handlers/command-handler';
+import messageContextMenuHandler from '@/handlers/context-menu-handler';
+import type { Interaction } from 'discord.js';
 
 export default async function interactionCreateHandler(interaction: Interaction): Promise<void> {
 	try {
-		if (interaction.isCommand()) {
+		if (interaction.isChatInputCommand()) {
 			await commandHandler(interaction);
+		} else if (interaction.isButton()) {
+			await buttonHandler(interaction);
+		} else if (interaction.isContextMenuCommand()) {
+			await messageContextMenuHandler(interaction);
 		}
 	} catch (error: any) {
 		if (!interaction.isCommand()) {
@@ -18,7 +24,7 @@ export default async function interactionCreateHandler(interaction: Interaction)
 
 		try {
 			if (interaction.replied || interaction.deferred) {
-				await interaction.editReply(payload);
+				await interaction.followUp(payload);
 			} else {
 				await interaction.reply(payload);
 			}

@@ -1,16 +1,18 @@
-import { EmbedBuilder } from 'discord.js';
-import { sendEventLogMessage } from '@/util';
+import { BaseGuildTextChannel, ChannelType, EmbedBuilder } from 'discord.js';
+import { getChannelFromSettings, sendEventLogMessage } from '@/util';
+import { MessageAuditRelationship } from '@/models/messageAuditRelationship';
 import type { Message, PartialMessage } from 'discord.js';
 
 export default async function messageUpdateHandler(oldMessage: Message | PartialMessage, newMessage: Message | PartialMessage): Promise<void> {
-	if (oldMessage.partial || newMessage.partial) {
-		// * This should never happen as we don't opt into partial structures
-		// * but we need this to be here to convince the compiler that the rest is safe
-		return;
+	if (oldMessage.partial) {
+		oldMessage = await oldMessage.fetch();
+	}
+
+	if (newMessage.partial) {
+		newMessage = await newMessage.fetch();
 	}
 
 	if (newMessage.author.bot) {
-		console.log('author is a bot?!');
 		return;
 	}
 
@@ -21,7 +23,11 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 
 		const oldMessageContent = oldMessage.content.length > 1024 ? oldMessage.content.substring(0, 1023) + '…' : oldMessage.content;
 		const newMessageContent = newMessage.content.length > 1024 ? newMessage.content.substring(0, 1023) + '…' : newMessage.content;
-		const channel = newMessage.channel;
+
+		let channelName = 'No channel name found';
+		if (newMessage.channel instanceof BaseGuildTextChannel) {
+			channelName = newMessage.channel.name;
+		}
 	
 		const eventLogEmbed = new EmbedBuilder();
 
@@ -43,7 +49,7 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 			},
 			{
 				name: 'Channel Name',
-				value: (channel as any).name // TODO some better way of doing this?
+				value: channelName
 			},
 			{
 				name: 'Old Message',
@@ -61,6 +67,36 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 			iconURL: guild.iconURL()!
 		});
 
-		await sendEventLogMessage(guild, newMessage.channelId, eventLogEmbed);
+		const previousLogRelationship = await MessageAuditRelationship.findOne({
+			where: {
+				message_id: oldMessage.id
+			},
+			order: [['created', 'desc']]
+		});
+
+		if (previousLogRelationship) {
+			const auditLogChannel = await getChannelFromSettings(guild, 'channels.event-logs');
+			if (auditLogChannel && auditLogChannel.type === ChannelType.GuildText) {
+				const auditMessage = await auditLogChannel.messages.fetch(previousLogRelationship.log_event_id);
+				if (auditMessage) {
+					eventLogEmbed.addFields([
+						{
+							name: 'Previous audit event',
+							value: auditMessage.url
+						}
+					]);
+				}
+			}
+		}
+
+		const audit = await sendEventLogMessage(guild, newMessage.channelId, eventLogEmbed);
+		if (!audit) {
+			return;
+		}
+
+		await MessageAuditRelationship.create({ 
+			message_id: newMessage.id,
+			log_event_id: audit.id
+		});
 	}
 }

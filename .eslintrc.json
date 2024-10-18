@@ -14,7 +14,7 @@
 	],
 	"rules": {
 		"@typescript-eslint/no-non-null-assertion": "off",
-		"@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+		"@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
 		"@typescript-eslint/no-extra-semi": "error",
 		"@typescript-eslint/keyword-spacing": "error",
 		"require-atomic-updates": "warn",

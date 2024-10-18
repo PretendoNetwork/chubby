@@ -2,6 +2,6 @@ import { Sequelize } from 'sequelize';
 
 export const sequelize = new Sequelize({
 	dialect: 'sqlite',
-	storage: `${__dirname}/../database/database.sqlite`,
+	storage: `${process.cwd()}/database/database.sqlite`,
 	logging: false
 });

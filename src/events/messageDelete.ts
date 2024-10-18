@@ -4,8 +4,6 @@ import type { Message, PartialMessage } from 'discord.js';
 
 export default async function messageDeleteHandler(message: Message | PartialMessage): Promise<void> {
 	if (message.partial) {
-		// * This should never happen as we don't opt into partial structures
-		// * but we need this to be here to convince the compiler that the rest is safe
 		return;
 	}
 
@@ -17,7 +15,10 @@ export default async function messageDeleteHandler(message: Message | PartialMes
 	const member = await message.member.fetch();
 	const user = member.user;
 
-	const messageContent = message.content.length > 1024 ? message.content.substring(0, 1023) + '…' : message.content;
+	let messageContent = message.content.length > 1024 ? message.content.substring(0, 1023) + '…' : message.content;
+	if (messageContent === '') {
+		messageContent = '\u200b';
+	}
 
 	let channelName = 'No channel name found';
 	if (message.channel instanceof BaseGuildTextChannel) {

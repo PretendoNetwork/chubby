@@ -1,28 +1,47 @@
-import { EmbedBuilder, MessageMentions } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Ban } from '@/models/bans';
-import { sendEventLogMessage, ordinal } from '@/util';
-import type { ChatInputCommandInteraction } from 'discord.js';
+import { banMessageDeleteChoices, sendEventLogMessage, ordinal } from '@/util';
+import { untrustUser } from '@/leveling';
+import { notifyUser } from '@/notifications';
+import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
 
-async function banHandler(interaction: ChatInputCommandInteraction): Promise<void> {
+async function banCommandHandler(interaction: ChatInputCommandInteraction): Promise<void> {
+	const subcommand = interaction.options.getSubcommand();
+	const reason = interaction.options.getString('reason', true);
+	const deleteMessages = interaction.options.getNumber('delete_messages');
+
+	let userIDs;
+	if (subcommand === 'user') {
+		const user = interaction.options.getUser('user', true);
+		userIDs = [user.id];
+	} else if (subcommand === 'multiuser') {
+		const users = interaction.options.getString('users', true);
+		userIDs = [...new Set(Array.from(users.matchAll(/\d{17,18}/g), match => match[0]))];
+	} else {
+		throw new Error(`Unknown ban subcommand: ${subcommand}`);
+	}
+
+	await banHandler(interaction, userIDs, reason, deleteMessages);
+}
+
+export async function banHandler(interaction: CommandInteraction | ModalSubmitInteraction, userIDs: string[], reason: string, deleteMessages?: number | null): Promise<void> {
 	await interaction.deferReply({
 		ephemeral: true
 	});
 
 	const guild = await interaction.guild!.fetch();
 	const executor = interaction.user;
-	const users = interaction.options.getString('users', true);
-	const reason = interaction.options.getString('reason', true);
-
-	const userIds = [...new Set(Array.from(users!.matchAll(new RegExp(MessageMentions.UsersPattern, 'g')), match => match[1]))];
 
 	const bansListEmbed = new EmbedBuilder();
 	bansListEmbed.setTitle('User Bans :thumbsdown:');
 	bansListEmbed.setColor(0xFFA500);
 
-	for (const userId of userIds) {
-		const member = await interaction.guild!.members.fetch(userId);
+	for (const userID of userIDs) {
+		const member = await interaction.guild!.members.fetch(userID);
 		const user = member.user;
+
+		await untrustUser(member, interaction.createdAt);
 
 		const eventLogEmbed = new EmbedBuilder();
 
@@ -52,6 +71,10 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 				value: reason
 			},
 			{
+				name: 'Delete Messages (seconds)',
+				value: deleteMessages?.toString() ?? 'No'
+			},
+			{
 				name: 'From bot /ban command',
 				value: 'true'
 			}
@@ -62,7 +85,7 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 		});
 
 		await sendEventLogMessage(guild, null, eventLogEmbed);
-		
+
 		const { count, rows } = await Ban.findAndCountAll({
 			where: {
 				user_id: member.id
@@ -87,7 +110,7 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 		});
 		banEmbed.setFields({
 			name: 'Ban Reason',
-			value: reason ?? ''
+			value: reason
 		});
 
 		sendMemberEmbeds.push(banEmbed);
@@ -128,12 +151,13 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 			sendMemberEmbeds.push(pastBansEmbed);
 		}
 
-		await member.send({
+		await notifyUser(guild, user, {
 			embeds: sendMemberEmbeds
-		}).catch(() => console.log('Failed to DM user'));
+		});
 
 		await member.ban({
-			reason: reason
+			reason: reason,
+			deleteMessageSeconds: deleteMessages ?? undefined
 		});
 
 		await Ban.create({
@@ -147,26 +171,48 @@ async function banHandler(interaction: ChatInputCommandInteraction): Promise<voi
 		]);
 	}
 
-	await interaction.editReply({ embeds: [bansListEmbed] });
+	await interaction.followUp({ embeds: [bansListEmbed], ephemeral: true });
 }
 
 const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('ban')
 	.setDescription('Ban user(s)')
-	.addStringOption(option => {
-		return option.setName('users')
-			.setDescription('User(s) to ban')
-			.setRequired(true);
-	})
-	.addStringOption(option => {
-		return option.setName('reason')
-			.setDescription('Reason for the ban')
-			.setRequired(true);
-	});
+	.addSubcommand(subcommand =>
+		subcommand.setName('user')
+			.setDescription('Ban a single user')
+			.addUserOption(option =>
+				option.setName('user')
+					.setDescription('User to ban')
+					.setRequired(true))
+			.addStringOption(option =>
+				option.setName('reason')
+					.setDescription('Reason for the ban')
+					.setRequired(true))
+			.addNumberOption(option =>
+				option.setName('delete_messages')
+					.setDescription('How much of their recent message history to delete')
+					.addChoices(banMessageDeleteChoices))
+	)
+	.addSubcommand(subcommand =>
+		subcommand.setName('multiuser')
+			.setDescription('Ban multiple users')
+			.addStringOption(option =>
+				option.setName('users')
+					.setDescription('User(s) to ban')
+					.setRequired(true))
+			.addStringOption(option =>
+				option.setName('reason')
+					.setDescription('Reason for the ban')
+					.setRequired(true))
+			.addNumberOption(option =>
+				option.setName('delete_messages')
+					.setDescription('How much of their recent message history to delete')
+					.addChoices(banMessageDeleteChoices))
+	);
 
 export default {
 	name: command.name,
-	handler: banHandler,
+	handler: banCommandHandler,
 	deploy: command.toJSON()
 };

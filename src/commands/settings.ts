@@ -3,12 +3,29 @@ import { getDB } from '@/db';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
 const editableOptions = [
+	'nsfw.enabled',
+	'nsfw.threshold.high',
+	'nsfw.threshold.low',
+	'nsfw.exemption.distance',
 	'roles.muted',
 	'roles.nsfw-punished',
+	'roles.supporter',
+	'roles.trusted',
+	'roles.untrusted',
+	'roles.mod-ping',
+	'roles.mod-ping-allowed',
 	'channels.nsfw-punished',
 	'channels.nsfw-logs',
 	'channels.event-logs',
 	'channels.event-logs.blacklist',
+	'channels.matchmaking',
+	'channels.notifications',
+	'matchmaking.lock-timeout-seconds',
+	'leveling.channels-blacklist',
+	'leveling.xp-required-for-trusted',
+	'leveling.days-required-for-trusted',
+	'leveling.supporter-xp-multiplier',
+	'leveling.message-timeout-seconds'
 ];
 
 function verifyInputtedKey(interaction: ChatInputCommandInteraction): string {

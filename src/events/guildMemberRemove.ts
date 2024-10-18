@@ -1,6 +1,6 @@
+import { AuditLogEvent, EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
-import { AuditLogEvent, EmbedBuilder, GuildMember } from 'discord.js';
-import type { PartialGuildMember } from 'discord.js';
+import type { PartialGuildMember, GuildMember } from 'discord.js';
 
 export default async function guildMemberRemoveHandler(member: GuildMember | PartialGuildMember): Promise<void> {
 	if (member.partial) {
@@ -13,16 +13,27 @@ export default async function guildMemberRemoveHandler(member: GuildMember | Par
 	const user = member.user;
 	
 	const auditLogs = await guild.fetchAuditLogs({
-		limit: 1
+		limit: 10
 	});
+
+	const auditLog = auditLogs.entries
+		.filter(log => log.action === AuditLogEvent.MemberBanAdd || log.action === AuditLogEvent.MemberKick)
+		.filter(log => Date.now() - log.createdTimestamp < 2000)
+		.find(log => log.targetId === member.id);
+
+	if (auditLog) {
+		// * If we found this audit log, it means that there's already going to be a
+		// * more specific event log created for this user leaving (i.e. they were banned/kicked)
+		return;
+	}
 
 	const eventLogEmbed = new EmbedBuilder();
 
 	eventLogEmbed.setColor(0xC0C0C0);
 	eventLogEmbed.setDescription('――――――――――――――――――――――――――――――――――');
 	eventLogEmbed.setTimestamp(Date.now());
-	eventLogEmbed.setTitle('Event Type: _Member Left_'); // Default type
-	eventLogEmbed.setFields( // Default fields
+	eventLogEmbed.setTitle('Event Type: _Member Left_');
+	eventLogEmbed.setFields(
 		{
 			name: 'User',
 			value: `<@${user.id}>`
@@ -36,68 +47,6 @@ export default async function guildMemberRemoveHandler(member: GuildMember | Par
 		text: 'Pretendo Network',
 		iconURL: guild.iconURL()!
 	});
-
-	const latestLog = auditLogs.entries.first();
-	
-	if (
-		!latestLog || // no logs yet
-		['MEMBER_KICK', 'MEMBER_BAN_ADD'].includes(latestLog.actionType) || // not the right type of log
-		((Date.now() - latestLog.createdTimestamp) > 2000) // log is too old, older than a couple seconds ago
-	) {
-		// User probably just left on their own
-		await sendEventLogMessage(guild, null, eventLogEmbed);
-		return;
-	}
-
-	// User was either kicked or banned
-	const { executor, target } = latestLog;
-
-	if (executor?.bot) {
-		// Bot actions log themselves in the action handlers
-		return;
-	}
-
-	if (target && target instanceof GuildMember && target.id !== member.id) {
-		// Log target does not match current user
-		// Probably just left on their own
-		await sendEventLogMessage(guild, null, eventLogEmbed);
-		return;
-	}
-	
-	if (latestLog.action === AuditLogEvent.MemberKick) {
-		eventLogEmbed.setColor(0xEF7F31);
-		eventLogEmbed.setTitle('Event Type: _Member Kicked_');
-	} else {
-		eventLogEmbed.setColor(0xF24E43);
-		eventLogEmbed.setTitle('Event Type: _Member Banned_');
-	}
-
-	eventLogEmbed.setFields(
-		{
-			name: 'User',
-			value: `<@${user.id}>`
-		},
-		{
-			name: 'User ID',
-			value: user.id
-		},
-		{
-			name: 'Executor',
-			value: `<@${executor!.id}>`
-		},
-		{
-			name: 'Executor User ID',
-			value: executor!.id
-		},
-		{
-			name: 'Reason',
-			value: latestLog.reason ?? ''
-		},
-		{
-			name: 'From bot command',
-			value: 'false'
-		}
-	);
 
 	await sendEventLogMessage(guild, null, eventLogEmbed);
 }

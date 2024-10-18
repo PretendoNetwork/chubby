@@ -1,6 +1,6 @@
 import JSONdb from 'simple-json-db';
 import path from 'path';
-import config from '@/config.json';
+import config from '@/config';
 
 const db = new JSONdb<string>(path.resolve(config.json_db_path));
 
