@@ -226,8 +226,8 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			punishmentEmbed.setColor(0xF24E43);
 			punishmentEmbed.setTimestamp(Date.now());
 			punishmentEmbed.setAuthor({
-				name: `Warned by: ${executor.tag}`,
-				iconURL: executor.avatarURL() ?? undefined
+				name: 'Warned by: Anonymous',
+				iconURL: undefined
 			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',

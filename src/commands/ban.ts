@@ -101,8 +101,8 @@ export async function banHandler(interaction: CommandInteraction | ModalSubmitIn
 		banEmbed.setColor(0xF24E43);
 		banEmbed.setTimestamp(Date.now());
 		banEmbed.setAuthor({
-			name: `Banned by: ${executor.tag}`,
-			iconURL: executor.avatarURL() ?? undefined
+			name: 'Banned by: Anonymous',
+			iconURL: undefined
 		});
 		banEmbed.setFooter({
 			text: 'Pretendo Network',
