@@ -137,8 +137,8 @@ export async function kickHandler(interaction: CommandInteraction | ModalSubmitI
 			kickEmbed.setColor(0xEF7F31);
 			kickEmbed.setTimestamp(Date.now());
 			kickEmbed.setAuthor({
-				name: `Kicked by: ${executor.tag}`,
-				iconURL: executor.avatarURL() ?? undefined
+				name: 'Kicked by: Anonymous',
+				iconURL: undefined
 			});
 			kickEmbed.setFooter({
 				text: 'Pretendo Network',
