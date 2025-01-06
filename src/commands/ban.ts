@@ -100,10 +100,6 @@ export async function banHandler(interaction: CommandInteraction | ModalSubmitIn
 		banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
 		banEmbed.setColor(0xF24E43);
 		banEmbed.setTimestamp(Date.now());
-		banEmbed.setAuthor({
-			name: 'Banned by: Anonymous',
-			iconURL: undefined
-		});
 		banEmbed.setFooter({
 			text: 'Pretendo Network',
 			iconURL: guild.iconURL()!

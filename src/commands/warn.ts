@@ -225,10 +225,6 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			punishmentEmbed.setDescription('You have been issued a warning.\nYou may review the details of your warning below');
 			punishmentEmbed.setColor(0xF24E43);
 			punishmentEmbed.setTimestamp(Date.now());
-			punishmentEmbed.setAuthor({
-				name: 'Warned by: Anonymous',
-				iconURL: undefined
-			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()!
