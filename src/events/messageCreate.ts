@@ -26,7 +26,7 @@ export default async function messageCreateHandler(message: Message): Promise<vo
 		await checkNSFW(message, urls);
 	}
 
-	await handleLeveling(message);
+	// await handleLeveling(message);
 
 	await handleMatchmakingThreadMessage(message);
 }
