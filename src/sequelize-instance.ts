@@ -5,3 +5,5 @@ export const sequelize = new Sequelize({
 	storage: `${process.cwd()}/database/database.sqlite`,
 	logging: false
 });
+
+sequelize.query('PRAGMA journal_mode=WAL;');
