@@ -1,6 +1,6 @@
 import { checkNSFW } from '@/check-nsfw';
 import { handleMatchmakingThreadMessage } from '@/matchmaking-threads';
-import { handleLeveling } from '@/leveling';
+// import { handleLeveling } from '@/leveling';
 import type { Message } from 'discord.js';
 
 const urlRegex = /(https?:\/\/[^\s]+)/g;
