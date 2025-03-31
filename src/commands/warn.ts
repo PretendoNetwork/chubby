@@ -83,10 +83,15 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 
 		const { count, rows } = await Warning.findAndCountAll({
 			where: {
-				user_id: member.id,
-				expires_at: {
-					[Op.lte]: new Date(),
-				}
+				[Op.or]: [{
+					user_id: member.id,
+					expires_at: {
+						[Op.gt]: new Date(),
+					}
+				}, {
+					user_id: member.id,
+					expires_at: null,
+				}],
 			}
 		});
 
