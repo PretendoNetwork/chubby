@@ -7,6 +7,7 @@ import { ordinal, sendEventLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
+import { Op } from 'sequelize';
 
 async function warnCommandHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const subcommand = interaction.options.getSubcommand();
@@ -82,7 +83,10 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 
 		const { count, rows } = await Warning.findAndCountAll({
 			where: {
-				user_id: member.id
+				user_id: member.id,
+				expires_at: {
+					[Op.lte]: new Date(),
+				}
 			}
 		});
 

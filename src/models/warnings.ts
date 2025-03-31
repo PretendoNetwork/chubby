@@ -8,6 +8,7 @@ export class Warning extends Model<InferAttributes<Warning>, InferCreationAttrib
 	declare admin_user_id: string;
 	declare reason: string;
 	declare timestamp: CreationOptional<Date>;
+	declare expires_at: CreationOptional<Date>;
 }
 
 Warning.init({
@@ -28,5 +29,8 @@ Warning.init({
 	timestamp: {
 		type: DataTypes.DATE,
 		defaultValue: DataTypes.NOW
-	}
+	},
+	expires_at: {
+		type: DataTypes.DATE,
+	},
 }, { sequelize, tableName: 'warnings' });
