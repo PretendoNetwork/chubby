@@ -32,8 +32,8 @@ export async function viewWarnHandler(interaction: CommandInteraction, userId: s
 		}
 	});
 	const userWarnings = rows.map(v=>({
-		...v,
-		isExpired: v.expires_at < new Date(),
+		content: v,
+		isExpired: v.expires_at && v.expires_at < new Date(),
 	}));
 	const activeWarnings = userWarnings.filter(v=>!v.isExpired);
 
@@ -44,8 +44,8 @@ export async function viewWarnHandler(interaction: CommandInteraction, userId: s
 
 	userWarnings.forEach(warn => {
 		warningListEmbed.addFields({
-			name: `Warning ID: \`${warn.id}\``,
-			value: warn.reason + `\n---\nGiven on ${warn.timestamp} by <@${warn.admin_user_id}>`,
+			name: `Warning ID: \`${warn.content.id}\`` + (warn.isExpired ? ' - EXPIRED' : ''),
+			value: warn.content.reason + `\n---\nGiven on ${warn.content.timestamp.toLocaleDateString()} by <@${warn.content.admin_user_id}>`,
 		});
 	});
 
