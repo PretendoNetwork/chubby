@@ -8,6 +8,7 @@ import warnCommand from '@/commands/warn';
 import modpingCommand from '@/commands/modping';
 import messageLogContextMenu from '@/context-menus/messages/message-log';
 import slowModeCommand from '@/commands/slow-mode';
+import manageWarnCommand from '@/commands/manage-warn';
 import warnContextMenu from '@/context-menus/users/warn';
 import kickContextMenu from '@/context-menus/users/kick';
 import banContextMenu from '@/context-menus/users/ban';
@@ -56,6 +57,7 @@ function loadBotHandlersCollection(client: Client): void {
 	client.commands.set(warnCommand.name, warnCommand);
 	client.commands.set(modpingCommand.name, modpingCommand);
 	client.commands.set(slowModeCommand.name, slowModeCommand);
+	client.commands.set(manageWarnCommand.name, manageWarnCommand);
 
 	client.contextMenus.set(messageLogContextMenu.name, messageLogContextMenu);
 	client.contextMenus.set(warnContextMenu.name, warnContextMenu);

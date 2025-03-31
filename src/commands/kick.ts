@@ -136,10 +136,6 @@ export async function kickHandler(interaction: CommandInteraction | ModalSubmitI
 			kickEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
 			kickEmbed.setColor(0xEF7F31);
 			kickEmbed.setTimestamp(Date.now());
-			kickEmbed.setAuthor({
-				name: `Kicked by: ${executor.tag}`,
-				iconURL: executor.avatarURL() ?? undefined
-			});
 			kickEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()!

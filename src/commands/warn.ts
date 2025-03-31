@@ -7,6 +7,7 @@ import { ordinal, sendEventLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
+import { Op } from 'sequelize';
 
 async function warnCommandHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const subcommand = interaction.options.getSubcommand();
@@ -82,7 +83,15 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 
 		const { count, rows } = await Warning.findAndCountAll({
 			where: {
-				user_id: member.id
+				[Op.or]: [{
+					user_id: member.id,
+					expires_at: {
+						[Op.gt]: new Date(),
+					}
+				}, {
+					user_id: member.id,
+					expires_at: null,
+				}],
 			}
 		});
 
@@ -225,10 +234,6 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			punishmentEmbed.setDescription('You have been issued a warning.\nYou may review the details of your warning below');
 			punishmentEmbed.setColor(0xF24E43);
 			punishmentEmbed.setTimestamp(Date.now());
-			punishmentEmbed.setAuthor({
-				name: `Warned by: ${executor.tag}`,
-				iconURL: executor.avatarURL() ?? undefined
-			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()!
