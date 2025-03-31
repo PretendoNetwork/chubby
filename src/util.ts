@@ -30,15 +30,30 @@ export function ordinal(number: number): string {
 	return (number + suffix);
 }
 
-export async function sendEventLogMessage(guild: Guild, originId: string | null, embed: EmbedBuilder, content?: string): Promise<Message | null> {
-	const blacklistedIds = getDBList('channels.event-logs.blacklist');
-	if (originId && blacklistedIds.includes(originId)) {
+export async function sendEventLogMessage(guild: Guild, originID: string | null, embed: EmbedBuilder, content?: string): Promise<Message | null> {
+	const blacklistedIDs = getDBList('channels.event-logs.blacklist');
+	if (originID && blacklistedIDs.includes(originID)) {
 		return null;
 	}
 
 	const logChannel = await getChannelFromSettings(guild, 'channels.event-logs');
 	if (!logChannel || logChannel.type !== ChannelType.GuildText) {
 		console.log('Missing log channel!');
+		return null;
+	}
+
+	return logChannel.send({ content, embeds: [embed] });
+}
+
+export async function sendModLogMessage(guild: Guild, originID: string | null, embed: EmbedBuilder, content?: string): Promise<Message | null> {
+	const blacklistedIDs = getDBList('channels.event-logs.blacklist');
+	if (originID && blacklistedIDs.includes(originID)) {
+		return null;
+	}
+
+	const logChannel = await getChannelFromSettings(guild, 'channels.mod-logs');
+	if (!logChannel || logChannel.type !== ChannelType.GuildText) {
+		console.log('Missing mod log channel!');
 		return null;
 	}
 
