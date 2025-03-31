@@ -20,14 +20,16 @@ import config from '@/config';
 import type { Database } from 'sqlite3';
 import type { Client } from 'discord.js';
 
-export default async function readyHandler(client: Client): Promise<void> {
-	console.log('Registering global commands');
-	loadBotHandlersCollection(client);
-
+export async function bootHandler(): Promise<void> {
 	console.log('Establishing DB connection');
 	await sequelize.sync(config.sequelize);
 	const connection = await sequelize.connectionManager.getConnection({ type: 'write' }) as Database;
 	connection.loadExtension('./lib/phhammdist/phhammdist.so');
+}
+
+export async function readyHandler(client: Client): Promise<void> {
+	console.log('Registering global commands');
+	loadBotHandlersCollection(client);
 
 	console.log('Loading NSFWJS models');
 	await loadModel();

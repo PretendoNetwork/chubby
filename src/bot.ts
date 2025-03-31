@@ -8,7 +8,7 @@ import messageCreateHandler from '@/events/messageCreate';
 import messageDeleteHandler from '@/events/messageDelete';
 import messageUpdateHandler from '@/events/messageUpdate';
 import reactionRemoveHandler from '@/events/reactionRemove';
-import readyHandler from '@/events/ready';
+import { readyHandler, bootHandler } from '@/events/ready';
 import config from '@/config';
 import type { ClientContextMenu, ClientCommand } from '@/types';
 
@@ -47,4 +47,9 @@ client.on(Events.MessageUpdate, messageUpdateHandler);
 client.on(Events.GuildAuditLogEntryCreate, guildAuditLogEntryCreateHandler);
 client.on(Events.MessageReactionRemove, reactionRemoveHandler);
 
-client.login(config.bot_token);
+async function bootstrap(): Promise<void> {
+	await bootHandler();
+	await client.login(config.bot_token);
+}
+
+bootstrap().catch(err => console.error(err));
