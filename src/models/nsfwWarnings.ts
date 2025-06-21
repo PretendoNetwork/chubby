@@ -25,7 +25,7 @@ NsfwWarning.init({
 		type: DataTypes.DATE,
 		defaultValue: DataTypes.NOW
 	}
-}, { 
+}, {
 	sequelize,
 	tableName: 'nsfw-warnings',
 	timestamps: false,

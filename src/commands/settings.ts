@@ -44,8 +44,8 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 				'```\n' + key + '=' + '\'' + `${getDB().get(key)}` + '\'' + '\n```',
 			ephemeral: true,
 			allowedMentions: {
-				parse: [], // dont allow tagging anything
-			},
+				parse: [] // dont allow tagging anything
+			}
 		});
 		return;
 	}
@@ -57,8 +57,8 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 			content: `setting \`${key}\` has been saved successfully`,
 			ephemeral: true,
 			allowedMentions: {
-				parse: [], // dont allow tagging anything
-			},
+				parse: [] // dont allow tagging anything
+			}
 		});
 		return;
 	}
@@ -66,12 +66,12 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 	if (interaction.options.getSubcommand() === 'which') {
 		await interaction.reply({
 			content: `**possible settings**:\n${editableOptions
-				.map((v) => `\`${v}\``)
+				.map(v => `\`${v}\``)
 				.join('\n')}`,
 			ephemeral: true,
 			allowedMentions: {
-				parse: [], // dont allow tagging anything
-			},
+				parse: [] // dont allow tagging anything
+			}
 		});
 		return;
 	}
@@ -122,5 +122,5 @@ export default {
 	name: command.name,
 	help: 'Change settings of the bot',
 	handler: settingsHandler,
-	deploy: command.toJSON(),
+	deploy: command.toJSON()
 };

@@ -18,9 +18,8 @@ import { NsfwWarning } from '@/models/nsfwWarnings';
 import { notifyUser } from '@/notifications';
 import { getChannelFromSettings } from '@/util';
 import { NsfwExemption } from '@/models/nsfwExemptions';
-import type { ButtonInteraction } from 'discord.js';
+import type { ButtonInteraction, Message } from 'discord.js';
 import type { Tensor3D } from '@tensorflow/tfjs-node';
-import type { Message } from 'discord.js';
 import type { NSFWJS, predictionType } from 'nsfwjs';
 
 let model: NSFWJS;
@@ -69,7 +68,7 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 		if (exemption) {
 			return;
 		}
-		
+
 		if (data.subarray(0, 4).equals(GIF_MAGIC)) {
 			const decodedGif = decodeGif(data);
 			const { width, height, frames } = decodedGif;
@@ -78,8 +77,8 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 					raw: {
 						width,
 						height,
-						channels: 4 
-					} 
+						channels: 4
+					}
 				}).removeAlpha()
 					.median() // * Applying a median filter to remove high frequency artifacts from gif's color-map encoding. This seems to massively improve the classification
 					.toBuffer();
@@ -143,7 +142,7 @@ async function logNsfwAction(message: Message, messageClassifications: MessageCl
 	}
 
 	const embeds = await createLogEmbeds(message, messageClassifications, hash);
-	
+
 	const addExemptionButton = new ButtonBuilder()
 		.setCustomId(ADD_NSFW_EXEMPTION)
 		.setStyle(ButtonStyle.Secondary)
@@ -157,13 +156,13 @@ async function logNsfwAction(message: Message, messageClassifications: MessageCl
 	const actionRow = new ActionRowBuilder<ButtonBuilder>()
 		.addComponents(addExemptionButton, removeExemptionButton);
 
-	const files = messageClassifications.getNsfwImages().map(classification => {
+	const files = messageClassifications.getNsfwImages().map((classification) => {
 		return new AttachmentBuilder(classification.data)
 			.setName('SPOILER_IMAGE.jpg')
 			.setDescription(`Image top classification is ${classification.top.className} (${(classification.top.probability * 100).toFixed(2)}%)`);
 	});
 
-	nsfwLogChannel.send({ embeds, files, components: [actionRow] }).catch(err => {
+	nsfwLogChannel.send({ embeds, files, components: [actionRow] }).catch((err) => {
 		nsfwLogChannel.send({ content: '`Unable to attach image`', embeds });
 		console.log(err);
 	});
@@ -180,7 +179,7 @@ async function createLogEmbeds(message: Message, messageClassifications: Message
 			}
 		}
 	});
-	
+
 	let color = 0xFFA500;
 
 	const embed = new EmbedBuilder()
@@ -231,9 +230,9 @@ async function createLogEmbeds(message: Message, messageClassifications: Message
 			},
 			{
 				name: 'Thresholds (High / Low)',
-				value: `${messageClassifications.settings.highThreshold * 100}% / ${messageClassifications.settings.lowThreshold * 100}%`,
+				value: `${messageClassifications.settings.highThreshold * 100}% / ${messageClassifications.settings.lowThreshold * 100}%`
 			},
-			...topClassifiedImage.classifications.map(classification => {
+			...topClassifiedImage.classifications.map((classification) => {
 				return {
 					name: classification.className,
 					value: colorMessage(`${(classification.probability * 100).toFixed(2)}%`, classification.severity),
@@ -254,7 +253,7 @@ export async function handleAddNsfwExemption(interaction: ButtonInteraction): Pr
 	let hash = interaction.message.embeds[0].fields
 		.find(field => field.name === 'Hash')!
 		.value;
-	hash = hexToBin(hash.substring(1, hash.length -1));
+	hash = hexToBin(hash.substring(1, hash.length - 1));
 	await NsfwExemption.create({ user_id: interaction.user.id, hash });
 	await interaction.editReply({ content: `Image added to NSFW exemptions by <@${interaction.user.id}>` });
 }
@@ -264,7 +263,7 @@ export async function handleRemoveNsfwExemption(interaction: ButtonInteraction):
 	let hash = interaction.message.embeds[0].fields
 		.find(field => field.name === 'Hash')!
 		.value;
-	hash = hexToBin(hash.substring(1, hash.length -1));
+	hash = hexToBin(hash.substring(1, hash.length - 1));
 
 	const exemption = await NsfwExemption.findOne({ where: { hash } });
 	if (exemption) {
@@ -303,7 +302,7 @@ function binToHex(string: string): string {
 }
 
 function hexToBin(string: string): string {
-	return [...Buffer.from(string, 'hex')].map((b) => b.toString(2).padStart(8, '0')).join('');
+	return [...Buffer.from(string, 'hex')].map(b => b.toString(2).padStart(8, '0')).join('');
 }
 
 class ClassifiedImage {
@@ -317,7 +316,7 @@ class ClassifiedImage {
 		this.settings = settings;
 		this.url = url;
 		this.data = data;
-		this.classifications = classifications.map(classification => {
+		this.classifications = classifications.map((classification) => {
 			let severity = ClassificationSeverity.None;
 			if (NSFW_CLASSIFICATIONS.includes(classification.className)) {
 				if (classification.probability >= this.settings.highThreshold) {

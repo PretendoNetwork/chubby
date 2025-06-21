@@ -33,6 +33,6 @@ Warning.init({
 	expires_at: {
 		type: DataTypes.DATE,
 		allowNull: true,
-		defaultValue: null,
-	},
+		defaultValue: null
+	}
 }, { sequelize, tableName: 'warnings' });

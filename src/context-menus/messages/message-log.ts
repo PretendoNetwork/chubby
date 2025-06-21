@@ -1,6 +1,6 @@
+import { ApplicationCommandType, ChannelType, ContextMenuCommandBuilder } from 'discord.js';
 import { MessageAuditRelationship } from '@/models/messageAuditRelationship';
 import { getChannelFromSettings } from '@/util';
-import { ApplicationCommandType, ChannelType, ContextMenuCommandBuilder } from 'discord.js';
 import type { MessageContextMenuCommandInteraction } from 'discord.js';
 
 async function messageLogMenuHandler(interaction: MessageContextMenuCommandInteraction): Promise<void> {

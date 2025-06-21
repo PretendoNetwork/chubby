@@ -40,10 +40,10 @@ async function notifyUserInChannel(guild: Guild, user: User, message: string | M
 				if (cachedThread.archived) {
 					await cachedThread.setArchived(false);
 					await cachedThreadMetadata.update({ updated: new Date() });
-				} 
+				}
 				thread = cachedThread;
-			} 
-		} catch (e) {
+			}
+		} catch {
 			await cachedThreadMetadata.destroy();
 		}
 	}

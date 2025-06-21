@@ -28,7 +28,7 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 		if (newMessage.channel instanceof BaseGuildTextChannel) {
 			channelName = newMessage.channel.name;
 		}
-	
+
 		const eventLogEmbed = new EmbedBuilder();
 
 		eventLogEmbed.setColor(0xC0C0C0);
@@ -94,7 +94,7 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 			return;
 		}
 
-		await MessageAuditRelationship.create({ 
+		await MessageAuditRelationship.create({
 			message_id: newMessage.id,
 			log_event_id: audit.id
 		});

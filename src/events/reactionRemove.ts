@@ -36,7 +36,7 @@ export default async function reactionRemoveHandler(reaction: MessageReaction | 
 			return;
 		}
 
-		await MessageAuditRelationship.create({ 
+		await MessageAuditRelationship.create({
 			message_id: reaction.message.id,
 			log_event_id: audit.id
 		});
@@ -63,7 +63,7 @@ export default async function reactionRemoveHandler(reaction: MessageReaction | 
 		}
 
 		const thread = auditMessage.thread ?? await createThread(auditMessage);
-		await thread.send({ 
+		await thread.send({
 			content: message,
 			allowedMentions: { parse: [] }
 		});

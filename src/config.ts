@@ -1,7 +1,7 @@
 import { createConfig, zodCoercedBoolean, loaders } from '@neato/config';
 import { z } from 'zod';
 
-export const config = createConfig({
+const config = createConfig({
 	envPrefix: 'PN_CHUBBY_',
 	loaders: [
 		loaders.environment(),
@@ -14,7 +14,7 @@ export const config = createConfig({
 			alter: zodCoercedBoolean().default(false),
 			postgres_uri: z.string()
 		})
-	}),
+	})
 });
 
 export default config;

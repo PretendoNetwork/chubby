@@ -9,15 +9,15 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 
 	const member = newPresence.member;
 	const settings = await ModPingSettings.findOne({
-		where: { 
-			user_id: member.id 
+		where: {
+			user_id: member.id
 		}
 	});
 
 	if (!settings) {
 		return;
 	}
-    
+
 	const { online, idle, dnd, offline } = settings;
 	const role = await getRoleFromSettings(member.guild!, 'roles.mod-ping');
 
@@ -31,8 +31,8 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 
 	if (!hasAllowedRole) {
 		await ModPingSettings.destroy({
-			where: { 
-				user_id: member.id 
+			where: {
+				user_id: member.id
 			}
 		});
 		await member.roles.remove(role);
@@ -50,8 +50,8 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 		shouldHaveRole = true;
 	} else if (newPresence.status === 'offline' && offline) {
 		shouldHaveRole = true;
-	} 
-	
+	}
+
 	if (shouldHaveRole) {
 		await member.roles.add(role);
 	} else {

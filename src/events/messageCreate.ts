@@ -13,7 +13,7 @@ export default async function messageCreateHandler(message: Message): Promise<vo
 
 	// check if the message has any URLs
 	const urls: string[] = message.cleanContent.match(urlRegex) || [];
-	
+
 	// if the message has any URLs or attachments check them for NSFW content
 	if (urls.length > 0 || message.attachments.size > 0) {
 		// get the URLs from attachments

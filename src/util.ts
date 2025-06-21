@@ -20,7 +20,7 @@ export const banMessageDeleteChoices: Array<APIApplicationCommandOptionChoice<nu
 	{ name: 'Previous 12 Hours', value: 12 * 60 * 60 },
 	{ name: 'Previous Day', value: 24 * 60 * 60 },
 	{ name: 'Previous 3 Days', value: 3 * 24 * 60 * 60 },
-	{ name: 'Previous Week', value: 7 * 24 * 60 * 60 },
+	{ name: 'Previous Week', value: 7 * 24 * 60 * 60 }
 ];
 
 export function ordinal(number: number): string {

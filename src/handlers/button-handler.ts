@@ -3,7 +3,7 @@ import type { ButtonInteraction } from 'discord.js';
 
 export default async function buttonHandler(interaction: ButtonInteraction): Promise<void> {
 	const { customId } = interaction;
-	
+
 	switch (customId) {
 		case ADD_NSFW_EXEMPTION:
 			await handleAddNsfwExemption(interaction);

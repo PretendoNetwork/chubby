@@ -1,8 +1,8 @@
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { ChannelType, EmbedBuilder } from 'discord.js';
 import { SlowMode, SlowModeStage } from '@/models/slow-mode';
 import handleSlowMode from '@/slow-mode';
-import { SlashCommandBuilder } from '@discordjs/builders';
 import { sendEventLogMessage } from '@/util';
-import { ChannelType, EmbedBuilder } from 'discord.js';
 import type { GuildTextBasedChannel, ChatInputCommandInteraction } from 'discord.js';
 
 async function slowModeHandler(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -44,7 +44,7 @@ async function setStageHandler(interaction: ChatInputCommandInteraction): Promis
 		throw new Error('Slow mode only applies to text channels');
 	}
 
-	const [slowMode, _] = await SlowMode.findOrCreate({
+	const [slowMode] = await SlowMode.findOrCreate({
 		where: {
 			channel_id: channel.id
 		},
@@ -105,10 +105,10 @@ async function setStageHandler(interaction: ChatInputCommandInteraction): Promis
 	}
 
 	if (slowMode.stages && slowMode.stages.length > 0) {
-		const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map(stage => {
+		const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map((stage) => {
 			return `1 message every ${stage.limit}s above ${stage.threshold} messages per minute`;
 		}).join('\n');
-	
+
 		auditLogEmbed.addFields([
 			{
 				name: 'Configured stages',
@@ -116,7 +116,7 @@ async function setStageHandler(interaction: ChatInputCommandInteraction): Promis
 			}
 		]);
 	}
-		
+
 	await sendEventLogMessage(interaction.guild!, channel.id, auditLogEmbed);
 
 	await interaction.followUp({ content: `Set a limit of 1 message every ${limit} seconds above ${threshold} messages per minute on <#${channel.id}>` });
@@ -179,10 +179,10 @@ async function unsetStageHandler(interaction: ChatInputCommandInteraction): Prom
 		});
 
 	if (slowMode.stages && slowMode.stages.length > 0) {
-		const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map(stage => {
+		const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map((stage) => {
 			return `1 message every ${stage.limit}s above ${stage.threshold} messages per minute`;
 		}).join('\n');
-	
+
 		auditLogEmbed.addFields([
 			{
 				name: 'Configured stages',
@@ -190,7 +190,7 @@ async function unsetStageHandler(interaction: ChatInputCommandInteraction): Prom
 			}
 		]);
 	}
-		
+
 	await sendEventLogMessage(interaction.guild!, channel.id, auditLogEmbed);
 
 	await interaction.followUp({ content: `Unset the limit at ${threshold} messages per minute on <#${channel.id}>` });
@@ -258,10 +258,10 @@ async function enableAutoSlowModeHandler(interaction: ChatInputCommandInteractio
 		});
 
 	if (slowMode.stages && slowMode.stages.length > 0) {
-		const stagesMessage = slowMode.stages.map(stage => {
+		const stagesMessage = slowMode.stages.map((stage) => {
 			return `1 message every ${stage.limit}s above ${stage.threshold} messages per minute`;
 		}).join('\n');
-	
+
 		auditLogEmbed.addFields([
 			{
 				name: 'Configured stages',
@@ -448,7 +448,7 @@ function autoSlowModeStats(slowMode: SlowMode, channel: GuildTextBasedChannel): 
 			}
 		]);
 	}
-	
+
 	if (slowMode.rate !== undefined) {
 		embed.addFields([
 			{
@@ -522,15 +522,15 @@ function disabledSlowModeStats(slowMode: SlowMode | null, channel: GuildTextBase
 
 function addConfiguredStagesToEmbed(embed: EmbedBuilder, slowMode: SlowMode | null): void {
 	if (slowMode && slowMode.stages && slowMode.stages.length > 0) {
-		const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map(stage => {
+		const stagesMessage = slowMode.stages.sort((a, b) => a.threshold - b.threshold).map((stage) => {
 			return `1 message every ${stage.limit}s above ${stage.threshold} messages per minute`;
 		}).join('\n');
-	
+
 		embed.addFields([
 			{
 				name: 'Configured auto slow mode stages',
 				value: stagesMessage
-			},
+			}
 		]);
 	}
 }
@@ -539,18 +539,18 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('slow-mode')
 	.setDescription('Configure slow mode for a channel')
-	.addSubcommandGroup(group => {
+	.addSubcommandGroup((group) => {
 		group.setName('enable')
 			.setDescription('Enable slow mode for a channel')
-			.addSubcommand(cmd => {
+			.addSubcommand((cmd) => {
 				cmd.setName('auto')
 					.setDescription('Enable auto slow mode')
-					.addChannelOption(option => {
+					.addChannelOption((option) => {
 						option.setName('channel')
 							.setDescription('The channel to enable auto slow mode for');
 						return option;
 					})
-					.addIntegerOption(option => {
+					.addIntegerOption((option) => {
 						option.setName('window')
 							.setDescription('The time window to use for calculating message rate')
 							.setMinValue(10000)
@@ -559,10 +559,10 @@ const command = new SlashCommandBuilder()
 					});
 				return cmd;
 			})
-			.addSubcommand(cmd =>{
+			.addSubcommand((cmd) => {
 				cmd.setName('static')
 					.setDescription('Enable static slow mode')
-					.addIntegerOption(option => {
+					.addIntegerOption((option) => {
 						option.setName('limit')
 							.setDescription('The static limit to set the channel slow mode to')
 							.setMinValue(1)
@@ -570,7 +570,7 @@ const command = new SlashCommandBuilder()
 							.setRequired(true);
 						return option;
 					})
-					.addChannelOption(option => {
+					.addChannelOption((option) => {
 						option.setName('channel')
 							.setDescription('The channel to enable static slow mode for');
 						return option;
@@ -579,40 +579,40 @@ const command = new SlashCommandBuilder()
 			});
 		return group;
 	})
-	.addSubcommand(cmd => {
+	.addSubcommand((cmd) => {
 		cmd.setName('disable')
 			.setDescription('Disable slow mode for a channel')
-			.addChannelOption(option => {
+			.addChannelOption((option) => {
 				option.setName('channel')
 					.setDescription('The channel to disable auto slow mode for');
 				return option;
 			});
 		return cmd;
 	})
-	.addSubcommand(cmd => {
+	.addSubcommand((cmd) => {
 		cmd.setName('stats')
 			.setDescription('Get the current auto slow mode stats for a channel')
-			.addChannelOption(option => {
+			.addChannelOption((option) => {
 				option.setName('channel')
 					.setDescription('The channel to fetch the auto slow mode stats for');
 				return option;
 			});
 		return cmd;
 	})
-	.addSubcommandGroup(group => {
+	.addSubcommandGroup((group) => {
 		group.setName('stage')
 			.setDescription('Managed the auto slow mode threshold settings')
-			.addSubcommand(cmd => {
+			.addSubcommand((cmd) => {
 				cmd.setName('set')
 					.setDescription('Set the properties of a stage for the given channel')
-					.addIntegerOption(option => {
+					.addIntegerOption((option) => {
 						option.setName('threshold')
 							.setDescription('the threshold in messages per section that must be reached to enable this stage')
 							.setRequired(true)
 							.setMinValue(0);
 						return option;
 					})
-					.addIntegerOption(option => {
+					.addIntegerOption((option) => {
 						option.setName('limit')
 							.setDescription('the limit to apply to the channel once the threshold has been reached')
 							.setRequired(true)
@@ -620,24 +620,24 @@ const command = new SlashCommandBuilder()
 							.setMaxValue(21600);
 						return option;
 					})
-					.addChannelOption(option => {
+					.addChannelOption((option) => {
 						option.setName('channel')
 							.setDescription('The channel to add a threshold for');
 						return option;
 					});
 				return cmd;
 			})
-			.addSubcommand(cmd => {
+			.addSubcommand((cmd) => {
 				cmd.setName('unset')
 					.setDescription('Unset a stage for the given channel')
-					.addIntegerOption(option => {
+					.addIntegerOption((option) => {
 						option.setName('threshold')
 							.setDescription('The value of the threshold to remove')
 							.setMinValue(0)
 							.setRequired(true);
 						return option;
 					})
-					.addChannelOption(option => {
+					.addChannelOption((option) => {
 						option.setName('channel')
 							.setDescription('The channel to remove a threshold for');
 						return option;
