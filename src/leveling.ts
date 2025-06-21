@@ -1,5 +1,4 @@
 import { EmbedBuilder } from 'discord.js';
-import { getDB, getDBList } from '@/db';
 import { User } from '@/models/users';
 import { getRoleFromSettings, sendEventLogMessage } from '@/util';
 import { sequelize } from '@/sequelize-instance';

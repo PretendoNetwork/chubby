@@ -3,7 +3,6 @@ import { client } from '@/bot';
 import { MatchmakingThread } from '@/models/matchmakingThreads';
 import { User } from '@/models/users';
 import { sendEventLogMessage } from '@/util';
-import { getDB } from '@/db';
 import { notifyUser } from '@/notifications';
 import type { Message } from 'discord.js';
 

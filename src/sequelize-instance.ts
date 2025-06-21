@@ -1,9 +1,11 @@
+import config from '@/config';
 import { Sequelize } from 'sequelize';
 
-export const sequelize = new Sequelize({
-	dialect: 'sqlite',
-	storage: `${process.cwd()}/database/database.sqlite`,
-	logging: false
+export const sequelize = new Sequelize(config.sequelize.postgres_uri, {
+	dialect: 'postgres'
 });
 
-sequelize.query('PRAGMA journal_mode=WAL;');
+sequelize.query('CREATE EXTENSION IF NOT EXISTS "pg_phash"').catch((error) => {
+	console.error('Failed to create pg_phash extension - make sure you\'re using the PretendoNetwork/postgres-with-extensions image!', error);
+	process.exit(1);
+});

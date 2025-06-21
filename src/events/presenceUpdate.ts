@@ -1,4 +1,3 @@
-import { getDBList } from '@/db';
 import { ModPingSettings } from '@/models/modPingSettings';
 import { getRoleFromSettings } from '@/util';
 import type { Presence } from 'discord.js';

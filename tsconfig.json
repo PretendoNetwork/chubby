@@ -1,20 +1,26 @@
 {
 	"compilerOptions": {
 		"strict": true,
-		"resolveJsonModule": true,
 		"sourceMap": true,
-		"module": "commonjs",
+		"resolveJsonModule": true,
+		"module": "ES2022",
 		"esModuleInterop": true,
-		"moduleResolution": "node",
+		"moduleResolution": "bundler",
 		"baseUrl": "src",
 		"outDir": "dist",
 		"allowJs": true,
 		"target": "es2022",
 		"noEmitOnError": true,
+		"noImplicitAny": true,
+		"strictPropertyInitialization": true,
+		"verbatimModuleSyntax": true,
 		"paths": {
-			"@/*": ["./*"]
-		},
-		"skipLibCheck": true
+			"@/*": [
+				"./*"
+			]
+		}
 	},
-	"include": ["src"]
+	"include": [
+		"src"
+	]
 }

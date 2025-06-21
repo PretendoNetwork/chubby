@@ -14,7 +14,6 @@ import {
 	TextChannel,
 	ButtonBuilder
 } from 'discord.js';
-import { getDB } from '@/db';
 import { NsfwWarning } from '@/models/nsfwWarnings';
 import { notifyUser } from '@/notifications';
 import { getChannelFromSettings } from '@/util';

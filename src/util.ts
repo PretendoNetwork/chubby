@@ -1,4 +1,3 @@
-import { getDB, getDBList } from '@/db';
 import { ChannelType } from 'discord.js';
 import type { Channel, EmbedBuilder, Guild, Role, Message, APIApplicationCommandOptionChoice } from 'discord.js';
 

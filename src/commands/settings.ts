@@ -1,5 +1,4 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { getDB } from '@/db';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
 const editableOptions = [

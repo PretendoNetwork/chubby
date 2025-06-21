@@ -4,16 +4,17 @@
   "description": "",
   "main": "./dist/bot.js",
   "scripts": {
-    "start": "node --max-old-space-size=4096 .",
-    "start:dev": "NODE_ENV=development node .",
+    "dev": "tsup --watch --onSuccess \"node dist/bot.js\"",
     "lint": "eslint .",
-    "build": "npm run lint && npm run clean && tsc && tsc-alias",
-    "clean": "rimraf ./dist"
+    "lint:fix": "eslint . --fix",
+    "build": "npm run lint && tsup",
+    "start": "node --enable-source-maps dist/bot.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@neato/config": "^4.0.3",
     "@tensorflow/tfjs-node": "^4.20.0",
     "decode-gif": "^1.0.1",
     "discord-api-types": "^0.31.2",
@@ -25,7 +26,8 @@
     "sharp": "^0.33.4",
     "sharp-phash": "^2.1.0",
     "simple-json-db": "^2.0.0",
-    "sqlite3": "^5.0.8"
+    "sqlite3": "^5.0.8",
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
@@ -38,6 +40,7 @@
     "eslint-plugin-jsdoc": "^50.2.4",
     "rimraf": "^6.0.1",
     "tsc-alias": "1.8.7",
+    "tsup": "^8.5.0",
     "typescript": "^5.1.6"
   }
 }
