@@ -44,12 +44,11 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 		return; // * Do not check if the channel is NSFW
 	}
 
-	let exemptionDistance = await getSetting('nsfw.exemption.distance');
-	if (isNaN(exemptionDistance)) {
-		exemptionDistance = 0;
-	}
+	const exemptionDistance = await getSetting('nsfw.exemption.distance');
+	const lowThreshold = await getSetting('nsfw.threshold.low');
+	const highThreshold = await getSetting('nsfw.threshold.high');
 
-	const messageClassifications = new MessageClassifications();
+	const messageClassifications = new MessageClassifications(lowThreshold, highThreshold);
 
 	for (const url of urls) {
 		const { headers } = await got.head(url);
@@ -348,18 +347,7 @@ class MessageClassifications {
 	private images: ClassifiedImage[] = [];
 	readonly settings: ClassificationSettings;
 
-	constructor() {
-		// * We fetch the settings each time so that if they're changed they'll be updated
-		let highThreshold = await getSetting('nsfw.threshold.high');
-		if (isNaN(highThreshold)) {
-			highThreshold = 1;
-		}
-
-		let lowThreshold = await getSetting('nsfw.threshold.low');
-		if (isNaN(lowThreshold)) {
-			lowThreshold = 0.7;
-		}
-
+	constructor(lowThreshold: number, highThreshold: number) {
 		this.settings = {
 			highThreshold, lowThreshold
 		};
