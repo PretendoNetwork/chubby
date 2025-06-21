@@ -18,6 +18,7 @@ import { NsfwWarning } from '@/models/nsfwWarnings';
 import { notifyUser } from '@/notifications';
 import { getChannelFromSettings } from '@/util';
 import { NsfwExemption } from '@/models/nsfwExemptions';
+import { getSetting } from '@/models/settings';
 import type { ButtonInteraction, Message } from 'discord.js';
 import type { Tensor3D } from '@tensorflow/tfjs-node';
 import type { NSFWJS, predictionType } from 'nsfwjs';
@@ -37,13 +38,13 @@ export async function loadModel(): Promise<void> {
 }
 
 export async function checkNSFW(message: Message, urls: string[]): Promise<void> {
-	const nsfwDetectionEnabled = getDB().get('nsfw.enabled') === 'true';
+	const nsfwDetectionEnabled = await getSetting('nsfw.enabled');
 
 	if (!nsfwDetectionEnabled || (message.channel instanceof TextChannel && message.channel.nsfw)) {
 		return; // * Do not check if the channel is NSFW
 	}
 
-	let exemptionDistance = parseInt(getDB().get('nsfw.exemption.distance') ?? '0');
+	let exemptionDistance = await getSetting('nsfw.exemption.distance');
 	if (isNaN(exemptionDistance)) {
 		exemptionDistance = 0;
 	}
@@ -62,7 +63,7 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 
 		const hash = await phash(data);
 		const exemption = await NsfwExemption.findOne({
-			where: sequelize.where(sequelize.fn('phhammdist', sequelize.col('hash'), hash), { [sequelize.Op.lte]: exemptionDistance })
+			where: sequelize.where(sequelize.fn('phash_hamming', sequelize.col('hash'), hash), { [sequelize.Op.lte]: exemptionDistance })
 		});
 
 		if (exemption) {
@@ -135,7 +136,7 @@ export async function checkNSFW(message: Message, urls: string[]): Promise<void>
 }
 
 async function logNsfwAction(message: Message, messageClassifications: MessageClassifications, hash: string): Promise<void> {
-	const nsfwLogChannel = await getChannelFromSettings(message.guild!, 'channels.nsfw-logs');
+	const nsfwLogChannel = await getChannelFromSettings(message.guild!, 'nsfw-logs');
 	if (!nsfwLogChannel || nsfwLogChannel.type !== ChannelType.GuildText) {
 		console.log('NSFW Event Log channel is not configured');
 		return;
@@ -349,12 +350,12 @@ class MessageClassifications {
 
 	constructor() {
 		// * We fetch the settings each time so that if they're changed they'll be updated
-		let highThreshold = parseFloat(getDB().get('nsfw.threshold.high') ?? '1');
+		let highThreshold = await getSetting('nsfw.threshold.high');
 		if (isNaN(highThreshold)) {
 			highThreshold = 1;
 		}
 
-		let lowThreshold = parseFloat(getDB().get('nsfw.threshold.low') ?? '0.7');
+		let lowThreshold = await getSetting('nsfw.threshold.low');
 		if (isNaN(lowThreshold)) {
 			lowThreshold = 0.7;
 		}

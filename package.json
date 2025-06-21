@@ -1,38 +1,38 @@
 {
-  "name": "chubby",
-  "version": "1.0.0",
-  "description": "",
-  "main": "./dist/bot.js",
-  "scripts": {
-    "dev": "tsup --watch --onSuccess \"node dist/bot.js\"",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "build": "npm run lint && tsup",
-    "start": "node --enable-source-maps dist/bot.js"
-  },
-  "license": "AGPL-3.0-only",
-  "dependencies": {
-    "@neato/config": "^4.0.3",
-    "@tensorflow/tfjs-node": "^4.20.0",
-    "decode-gif": "^1.0.1",
-    "discord-api-types": "^0.31.2",
-    "discord.js": "^14.15.3",
-    "got": "^11.8.2",
-    "node-schedule": "^2.1.1",
-    "nsfwjs": "^4.1.0",
-    "sequelize": "^6.19.0",
-    "sharp": "^0.33.4",
-    "sharp-phash": "^2.1.0",
-    "zod": "^3.25.67"
-  },
-  "devDependencies": {
-    "@pretendonetwork/eslint-config": "^0.0.8",
-    "@types/glob": "^8.1.0",
-    "@types/node": "^22.5.5",
-    "@types/node-schedule": "^2.1.7",
-    "@types/sequelize": "^4.28.20",
-    "eslint": "^9.29.0",
-    "tsup": "^8.5.0",
-    "typescript": "^5.1.6"
-  }
+	"name": "chubby",
+	"version": "1.0.0",
+	"description": "",
+	"main": "./dist/bot.js",
+	"scripts": {
+		"dev": "tsup --watch --onSuccess \"node dist/bot.js\"",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"build": "tsc --noEmit && tsup",
+		"start": "node --enable-source-maps dist/bot.js"
+	},
+	"license": "AGPL-3.0-only",
+	"dependencies": {
+		"@neato/config": "^4.0.3",
+		"@tensorflow/tfjs-node": "^4.20.0",
+		"decode-gif": "^1.0.1",
+		"discord-api-types": "^0.31.2",
+		"discord.js": "^14.15.3",
+		"got": "^11.8.2",
+		"node-schedule": "^2.1.1",
+		"nsfwjs": "^4.1.0",
+		"sequelize": "^6.19.0",
+		"sharp": "^0.33.4",
+		"sharp-phash": "^2.1.0",
+		"zod": "^3.25.67"
+	},
+	"devDependencies": {
+		"@pretendonetwork/eslint-config": "^0.0.8",
+		"@types/glob": "^8.1.0",
+		"@types/node": "^22.5.5",
+		"@types/node-schedule": "^2.1.7",
+		"@types/sequelize": "^4.28.20",
+		"eslint": "^9.29.0",
+		"tsup": "^8.5.0",
+		"typescript": "^5.1.6"
+	}
 }

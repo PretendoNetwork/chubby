@@ -103,7 +103,7 @@ async function handleAutoCurrent(interaction: ChatInputCommandInteraction): Prom
 }
 
 async function interactionHandler(interaction: ChatInputCommandInteraction): Promise<void> {
-	const role = await getRoleFromSettings(interaction.guild!, 'roles.mod-ping');
+	const role = await getRoleFromSettings(interaction.guild!, 'mod-ping');
 	if (!role) {
 		await interaction.reply({
 			content: 'Missing mod-ping role ID!',

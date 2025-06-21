@@ -3,20 +3,21 @@ import { User } from '@/models/users';
 import { getRoleFromSettings, sendEventLogMessage } from '@/util';
 import { sequelize } from '@/sequelize-instance';
 import { notifyUser } from '@/notifications';
+import { getSetting } from '@/models/settings';
 import type { GuildMember, Message } from 'discord.js';
 
 export async function handleLeveling(message: Message): Promise<void> {
-	const levelingChannelBlacklist = getDBList('leveling.channels-blacklist');
+	const levelingChannelBlacklist = await getSetting('leveling.channels-blacklist');
 	if (levelingChannelBlacklist.includes(message.channelId)) {
 		return;
 	}
 
-	const trustedRole = await getRoleFromSettings(message.guild!, 'roles.trusted');
+	const trustedRole = await getRoleFromSettings(message.guild!, 'trusted');
 	if (!trustedRole) {
 		return;
 	}
 
-	const untrustedRole = await getRoleFromSettings(message.guild!, 'roles.untrusted');
+	const untrustedRole = await getRoleFromSettings(message.guild!, 'untrusted');
 	if (!untrustedRole) {
 		return;
 	}
@@ -25,34 +26,22 @@ export async function handleLeveling(message: Message): Promise<void> {
 		return;
 	}
 
-	const supporterRole = await getRoleFromSettings(message.guild!, 'roles.supporter');
+	const supporterRole = await getRoleFromSettings(message.guild!, 'supporter');
 	if (!supporterRole) {
 		return;
 	}
 
-	const xpRequiredForTrusted = parseInt(getDB().get('leveling.xp-required-for-trusted') ?? '');
-	if (isNaN(xpRequiredForTrusted)) {
-		console.log('Missing amount of XP required for trusted role!');
-		return;
-	}
+	const xpRequiredForTrusted = await getSetting('leveling.xp-required-for-trusted');
 
-	const timeRequiredForTrusted = parseInt(getDB().get('leveling.days-required-for-trusted') ?? '') * 24 * 60 * 60 * 1000;
-	if (isNaN(timeRequiredForTrusted)) {
-		console.log('Missing number of days required for trusted role!');
-		return;
-	}
+	const timeRequiredForTrusted = await getSetting('leveling.days-required-for-trusted') * 24 * 60 * 60 * 1000;
 
-	let messageTimeout = parseInt(getDB().get('leveling.message-timeout-seconds') ?? '') * 1000;
+	let messageTimeout = await getSetting('leveling.message-timeout-seconds') * 1000;
 	if (isNaN(messageTimeout)) {
 		console.log('Missing leveling message timeout! Defaulting to 1 minute.');
 		messageTimeout = 60 * 1000;
 	}
 
-	let supporterXPMultiplier = parseInt(getDB().get('leveling.supporter-xp-multiplier') ?? '');
-	if (isNaN(supporterXPMultiplier)) {
-		console.log('Missing supporter XP multiplier! Supporters will not earn extra XP.');
-		supporterXPMultiplier = 1;
-	}
+	const supporterXPMultiplier = await getSetting('leveling.supporter-xp-multiplier');
 
 	const joinDate = message.member?.joinedAt;
 	if (!joinDate) {
@@ -160,7 +149,7 @@ export async function handleLeveling(message: Message): Promise<void> {
 }
 
 export async function untrustUser(member: GuildMember, newStartDate: Date): Promise<void> {
-	const trustedRoleID = await getRoleFromSettings(member.guild, 'roles.trusted');
+	const trustedRoleID = await getRoleFromSettings(member.guild, 'trusted');
 	if (!trustedRoleID) {
 		return;
 	}

@@ -13,7 +13,7 @@ async function messageLogMenuHandler(interaction: MessageContextMenuCommandInter
 	});
 
 	if (messageAuditRelationships.length > 0) {
-		const auditLogChannel = await getChannelFromSettings(interaction.guild!, 'channels.event-logs');
+		const auditLogChannel = await getChannelFromSettings(interaction.guild!, 'event-logs');
 		if (!auditLogChannel || auditLogChannel.type !== ChannelType.GuildText) {
 			console.error('no log channel specified');
 			return;

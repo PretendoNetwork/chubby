@@ -1,8 +1,0 @@
-{
-	"bot_token": "TOKEN",
-	"json_db_path": "./db.json",
-	"sequelize": {
-		"force": false,
-		"alter": false
-	}
-}

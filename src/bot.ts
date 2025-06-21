@@ -8,8 +8,10 @@ import messageCreateHandler from '@/events/messageCreate';
 import messageDeleteHandler from '@/events/messageDelete';
 import messageUpdateHandler from '@/events/messageUpdate';
 import reactionRemoveHandler from '@/events/reactionRemove';
-import { readyHandler, bootHandler } from '@/events/ready';
+import { readyHandler } from '@/events/ready';
 import config from '@/config';
+import { sequelize } from '@/sequelize-instance';
+import { initialiseSettings } from '@/models/settings';
 import type { ClientContextMenu, ClientCommand } from '@/types';
 
 process.on('SIGINT', () => {
@@ -48,7 +50,10 @@ client.on(Events.GuildAuditLogEntryCreate, guildAuditLogEntryCreateHandler);
 client.on(Events.MessageReactionRemove, reactionRemoveHandler);
 
 async function bootstrap(): Promise<void> {
-	await bootHandler();
+	console.log('Establishing DB connection');
+	await sequelize.sync(config.sequelize);
+	initialiseSettings();
+
 	await client.login(config.bot_token);
 }
 

@@ -50,7 +50,7 @@ export default async function reactionRemoveHandler(reaction: MessageReaction | 
 		});
 		await thread.setArchived(true);
 	} else {
-		const auditLogChannel = await getChannelFromSettings(reaction.message.guild!, 'channels.event-logs');
+		const auditLogChannel = await getChannelFromSettings(reaction.message.guild!, 'event-logs');
 		if (!auditLogChannel || auditLogChannel.type !== ChannelType.GuildText) {
 			console.error('no log channel specified');
 			return;

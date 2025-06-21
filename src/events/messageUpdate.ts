@@ -75,7 +75,7 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 		});
 
 		if (previousLogRelationship) {
-			const auditLogChannel = await getChannelFromSettings(guild, 'channels.event-logs');
+			const auditLogChannel = await getChannelFromSettings(guild, 'event-logs');
 			if (auditLogChannel && auditLogChannel.type === ChannelType.GuildText) {
 				const auditMessage = await auditLogChannel.messages.fetch(previousLogRelationship.log_event_id);
 				if (auditMessage) {

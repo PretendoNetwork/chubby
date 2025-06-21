@@ -24,7 +24,7 @@ export async function notifyUser(guild: Guild, user: User, message: string | Mes
 }
 
 async function notifyUserInChannel(guild: Guild, user: User, message: string | MessageCreateOptions): Promise<void> {
-	const notificationsChannel = await getChannelFromSettings(guild, 'channels.notifications');
+	const notificationsChannel = await getChannelFromSettings(guild, 'notifications');
 	if (!notificationsChannel || notificationsChannel.type !== ChannelType.GuildText) {
 		throw 'Could not find notifications channel';
 	}

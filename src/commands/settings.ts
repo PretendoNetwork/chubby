@@ -1,77 +1,75 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
+import { getAllSettings, getSetting, setSetting, settingsDefinitions } from '@/models/settings';
+import type { SettingsKeys } from '@/models/settings';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
-const editableOptions = [
-	'nsfw.enabled',
-	'nsfw.threshold.high',
-	'nsfw.threshold.low',
-	'nsfw.exemption.distance',
-	'roles.muted',
-	'roles.nsfw-punished',
-	'roles.supporter',
-	'roles.trusted',
-	'roles.untrusted',
-	'roles.mod-ping',
-	'roles.mod-ping-allowed',
-	'channels.nsfw-punished',
-	'channels.nsfw-logs',
-	'channels.event-logs',
-	'channels.event-logs.blacklist',
-	'channels.matchmaking',
-	'channels.notifications',
-	'matchmaking.lock-timeout-seconds',
-	'leveling.channels-blacklist',
-	'leveling.xp-required-for-trusted',
-	'leveling.days-required-for-trusted',
-	'leveling.supporter-xp-multiplier',
-	'leveling.message-timeout-seconds'
-];
-
-function verifyInputtedKey(interaction: ChatInputCommandInteraction): string {
-	const key = interaction.options.getString('key', true);
-	if (!editableOptions.includes(key)) {
-		throw new Error('Cannot edit this setting - not a valid setting');
+function verifyInputtedKey(key: string | null): key is SettingsKeys {
+	if (!key) {
+		return false;
 	}
-	return key;
+	return Object.keys(settingsDefinitions).includes(key);
 }
 
 async function settingsHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	if (interaction.options.getSubcommand() === 'get') {
-		const key = verifyInputtedKey(interaction);
-		// this is hellish string concatenation, I know
+		const key = interaction.options.getString('key');
+		const validKey = verifyInputtedKey(key);
+
+		if (!validKey) {
+			await interaction.reply({
+				content: 'Invalid key provided. Use `/settings list` to see valid keys.',
+				ephemeral: true
+			});
+			return;
+		}
+
 		await interaction.reply({
 			content:
-				'```\n' + key + '=' + '\'' + `${getDB().get(key)}` + '\'' + '\n```',
+				'```\n' + validKey + '=' + '\'' + `${await getSetting(key)}` + '\'' + '\n```',
 			ephemeral: true,
 			allowedMentions: {
-				parse: [] // dont allow tagging anything
+				parse: [] // Don't allow tagging anything
 			}
 		});
 		return;
 	}
 
 	if (interaction.options.getSubcommand() === 'set') {
-		const key = verifyInputtedKey(interaction);
-		getDB().set(key, interaction.options.getString('value')!);
+		const key = interaction.options.getString('key');
+		const validKey = verifyInputtedKey(key);
+
+		if (!validKey) {
+			await interaction.reply({
+				content: 'Invalid key provided. Use `/settings list` to see valid keys.',
+				ephemeral: true
+			});
+			return;
+		}
+
+		const setResult = await setSetting(key, interaction.options.getString('value'));
+
+		if (!setResult.success) {
+			await interaction.reply({
+				content: `Failed to set \`${key}\`: ${setResult.error?.message ?? 'Unknown error'}`,
+				ephemeral: true
+			});
+			return;
+		}
+
 		await interaction.reply({
-			content: `setting \`${key}\` has been saved successfully`,
-			ephemeral: true,
-			allowedMentions: {
-				parse: [] // dont allow tagging anything
-			}
+			content: `Setting \`${key}\` has been saved successfully`,
+			ephemeral: true
 		});
 		return;
 	}
 
-	if (interaction.options.getSubcommand() === 'which') {
+	if (interaction.options.getSubcommand() === 'list') {
+		const allSettings = await getAllSettings();
 		await interaction.reply({
-			content: `**possible settings**:\n${editableOptions
-				.map(v => `\`${v}\``)
+			content: `**Possible settings**:\n${Object.keys(allSettings)
+				.map(v => `\`${v}\`: \`${allSettings[v]}\``)
 				.join('\n')}`,
-			ephemeral: true,
-			allowedMentions: {
-				parse: [] // dont allow tagging anything
-			}
+			ephemeral: true
 		});
 		return;
 	}
@@ -113,8 +111,8 @@ command.addSubcommand((cmd) => {
 	return cmd;
 });
 command.addSubcommand((cmd) => {
-	cmd.setName('which');
-	cmd.setDescription('which settings are valid?');
+	cmd.setName('list');
+	cmd.setDescription('List all settings');
 	return cmd;
 });
 
