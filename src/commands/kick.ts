@@ -2,7 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
-import { banMessageDeleteChoices, ordinal, sendEventLogMessage } from '@/util';
+import { banMessageDeleteChoices, ordinal, sendModLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
@@ -150,7 +150,7 @@ export async function kickHandler(interaction: CommandInteraction | ModalSubmitI
 			sendMemberEmbeds.push(kickEmbed);
 		}
 
-		await sendEventLogMessage(guild, null, eventLogEmbed);
+		await sendModLogMessage(guild, null, eventLogEmbed);
 
 		if (count > 0) {
 			const pastKicksEmbed = new EmbedBuilder();
