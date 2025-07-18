@@ -42,7 +42,6 @@ COPY package.json .
 
 COPY --from=dependencies ${app_dir}/node_modules ${app_dir}/node_modules
 COPY --from=build ${app_dir}/dist ${app_dir}/dist
-COPY lib lib
 
 VOLUME ["./config.json", "./database"]
 
