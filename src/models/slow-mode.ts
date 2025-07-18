@@ -59,15 +59,15 @@ SlowMode.init({
 		defaultValue: true
 	},
 	window: {
-		type: DataTypes.NUMBER,
+		type: DataTypes.DECIMAL,
 		defaultValue: 60000
 	},
 	users: {
-		type: DataTypes.NUMBER,
+		type: DataTypes.DECIMAL,
 		allowNull: true
 	},
 	rate: {
-		type: DataTypes.NUMBER,
+		type: DataTypes.DECIMAL,
 		allowNull: true
 	}
 }, { sequelize, tableName: 'slow-mode' });
@@ -88,10 +88,10 @@ SlowModeStage.init({
 		primaryKey: true
 	},
 	threshold: {
-		type: DataTypes.NUMBER
+		type: DataTypes.DECIMAL
 	},
 	limit: {
-		type: DataTypes.NUMBER
+		type: DataTypes.DECIMAL
 	}
 }, { sequelize, tableName: 'slow-mode-threshold' });
 
