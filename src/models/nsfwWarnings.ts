@@ -19,7 +19,7 @@ NsfwWarning.init({
 		type: DataTypes.STRING
 	},
 	probability: {
-		type: DataTypes.DECIMAL
+		type: DataTypes.DOUBLE
 	},
 	created: {
 		type: DataTypes.DATE,
