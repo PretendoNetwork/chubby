@@ -118,7 +118,7 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 	if (interaction.options.getSubcommand() === 'list') {
 		const allSettings = await getAllSettings();
 		const sortedKeys = Object.keys(allSettings).sort((a, b) => a.localeCompare(b));
-		const settingsOutput = sortedKeys.map(key => `\`${key}\` = \`${formatOutput(key, allSettings[key])}\``).join('\n');
+		const settingsOutput = sortedKeys.map(key => `\`${key}\` = ${formatOutput(key, allSettings[key])}`).join('\n');
 		await interaction.reply({
 			content: `**Possible settings**:\n${settingsOutput}`,
 			ephemeral: true

@@ -7,7 +7,7 @@ import { getSetting } from '@/models/settings';
 import type { GuildMember, Message } from 'discord.js';
 
 export async function handleLeveling(message: Message): Promise<void> {
-	const levelingChannelBlacklist = await getSetting('leveling.channels-blacklist');
+	const levelingChannelBlacklist = await getSetting('leveling.channel-blacklist');
 	if (levelingChannelBlacklist.includes(message.channelId)) {
 		return;
 	}

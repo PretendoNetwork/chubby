@@ -24,11 +24,25 @@ Settings.init({
 
 type SettingSchema = {
 	schema: z.ZodTypeAny;
+	inputPreprocess?: (input: string) => any;
 };
 
 const settingsCache = new Map<SettingsKeys, any>();
 
-const snowflakeSchema = z.coerce.string().min(17).max(20).regex(/^\d+$/, 'Invalid snowflake format');
+const snowflakeSchema = z.string().min(17).max(20).regex(/^\d+$/, 'Invalid snowflake format');
+
+const settingsDefaults = {
+	'roles.mod-ping-allowed': [] as string[],
+	'event-logs.channel-blacklist': [] as string[],
+	'leveling.enabled': false,
+	'matchmaking.lock-timeout-seconds': 300,
+	'leveling.channel-blacklist': [] as string[],
+	'leveling.message-xp': 1,
+	'leveling.xp-required-for-trusted': 1000,
+	'leveling.days-required-for-trusted': 30,
+	'leveling.supporter-xp-multiplier': 1,
+	'leveling.message-timeout-seconds': 60
+} as const satisfies Record<string, any>;
 
 export const settingsDefinitions = {
 	'role.muted': { schema: snowflakeSchema },
@@ -36,19 +50,19 @@ export const settingsDefinitions = {
 	'role.trusted': { schema: snowflakeSchema },
 	'role.untrusted': { schema: snowflakeSchema },
 	'role.mod-ping': { schema: snowflakeSchema },
-	'roles.mod-ping-allowed': { schema: z.array(snowflakeSchema).default([]) },
+	'roles.mod-ping-allowed': { schema: z.array(snowflakeSchema).default(settingsDefaults['roles.mod-ping-allowed']), inputPreprocess: (s): string[] => s.split(',') },
 	'channel.event-logs': { schema: snowflakeSchema },
 	'channel.matchmaking': { schema: snowflakeSchema },
 	'channel.notifications': { schema: snowflakeSchema },
-	'event-logs.blacklist': { schema: z.array(snowflakeSchema).default([]) },
-	'matchmaking.lock-timeout-seconds': { schema: z.number().min(1).default(300) },
-	'leveling.enabled': { schema: z.boolean().default(false) },
-	'leveling.channels-blacklist': { schema: z.array(snowflakeSchema).default([]) },
-	'leveling.message-xp': { schema: z.number().gt(0).default(1) },
-	'leveling.xp-required-for-trusted': { schema: z.number().min(1).default(1000) },
-	'leveling.days-required-for-trusted': { schema: z.number().min(0).default(30) },
-	'leveling.supporter-xp-multiplier': { schema: z.number().min(1).default(1) },
-	'leveling.message-timeout-seconds': { schema: z.number().min(1).default(60) }
+	'event-logs.channel-blacklist': { schema: z.array(snowflakeSchema).default(settingsDefaults['event-logs.channel-blacklist']), inputPreprocess: (s): string[] => s.split(',') },
+	'matchmaking.lock-timeout-seconds': { schema: z.coerce.number().min(1).default(settingsDefaults['matchmaking.lock-timeout-seconds']) },
+	'leveling.enabled': { schema: z.boolean().default(settingsDefaults['leveling.enabled']), inputPreprocess: (s): boolean | string => typeof s === 'string' && ['true', 'false'].includes(s) ? Boolean(s) : s },
+	'leveling.channel-blacklist': { schema: z.array(snowflakeSchema).default(settingsDefaults['leveling.channel-blacklist']), inputPreprocess: (s): string[] => s.split(',') },
+	'leveling.message-xp': { schema: z.coerce.number().gt(0).default(settingsDefaults['leveling.message-xp']) },
+	'leveling.xp-required-for-trusted': { schema: z.coerce.number().min(1).default(settingsDefaults['leveling.xp-required-for-trusted']) },
+	'leveling.days-required-for-trusted': { schema: z.coerce.number().min(0).default(settingsDefaults['leveling.days-required-for-trusted']) },
+	'leveling.supporter-xp-multiplier': { schema: z.coerce.number().min(1).default(settingsDefaults['leveling.supporter-xp-multiplier']) },
+	'leveling.message-timeout-seconds': { schema: z.coerce.number().min(1).default(settingsDefaults['leveling.message-timeout-seconds']) }
 } satisfies Record<string, SettingSchema>;
 
 export type SettingsDefinitions = typeof settingsDefinitions;
@@ -118,8 +132,8 @@ export async function getAllSettings(): Promise<Record<string, any>> {
 
 type GetSettingDefault<T extends SettingsKeys> =
 	T extends SettingsKeys
-		? SettingsDefinitions[T]['schema'] extends z.ZodDefault<infer U>
-			? z.output<U>
+		? T extends keyof typeof settingsDefaults
+			? typeof settingsDefaults[T]
 			: null
 		: never;
 

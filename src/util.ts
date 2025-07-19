@@ -32,7 +32,7 @@ export function ordinal(number: number): string {
 }
 
 export async function sendEventLogMessage(guild: Guild, originId: string | null, embed: EmbedBuilder, content?: string): Promise<Message | null> {
-	const blacklistedIds = await getSetting('event-logs.blacklist');
+	const blacklistedIds = await getSetting('event-logs.channel-blacklist');
 	if (originId && blacklistedIds.includes(originId)) {
 		return null;
 	}
