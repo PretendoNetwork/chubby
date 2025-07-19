@@ -88,7 +88,6 @@ command.addSubcommand((cmd) => {
 		option.setName('key');
 		option.setDescription('Key to modify');
 		option.setRequired(true);
-		option.setAutocomplete(true);
 		option.setChoices(...Object.keys(settingsDefinitions).map((key) => {
 			return { name: key, value: key };
 		}));
@@ -109,7 +108,6 @@ command.addSubcommand((cmd) => {
 		option.setName('key');
 		option.setDescription('Key to modify');
 		option.setRequired(true);
-		option.setAutocomplete(true);
 		option.setChoices(...Object.keys(settingsDefinitions).map((key) => {
 			return { name: key, value: key };
 		}));
