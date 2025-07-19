@@ -111,8 +111,20 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 		const allSettings = await getAllSettings();
 		const sortedKeys = Object.keys(allSettings).sort((a, b) => a.localeCompare(b));
 		const settingsOutput = sortedKeys.map(key => `\`${key}\` = ${formatOutput(key, allSettings[key])}`).join('\n');
+
+		const settingWarnings: string[] = [];
+		if (allSettings['leveling.enabled'] === true && !(allSettings['role.trusted'] && allSettings['role.untrusted'])) {
+			settingWarnings.push('Leveling is enabled, but the trusted and untrusted roles are not set. Leveling will not work until these roles are set.');
+		}
+		if (!allSettings['channel.matchmaking']) {
+			settingWarnings.push('The matchmaking channel is not set.');
+		}
+		if (!allSettings['channel.event-logs']) {
+			settingWarnings.push('The event logs channel is not set.');
+		}
+
 		await interaction.reply({
-			content: `**Possible settings**:\n${settingsOutput}`,
+			content: `**Possible settings**:\n${settingsOutput}${settingWarnings.length > 0 ? `\n\n**⚠️ Warnings**:\n${settingWarnings.join('\n')}` : ''}`,
 			ephemeral: true
 		});
 		return;

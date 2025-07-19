@@ -16,9 +16,14 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 		return;
 	}
 
+	const guild = await newMessage.guild?.fetch();
+	const member = await newMessage.member?.fetch();
+
+	if (!guild || !member) {
+		return;
+	}
+
 	if (oldMessage.content !== newMessage.content) {
-		const guild = await newMessage.guild!.fetch();
-		const member = await newMessage.member!.fetch();
 		const user = member.user;
 
 		const oldMessageContent = oldMessage.content.length > 1024 ? oldMessage.content.substring(0, 1023) + '…' : oldMessage.content;
