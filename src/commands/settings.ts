@@ -83,15 +83,7 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 			return;
 		}
 
-		let parsedValue;
-		try {
-			// Parse JSON to handle arrays and
-			parsedValue = JSON.parse(value);
-		} catch {
-			parsedValue = value; // If JSON parsing fails, we'll assume it's a simple string
-		}
-
-		const setResult = await setSetting(key, parsedValue);
+		const setResult = await setSetting(key, value);
 
 		if (!setResult.success) {
 			let message = 'Unknown error';
