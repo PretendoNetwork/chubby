@@ -20,11 +20,9 @@
 		"discord.js": "^14.15.3",
 		"got": "^11.8.2",
 		"node-schedule": "^2.1.1",
-		"nsfwjs": "^4.1.0",
 		"pg": "^8.16.2",
 		"sequelize": "^6.19.0",
 		"sharp": "^0.33.4",
-		"sharp-phash": "^2.1.0",
 		"zod": "^3.25.67"
 	},
 	"devDependencies": {

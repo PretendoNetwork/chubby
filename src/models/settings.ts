@@ -27,28 +27,25 @@ type SettingSchema = {
 	schema: z.ZodTypeAny;
 };
 
+const settingsCache = new Map<SettingsKeys, any>();
+
 const snowflakeSchema = z.string().min(17).max(20).regex(/^\d+$/);
 
 export const settingsDefinitions = {
-	'nsfw.enabled': { schema: zodCoercedBoolean().default(false) },
-	'nsfw.threshold.high': { schema: z.number().min(0).default(1) },
-	'nsfw.threshold.low': { schema: z.number().min(0).default(0.7) },
-	'nsfw.exemption.distance': { schema: z.number().min(0).default(0) },
 	'role.muted': { schema: snowflakeSchema },
-	'role.nsfw-punished': { schema: snowflakeSchema },
 	'role.supporter': { schema: snowflakeSchema },
 	'role.trusted': { schema: snowflakeSchema },
 	'role.untrusted': { schema: snowflakeSchema },
 	'role.mod-ping': { schema: snowflakeSchema },
 	'roles.mod-ping-allowed': { schema: z.array(snowflakeSchema).default([]) },
-	'channel.nsfw-punished': { schema: snowflakeSchema },
-	'channel.nsfw-logs': { schema: snowflakeSchema },
 	'channel.event-logs': { schema: snowflakeSchema },
 	'channel.matchmaking': { schema: snowflakeSchema },
 	'channel.notifications': { schema: snowflakeSchema },
 	'event-logs.blacklist': { schema: z.array(snowflakeSchema).default([]) },
 	'matchmaking.lock-timeout-seconds': { schema: z.number().min(1).default(300) },
+	'leveling.enabled': { schema: zodCoercedBoolean().default(false) },
 	'leveling.channels-blacklist': { schema: z.array(z.string()).default([]) },
+	'leveling.message-xp': { schema: z.number().gt(0).default(1) },
 	'leveling.xp-required-for-trusted': { schema: z.number().min(1).default(1000) },
 	'leveling.days-required-for-trusted': { schema: z.number().min(0).default(30) },
 	'leveling.supporter-xp-multiplier': { schema: z.number().min(1).default(1) },
@@ -64,6 +61,10 @@ type ZodTypeOrDefault<T extends z.ZodTypeAny> =
 
 export async function getSetting<T extends SettingsKeys>(key: T): Promise<ZodTypeOrDefault<SettingsDefinitions[T]['schema']>> {
 	assertValidSettingKey(key);
+
+	if (settingsCache.has(key)) {
+		return settingsCache.get(key);
+	}
 
 	const setting = await Settings.findOne({ where: { key } });
 
@@ -90,6 +91,7 @@ export async function setSetting<T extends SettingsKeys>(key: T, value: z.input<
 			key,
 			value: JSON.stringify(parsedValue)
 		});
+		settingsCache.set(key, parsedValue);
 		return { success: true };
 	} catch (error) {
 		if (error instanceof Error) {
@@ -108,11 +110,21 @@ export async function getAllSettings(): Promise<Record<string, any>> {
 			continue;
 		}
 		result[setting.key] = setting.value != null ? JSON.parse(setting.value) : null;
+
+		// Refresh the cache when fetching all settings
+		settingsCache.set(setting.key as SettingsKeys, result[setting.key]);
 	}
 	return result;
 }
 
-export function getSettingDefault<T extends SettingsKeys>(key: T): SettingsDefinitions[T]['schema'] extends z.ZodDefault<infer U> ? z.output<U> : undefined {
+type GetSettingDefault<T extends SettingsKeys> =
+	T extends SettingsKeys
+		? SettingsDefinitions[T]['schema'] extends z.ZodDefault<infer U>
+			? z.output<U>
+			: null
+		: never;
+
+export function getSettingDefault<T extends SettingsKeys>(key: T): GetSettingDefault<T> {
 	const definition = settingsDefinitions[key];
 	if (!definition) {
 		throw new Error(`No setting definition found for key: ${key}`);
@@ -122,23 +134,18 @@ export function getSettingDefault<T extends SettingsKeys>(key: T): SettingsDefin
 		return definition.schema._def.defaultValue() as any;
 	}
 
-	return undefined as any;
+	return null as any;
 }
 
 export async function initialiseSettings(): Promise<void> {
 	for (const key of Object.keys(settingsDefinitions) as SettingsKeys[]) {
-		const definition = settingsDefinitions[key];
-		if (definition.schema._def.typeName === 'ZodDefault') {
-			const defaultValue = definition.schema._def.defaultValue();
-			Settings.upsert({
-				key,
-				value: JSON.stringify(defaultValue)
-			});
-		} else {
-			Settings.upsert({
-				key,
-				value: null
-			});
-		}
+		const defaultValue = getSettingDefault(key);
+		const [newSetting] = await Settings.upsert({
+			key,
+			value: defaultValue !== null ? JSON.stringify(defaultValue) : null
+		});
+
+		// Pre-warm the cache
+		settingsCache.set(key, newSetting.value != null ? JSON.parse(newSetting.value) : null);
 	}
 }

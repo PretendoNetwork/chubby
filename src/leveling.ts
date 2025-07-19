@@ -13,12 +13,8 @@ export async function handleLeveling(message: Message): Promise<void> {
 	}
 
 	const trustedRole = await getRoleFromSettings(message.guild!, 'trusted');
-	if (!trustedRole) {
-		return;
-	}
-
 	const untrustedRole = await getRoleFromSettings(message.guild!, 'untrusted');
-	if (!untrustedRole) {
+	if (!trustedRole || !untrustedRole) {
 		return;
 	}
 
@@ -27,12 +23,8 @@ export async function handleLeveling(message: Message): Promise<void> {
 	}
 
 	const supporterRole = await getRoleFromSettings(message.guild!, 'supporter');
-	if (!supporterRole) {
-		return;
-	}
 
 	const xpRequiredForTrusted = await getSetting('leveling.xp-required-for-trusted');
-
 	const timeRequiredForTrusted = await getSetting('leveling.days-required-for-trusted') * 24 * 60 * 60 * 1000;
 
 	let messageTimeout = await getSetting('leveling.message-timeout-seconds') * 1000;
@@ -41,6 +33,7 @@ export async function handleLeveling(message: Message): Promise<void> {
 		messageTimeout = 60 * 1000;
 	}
 
+	const messageXP = await getSetting('leveling.message-xp');
 	const supporterXPMultiplier = await getSetting('leveling.supporter-xp-multiplier');
 
 	const joinDate = message.member?.joinedAt;
@@ -67,17 +60,15 @@ export async function handleLeveling(message: Message): Promise<void> {
 
 	// * Check if this message should give XP
 	if (!user.last_xp_message_sent || message.createdAt.getTime() - user.last_xp_message_sent.getTime() > messageTimeout) {
-		let xp = 1;
-		if (message.member?.roles.cache.has(supporterRole.id)) {
+		let xp = messageXP;
+		if (supporterRole && message.member.roles.cache.has(supporterRole.id)) {
 			xp = supporterXPMultiplier;
 		}
 
 		const transaction = await sequelize.transaction();
 		try {
-			await user.reload({ transaction });
-			user.xp += xp;
-			user.last_xp_message_sent = message.createdAt;
-			await user.save({ transaction });
+			await user.increment('xp', { by: xp, transaction });
+			await user.update('last_xp_message_sent', message.createdAt, { transaction });
 			await transaction.commit();
 		} catch (error) {
 			await transaction.rollback();
