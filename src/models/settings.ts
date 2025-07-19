@@ -94,12 +94,13 @@ function assertValidSettingKey<T extends keyof SettingsDefinitions>(key: T): ass
 	}
 }
 
-export async function setSetting<T extends SettingsKeys>(key: T, value: z.input<SettingsDefinitions[T]['schema']>): Promise<{ success: true } | { success: false; error: Error | null }> {
+export async function setSetting<T extends SettingsKeys>(key: T, value: string): Promise<{ success: true } | { success: false; error: Error | null }> {
 	assertValidSettingKey(key);
-	const definition = settingsDefinitions[key];
+	const definition = settingsDefinitions[key] as SettingSchema;
 
 	try {
-		const parsedValue = definition.schema.parse(value);
+		const processedInput = definition.inputPreprocess ? definition.inputPreprocess(value) : value;
+		const parsedValue = definition.schema.parse(processedInput);
 		await Settings.upsert({
 			key,
 			value: JSON.stringify(parsedValue)
