@@ -101,7 +101,7 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 		}
 
 		await interaction.reply({
-			content: `Setting \`${key}\` has been saved successfully`,
+			content: `Setting \`${key}\` has been successfully set to ${formatOutput(key, setResult.value)}`,
 			ephemeral: true
 		});
 		return;

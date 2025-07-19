@@ -56,7 +56,7 @@ export const settingsDefinitions = {
 	'channel.notifications': { schema: snowflakeSchema },
 	'event-logs.channel-blacklist': { schema: z.array(snowflakeSchema).default(settingsDefaults['event-logs.channel-blacklist']), inputPreprocess: (s): string[] => s.split(',') },
 	'matchmaking.lock-timeout-seconds': { schema: z.coerce.number().min(1).default(settingsDefaults['matchmaking.lock-timeout-seconds']) },
-	'leveling.enabled': { schema: z.boolean().default(settingsDefaults['leveling.enabled']), inputPreprocess: (s): boolean | string => typeof s === 'string' && ['true', 'false'].includes(s) ? Boolean(s) : s },
+	'leveling.enabled': { schema: z.boolean().default(settingsDefaults['leveling.enabled']), inputPreprocess: (s): boolean | string => typeof s === 'string' && ['true', 'false'].includes(s) ? s === 'true' : s },
 	'leveling.channel-blacklist': { schema: z.array(snowflakeSchema).default(settingsDefaults['leveling.channel-blacklist']), inputPreprocess: (s): string[] => s.split(',') },
 	'leveling.message-xp': { schema: z.coerce.number().gt(0).default(settingsDefaults['leveling.message-xp']) },
 	'leveling.xp-required-for-trusted': { schema: z.coerce.number().min(1).default(settingsDefaults['leveling.xp-required-for-trusted']) },
@@ -94,7 +94,7 @@ function assertValidSettingKey<T extends keyof SettingsDefinitions>(key: T): ass
 	}
 }
 
-export async function setSetting<T extends SettingsKeys>(key: T, value: string): Promise<{ success: true } | { success: false; error: Error | null }> {
+export async function setSetting<T extends SettingsKeys>(key: T, value: string): Promise<{ success: true; value: any } | { success: false; error: Error | null }> {
 	assertValidSettingKey(key);
 	const definition = settingsDefinitions[key] as SettingSchema;
 
@@ -106,7 +106,7 @@ export async function setSetting<T extends SettingsKeys>(key: T, value: string):
 			value: JSON.stringify(parsedValue)
 		});
 		settingsCache.set(key, parsedValue);
-		return { success: true };
+		return { success: true, value: parsedValue };
 	} catch (error) {
 		if (error instanceof Error) {
 			return { success: false, error };
