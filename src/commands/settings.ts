@@ -1,4 +1,5 @@
 import { escapeMarkdown, SlashCommandBuilder } from '@discordjs/builders';
+import { ZodError } from 'zod';
 import { getAllSettings, getSetting, setSetting, settingsDefinitions } from '@/models/settings';
 import type { SettingsKeys } from '@/models/settings';
 import type { ChatInputCommandInteraction } from 'discord.js';
@@ -8,6 +9,22 @@ function verifyInputtedKey(key: string | null): key is SettingsKeys {
 		return false;
 	}
 	return Object.keys(settingsDefinitions).includes(key);
+}
+
+function formatOutput(value: any): string {
+	if (Array.isArray(value)) {
+		const arrayValues = value.map(v => escapeMarkdown(String(v))).join(', ');
+		return `[${arrayValues}]`;
+	}
+
+	const stringValue = escapeMarkdown(String(value));
+	if (stringValue.length > 100) {
+		return `${stringValue.slice(0, 100)}...`;
+	}
+	if (stringValue.length === 0) {
+		return '<empty>';
+	}
+	return stringValue;
 }
 
 async function settingsHandler(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -24,7 +41,7 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 		}
 
 		await interaction.reply({
-			content: `\`${key}\` = \`${escapeMarkdown(String(await getSetting(key))) ?? 'null'}\``,
+			content: `\`${key}\` = \`${formatOutput(await getSetting(key)) ?? 'null'}\``,
 			ephemeral: true,
 			allowedMentions: {
 				parse: [] // Don't allow tagging anything
@@ -48,8 +65,15 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 		const setResult = await setSetting(key, interaction.options.getString('value'));
 
 		if (!setResult.success) {
+			let message = 'Unknown error';
+			if (setResult.error instanceof ZodError) {
+				message = `\n${setResult.error.issues.map(issue => `- ${issue.message}`).join('\n')}`;
+			} else if (setResult.error instanceof Error) {
+				message = setResult.error.message;
+			}
+
 			await interaction.reply({
-				content: `Failed to set \`${key}\`: ${setResult.error?.message ?? 'Unknown error'}`,
+				content: `Failed to set \`${key}\`: ${message}`,
 				ephemeral: true
 			});
 			return;
@@ -66,7 +90,7 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 		const allSettings = await getAllSettings();
 		await interaction.reply({
 			content: `**Possible settings**:\n${Object.keys(allSettings)
-				.map(v => `\`${v}\`: \`${escapeMarkdown(String(allSettings[v]))}\``)
+				.map(v => `\`${v}\`: \`${formatOutput(allSettings[v])}\``)
 				.join('\n')}`,
 			ephemeral: true
 		});

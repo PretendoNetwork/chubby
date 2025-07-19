@@ -29,7 +29,7 @@ type SettingSchema = {
 
 const settingsCache = new Map<SettingsKeys, any>();
 
-const snowflakeSchema = z.string().min(17).max(20).regex(/^\d+$/);
+const snowflakeSchema = z.string().min(17).max(20).regex(/^\d+$/, 'Invalid snowflake format');
 
 export const settingsDefinitions = {
 	'role.muted': { schema: snowflakeSchema },
