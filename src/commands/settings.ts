@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
+import { escapeMarkdown, SlashCommandBuilder } from '@discordjs/builders';
 import { getAllSettings, getSetting, setSetting, settingsDefinitions } from '@/models/settings';
 import type { SettingsKeys } from '@/models/settings';
 import type { ChatInputCommandInteraction } from 'discord.js';
@@ -24,8 +24,7 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 		}
 
 		await interaction.reply({
-			content:
-				'```\n' + validKey + '=' + '\'' + `${await getSetting(key)}` + '\'' + '\n```',
+			content: `\`${key}\` = \`${escapeMarkdown(String(await getSetting(key))) ?? 'null'}\``,
 			ephemeral: true,
 			allowedMentions: {
 				parse: [] // Don't allow tagging anything
@@ -67,7 +66,7 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 		const allSettings = await getAllSettings();
 		await interaction.reply({
 			content: `**Possible settings**:\n${Object.keys(allSettings)
-				.map(v => `\`${v}\`: \`${allSettings[v]}\``)
+				.map(v => `\`${v}\`: \`${escapeMarkdown(String(allSettings[v]))}\``)
 				.join('\n')}`,
 			ephemeral: true
 		});
@@ -89,6 +88,10 @@ command.addSubcommand((cmd) => {
 		option.setName('key');
 		option.setDescription('Key to modify');
 		option.setRequired(true);
+		option.setAutocomplete(true);
+		option.setChoices(...Object.keys(settingsDefinitions).map((key) => {
+			return { name: key, value: key };
+		}));
 		return option;
 	});
 	cmd.addStringOption((option) => {
@@ -106,6 +109,10 @@ command.addSubcommand((cmd) => {
 		option.setName('key');
 		option.setDescription('Key to modify');
 		option.setRequired(true);
+		option.setAutocomplete(true);
+		option.setChoices(...Object.keys(settingsDefinitions).map((key) => {
+			return { name: key, value: key };
+		}));
 		return option;
 	});
 	return cmd;
