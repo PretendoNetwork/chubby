@@ -1,6 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
 import { z } from 'zod';
-import { zodCoercedBoolean } from '@neato/config';
 import { sequelize } from '@/sequelize-instance';
 import type { InferAttributes, InferCreationAttributes } from 'sequelize';
 
@@ -29,7 +28,7 @@ type SettingSchema = {
 
 const settingsCache = new Map<SettingsKeys, any>();
 
-const snowflakeSchema = z.string().min(17).max(20).regex(/^\d+$/, 'Invalid snowflake format');
+const snowflakeSchema = z.coerce.string().min(17).max(20).regex(/^\d+$/, 'Invalid snowflake format');
 
 export const settingsDefinitions = {
 	'role.muted': { schema: snowflakeSchema },
@@ -42,14 +41,14 @@ export const settingsDefinitions = {
 	'channel.matchmaking': { schema: snowflakeSchema },
 	'channel.notifications': { schema: snowflakeSchema },
 	'event-logs.blacklist': { schema: z.array(snowflakeSchema).default([]) },
-	'matchmaking.lock-timeout-seconds': { schema: z.coerce.number().min(1).default(300) },
-	'leveling.enabled': { schema: z.enum(['true', 'false']).transform(s => s === 'true').default('false') },
+	'matchmaking.lock-timeout-seconds': { schema: z.number().min(1).default(300) },
+	'leveling.enabled': { schema: z.boolean().default(false) },
 	'leveling.channels-blacklist': { schema: z.array(snowflakeSchema).default([]) },
-	'leveling.message-xp': { schema: z.coerce.number().gt(0).default(1) },
-	'leveling.xp-required-for-trusted': { schema: z.coerce.number().min(1).default(1000) },
-	'leveling.days-required-for-trusted': { schema: z.coerce.number().min(0).default(30) },
-	'leveling.supporter-xp-multiplier': { schema: z.coerce.number().min(1).default(1) },
-	'leveling.message-timeout-seconds': { schema: z.coerce.number().min(1).default(60) }
+	'leveling.message-xp': { schema: z.number().gt(0).default(1) },
+	'leveling.xp-required-for-trusted': { schema: z.number().min(1).default(1000) },
+	'leveling.days-required-for-trusted': { schema: z.number().min(0).default(30) },
+	'leveling.supporter-xp-multiplier': { schema: z.number().min(1).default(1) },
+	'leveling.message-timeout-seconds': { schema: z.number().min(1).default(60) }
 } satisfies Record<string, SettingSchema>;
 
 export type SettingsDefinitions = typeof settingsDefinitions;
