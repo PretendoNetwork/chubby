@@ -11,7 +11,27 @@ function verifyInputtedKey(key: string | null): key is SettingsKeys {
 	return Object.keys(settingsDefinitions).includes(key);
 }
 
-function formatOutput(value: any): string {
+function formatOutput(key: string, value: any): string {
+	if (key.includes('channel')) {
+		if (Array.isArray(value)) {
+			return value.map(v => `<#${v}>`).join(', ') || '<empty>';
+		}
+		if (typeof value === 'string' && value.length > 0) {
+			return `<#${value}>`;
+		}
+		return '<empty>';
+	}
+
+	if (key.includes('role')) {
+		if (Array.isArray(value)) {
+			return value.map(v => `<@&${v}>`).join(', ') || '<empty>';
+		}
+		if (typeof value === 'string' && value.length > 0) {
+			return `<@&${value}>`;
+		}
+		return '<empty>';
+	}
+
 	const stringValue = escapeMarkdown(JSON.stringify(value));
 	if (stringValue.length === 0) {
 		return '<empty>';
@@ -33,7 +53,7 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 		}
 
 		await interaction.reply({
-			content: `\`${key}\` = \`${formatOutput(await getSetting(key)) ?? 'null'}\``,
+			content: `\`${key}\` = ${formatOutput(key, await getSetting(key)) ?? '`null`'}`,
 			ephemeral: true,
 			allowedMentions: {
 				parse: [] // Don't allow tagging anything
@@ -98,7 +118,7 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 	if (interaction.options.getSubcommand() === 'list') {
 		const allSettings = await getAllSettings();
 		const sortedKeys = Object.keys(allSettings).sort((a, b) => a.localeCompare(b));
-		const settingsOutput = sortedKeys.map(v => `\`${v}\` = \`${formatOutput(allSettings[v])}\``).join('\n');
+		const settingsOutput = sortedKeys.map(key => `\`${key}\` = \`${formatOutput(key, allSettings[key])}\``).join('\n');
 		await interaction.reply({
 			content: `**Possible settings**:\n${settingsOutput}`,
 			ephemeral: true
