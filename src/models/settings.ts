@@ -153,7 +153,14 @@ export function getSettingDefault<T extends SettingsKeys>(key: T): GetSettingDef
 export async function initialiseSettings(): Promise<void> {
 	for (const key of Object.keys(settingsDefinitions) as SettingsKeys[]) {
 		const defaultValue = getSettingDefault(key);
-		const [newSetting] = await Settings.upsert({
+		const existingSetting = await Settings.findOne({ where: { key } });
+		if (existingSetting) {
+			// Pre-warm the cache
+			settingsCache.set(key, existingSetting.value != null ? JSON.parse(existingSetting.value) : null);
+			continue;
+		}
+
+		const newSetting = await Settings.create({
 			key,
 			value: defaultValue !== null ? JSON.stringify(defaultValue) : null
 		});
