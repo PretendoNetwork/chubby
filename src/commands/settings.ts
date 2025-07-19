@@ -12,15 +12,7 @@ function verifyInputtedKey(key: string | null): key is SettingsKeys {
 }
 
 function formatOutput(value: any): string {
-	if (Array.isArray(value)) {
-		const arrayValues = value.map(v => escapeMarkdown(String(v))).join(', ');
-		return `[${arrayValues}]`;
-	}
-
-	const stringValue = escapeMarkdown(String(value));
-	if (stringValue.length > 100) {
-		return `${stringValue.slice(0, 100)}...`;
-	}
+	const stringValue = escapeMarkdown(JSON.stringify(value));
 	if (stringValue.length === 0) {
 		return '<empty>';
 	}
@@ -62,7 +54,24 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 			return;
 		}
 
-		const setResult = await setSetting(key, interaction.options.getString('value'));
+		const value = interaction.options.getString('value');
+		if (value === null || value.length === 0) {
+			await interaction.reply({
+				content: 'Value cannot be empty',
+				ephemeral: true
+			});
+			return;
+		}
+
+		let parsedValue;
+		try {
+			// Parse JSON to handle arrays and
+			parsedValue = JSON.parse(value);
+		} catch {
+			parsedValue = value; // If JSON parsing fails, we'll assume it's a simple string
+		}
+
+		const setResult = await setSetting(key, parsedValue);
 
 		if (!setResult.success) {
 			let message = 'Unknown error';
@@ -88,10 +97,10 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 
 	if (interaction.options.getSubcommand() === 'list') {
 		const allSettings = await getAllSettings();
+		const sortedKeys = Object.keys(allSettings).sort((a, b) => a.localeCompare(b));
+		const settingsOutput = sortedKeys.map(v => `\`${v}\` = \`${formatOutput(allSettings[v])}\``).join('\n');
 		await interaction.reply({
-			content: `**Possible settings**:\n${Object.keys(allSettings)
-				.map(v => `\`${v}\`: \`${formatOutput(allSettings[v])}\``)
-				.join('\n')}`,
+			content: `**Possible settings**:\n${settingsOutput}`,
 			ephemeral: true
 		});
 		return;

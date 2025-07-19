@@ -42,14 +42,14 @@ export const settingsDefinitions = {
 	'channel.matchmaking': { schema: snowflakeSchema },
 	'channel.notifications': { schema: snowflakeSchema },
 	'event-logs.blacklist': { schema: z.array(snowflakeSchema).default([]) },
-	'matchmaking.lock-timeout-seconds': { schema: z.number().min(1).default(300) },
-	'leveling.enabled': { schema: zodCoercedBoolean().default(false) },
-	'leveling.channels-blacklist': { schema: z.array(z.string()).default([]) },
-	'leveling.message-xp': { schema: z.number().gt(0).default(1) },
-	'leveling.xp-required-for-trusted': { schema: z.number().min(1).default(1000) },
-	'leveling.days-required-for-trusted': { schema: z.number().min(0).default(30) },
-	'leveling.supporter-xp-multiplier': { schema: z.number().min(1).default(1) },
-	'leveling.message-timeout-seconds': { schema: z.number().min(1).default(60) }
+	'matchmaking.lock-timeout-seconds': { schema: z.coerce.number().min(1).default(300) },
+	'leveling.enabled': { schema: z.enum(['true', 'false']).transform(s => s === 'true').default('false') },
+	'leveling.channels-blacklist': { schema: z.array(snowflakeSchema).default([]) },
+	'leveling.message-xp': { schema: z.coerce.number().gt(0).default(1) },
+	'leveling.xp-required-for-trusted': { schema: z.coerce.number().min(1).default(1000) },
+	'leveling.days-required-for-trusted': { schema: z.coerce.number().min(0).default(30) },
+	'leveling.supporter-xp-multiplier': { schema: z.coerce.number().min(1).default(1) },
+	'leveling.message-timeout-seconds': { schema: z.coerce.number().min(1).default(60) }
 } satisfies Record<string, SettingSchema>;
 
 export type SettingsDefinitions = typeof settingsDefinitions;
