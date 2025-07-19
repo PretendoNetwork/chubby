@@ -19,6 +19,14 @@ process.on('SIGINT', () => {
 	process.exit(0);
 });
 
+process.on('unhandledRejection', (error) => {
+	console.error('Unhandled promise rejection:', error);
+});
+
+process.on('uncaughtException', (error) => {
+	console.error('Uncaught exception:', error);
+});
+
 export const client = new Client({
 	partials: [
 		Partials.Reaction,
