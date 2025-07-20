@@ -60,7 +60,7 @@ client.on(Events.MessageReactionRemove, reactionRemoveHandler);
 async function bootstrap(): Promise<void> {
 	console.log('Establishing DB connection');
 	await sequelize.sync(config.sequelize);
-	initialiseSettings();
+	await initialiseSettings();
 
 	await client.login(config.bot_token);
 }
