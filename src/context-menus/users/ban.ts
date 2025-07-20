@@ -7,7 +7,7 @@ import {
 	TextInputStyle
 } from 'discord.js';
 import { banHandler } from '@/commands/ban';
-import type { UserContextMenuCommandInteraction, ModalActionRowComponentBuilder} from 'discord.js';
+import type { UserContextMenuCommandInteraction, ModalActionRowComponentBuilder } from 'discord.js';
 
 export async function banContextMenuHandler(interaction: UserContextMenuCommandInteraction): Promise<void> {
 	const target = interaction.targetUser;

@@ -11,7 +11,7 @@ export default async function guildMemberRemoveHandler(member: GuildMember | Par
 
 	const guild = member.guild;
 	const user = member.user;
-	
+
 	const auditLogs = await guild.fetchAuditLogs({
 		limit: 10
 	});

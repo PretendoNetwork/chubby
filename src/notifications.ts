@@ -24,7 +24,7 @@ export async function notifyUser(guild: Guild, user: User, message: string | Mes
 }
 
 async function notifyUserInChannel(guild: Guild, user: User, message: string | MessageCreateOptions): Promise<void> {
-	const notificationsChannel = await getChannelFromSettings(guild, 'channels.notifications');
+	const notificationsChannel = await getChannelFromSettings(guild, 'notifications');
 	if (!notificationsChannel || notificationsChannel.type !== ChannelType.GuildText) {
 		throw 'Could not find notifications channel';
 	}
@@ -40,10 +40,10 @@ async function notifyUserInChannel(guild: Guild, user: User, message: string | M
 				if (cachedThread.archived) {
 					await cachedThread.setArchived(false);
 					await cachedThreadMetadata.update({ updated: new Date() });
-				} 
+				}
 				thread = cachedThread;
-			} 
-		} catch (e) {
+			}
+		} catch {
 			await cachedThreadMetadata.destroy();
 		}
 	}

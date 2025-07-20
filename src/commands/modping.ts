@@ -15,10 +15,10 @@ async function handleToggle(interaction: ChatInputCommandInteraction, role: Role
 		message = `<@&${role.id}> has been assigned to you.`;
 	}
 
-	const settings = await ModPingSettings.findOne({ 
-		where: { 
-			user_id: member.id 
-		} 
+	const settings = await ModPingSettings.findOne({
+		where: {
+			user_id: member.id
+		}
 	});
 
 	if (settings) {
@@ -73,10 +73,10 @@ async function handleAutoAssign(interaction: ChatInputCommandInteraction, role: 
 
 async function handleAutoDisable(interaction: ChatInputCommandInteraction): Promise<string> {
 	const userID = interaction.user.id;
-	await ModPingSettings.destroy({ 
-		where: { 
+	await ModPingSettings.destroy({
+		where: {
 			user_id: userID
-		} 
+		}
 	});
 
 	return 'Auto-assign has been disabled.';
@@ -84,10 +84,10 @@ async function handleAutoDisable(interaction: ChatInputCommandInteraction): Prom
 
 async function handleAutoCurrent(interaction: ChatInputCommandInteraction): Promise<string> {
 	const userID = interaction.user.id;
-	const settings = await ModPingSettings.findOne({ 
-		where: { 
+	const settings = await ModPingSettings.findOne({
+		where: {
 			user_id: userID
-		} 
+		}
 	});
 
 	if (settings) {
@@ -103,7 +103,7 @@ async function handleAutoCurrent(interaction: ChatInputCommandInteraction): Prom
 }
 
 async function interactionHandler(interaction: ChatInputCommandInteraction): Promise<void> {
-	const role = await getRoleFromSettings(interaction.guild!, 'roles.mod-ping');
+	const role = await getRoleFromSettings(interaction.guild!, 'mod-ping');
 	if (!role) {
 		await interaction.reply({
 			content: 'Missing mod-ping role ID!',
@@ -138,38 +138,38 @@ const command = new SlashCommandBuilder();
 command.setDefaultMemberPermissions('0');
 command.setName('mod-ping');
 command.setDescription('Manage your @Mod-Ping role.');
-command.addSubcommand((cmd) => 
+command.addSubcommand(cmd =>
 	cmd.setName('toggle')
 		.setDescription('Manually toggle @Mod-Ping. (Overrides auto-assign, but still auto-assigns when your status changes)')
 );
-command.addSubcommandGroup((group) => 
+command.addSubcommandGroup(group =>
 	group.setName('auto')
 		.setDescription('Automatically assign @Mod-Ping based on your status.')
-		.addSubcommand((cmd) =>
+		.addSubcommand(cmd =>
 			cmd.setName('assign')
 				.setDescription('Enable auto-assign. (Default: Online/Idle assigns, Offline/DND removes)')
-				.addBooleanOption((option) =>
+				.addBooleanOption(option =>
 					option.setName('online')
 						.setDescription('Assign @Mod-Ping while Online. Default: ✅')
 				)
-				.addBooleanOption((option) =>
+				.addBooleanOption(option =>
 					option.setName('idle')
 						.setDescription('Assign @Mod-Ping while Idle. Default: ✅')
 				)
-				.addBooleanOption((option) =>
+				.addBooleanOption(option =>
 					option.setName('do_not_disturb')
 						.setDescription('Assign @Mod-Ping while in Do Not Disturb. Default: ❌')
 				)
-				.addBooleanOption((option) =>
+				.addBooleanOption(option =>
 					option.setName('offline')
 						.setDescription('Assign @Mod-Ping while Offline. Default: ❌')
 				)
 		)
-		.addSubcommand((cmd) =>
+		.addSubcommand(cmd =>
 			cmd.setName('disable')
 				.setDescription('Disable auto-assign.')
 		)
-		.addSubcommand((cmd) =>
+		.addSubcommand(cmd =>
 			cmd.setName('current')
 				.setDescription('View your current auto-assign settings.')
 		)
@@ -179,5 +179,5 @@ export default {
 	name: command.name,
 	help: 'Manage your @Mod-Ping role',
 	handler: interactionHandler,
-	deploy: command.toJSON(),
+	deploy: command.toJSON()
 };

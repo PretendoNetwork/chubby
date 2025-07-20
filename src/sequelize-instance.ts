@@ -1,9 +1,6 @@
 import { Sequelize } from 'sequelize';
+import config from '@/config';
 
-export const sequelize = new Sequelize({
-	dialect: 'sqlite',
-	storage: `${process.cwd()}/database/database.sqlite`,
-	logging: false
+export const sequelize = new Sequelize(config.sequelize.postgres_uri, {
+	dialect: 'postgres'
 });
-
-sequelize.query('PRAGMA journal_mode=WAL;');

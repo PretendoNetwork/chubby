@@ -3,7 +3,7 @@ import type { ClientCommand, ClientContextMenu } from '.';
 
 declare module 'discord.js' {
 	export interface Client {
-		commands: Collection<string, ClientCommand>
-		contextMenus: Collection<string, ClientContextMenu>
+		commands: Collection<string, ClientCommand>;
+		contextMenus: Collection<string, ClientContextMenu>;
 	}
 }

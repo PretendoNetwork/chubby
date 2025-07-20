@@ -39,7 +39,7 @@ export async function kickHandler(interaction: CommandInteraction | ModalSubmitI
 	kicksListEmbed.setColor(0xFFA500);
 
 	for (const userID of userIDs) {
-		const member = await interaction.guild!.members.fetch(userID);
+		const member = await guild.members.fetch(userID);
 		const user = member.user;
 
 		await untrustUser(member, interaction.createdAt);

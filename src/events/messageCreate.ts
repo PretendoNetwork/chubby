@@ -1,9 +1,7 @@
-import { checkNSFW } from '@/check-nsfw';
 import { handleMatchmakingThreadMessage } from '@/matchmaking-threads';
-// import { handleLeveling } from '@/leveling';
+import { handleLeveling } from '@/leveling';
+import { getSetting } from '@/models/settings';
 import type { Message } from 'discord.js';
-
-const urlRegex = /(https?:\/\/[^\s]+)/g;
 
 export default async function messageCreateHandler(message: Message): Promise<void> {
 	// Ignore bot messages
@@ -11,22 +9,9 @@ export default async function messageCreateHandler(message: Message): Promise<vo
 		return;
 	}
 
-	// check if the message has any URLs
-	const urls: string[] = message.cleanContent.match(urlRegex) || [];
-	
-	// if the message has any URLs or attachments check them for NSFW content
-	if (urls.length > 0 || message.attachments.size > 0) {
-		// get the URLs from attachments
-		for (const attachment of message.attachments.values()) {
-			if (attachment.width && attachment.height) { // images have these set
-				urls.push(attachment.url);
-			}
-		}
-
-		await checkNSFW(message, urls);
+	if (await getSetting('leveling.enabled')) {
+		await handleLeveling(message);
 	}
-
-	// await handleLeveling(message);
 
 	await handleMatchmakingThreadMessage(message);
 }
