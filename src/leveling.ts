@@ -74,15 +74,11 @@ export async function handleLeveling(message: Message): Promise<void> {
 			xp = supporterXPMultiplier;
 		}
 
-		try {
-			await sequelize.transaction(async (t) => {
-				await user.increment('xp', { by: xp, transaction: t });
-				await user.update('last_xp_message_sent', message.createdAt, { transaction: t });
-			});
-			await user.reload();
-		} catch (error) {
-			throw error;
-		}
+		await sequelize.transaction(async (t) => {
+			await user.increment('xp', { by: xp, transaction: t });
+			await user.update('last_xp_message_sent', message.createdAt, { transaction: t });
+		});
+		await user.reload();
 	}
 
 	// * Check if the user should become trusted
