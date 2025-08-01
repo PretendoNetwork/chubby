@@ -1,5 +1,6 @@
-import { getDB, getDBList } from '@/db';
 import { ChannelType } from 'discord.js';
+import { getSetting } from '@/models/settings';
+import type { SettingsKeys } from '@/models/settings';
 import type { Channel, EmbedBuilder, Guild, Role, Message, APIApplicationCommandOptionChoice } from 'discord.js';
 
 const ordinalRules = new Intl.PluralRules('en', {
@@ -21,7 +22,7 @@ export const banMessageDeleteChoices: Array<APIApplicationCommandOptionChoice<nu
 	{ name: 'Previous 12 Hours', value: 12 * 60 * 60 },
 	{ name: 'Previous Day', value: 24 * 60 * 60 },
 	{ name: 'Previous 3 Days', value: 3 * 24 * 60 * 60 },
-	{ name: 'Previous Week', value: 7 * 24 * 60 * 60 },
+	{ name: 'Previous Week', value: 7 * 24 * 60 * 60 }
 ];
 
 export function ordinal(number: number): string {
@@ -31,12 +32,12 @@ export function ordinal(number: number): string {
 }
 
 export async function sendEventLogMessage(guild: Guild, originId: string | null, embed: EmbedBuilder, content?: string): Promise<Message | null> {
-	const blacklistedIds = getDBList('channels.event-logs.blacklist');
+	const blacklistedIds = await getSetting('event-logs.channel-blacklist');
 	if (originId && blacklistedIds.includes(originId)) {
 		return null;
 	}
 
-	const logChannel = await getChannelFromSettings(guild, 'channels.event-logs');
+	const logChannel = await getChannelFromSettings(guild, 'event-logs');
 	if (!logChannel || logChannel.type !== ChannelType.GuildText) {
 		console.log('Missing log channel!');
 		return null;
@@ -45,8 +46,11 @@ export async function sendEventLogMessage(guild: Guild, originId: string | null,
 	return logChannel.send({ content, embeds: [embed] });
 }
 
-export async function getChannelFromSettings(guild: Guild, channelName: string): Promise<Channel | null> {
-	const channelID = getDB().get(channelName);
+type RoleKeys = Extract<SettingsKeys, `role.${string}`> extends `role.${infer R}` ? R : never;
+type ChannelKeys = Extract<SettingsKeys, `channel.${string}`> extends `channel.${infer C}` ? C : never;
+
+export async function getChannelFromSettings(guild: Guild, channelName: ChannelKeys): Promise<Channel | null> {
+	const channelID = await getSetting(`channel.${channelName}`);
 	if (!channelID) {
 		console.log(`No channel id set for ${channelName}`);
 		return null;
@@ -61,8 +65,8 @@ export async function getChannelFromSettings(guild: Guild, channelName: string):
 	return channel;
 }
 
-export async function getRoleFromSettings(guild: Guild, roleName: string): Promise<Role | null> {
-	const roleID = getDB().get(roleName);
+export async function getRoleFromSettings(guild: Guild, roleName: RoleKeys): Promise<Role | null> {
+	const roleID = await getSetting(`role.${roleName}`);
 	if (!roleID) {
 		console.log(`No role id set for ${roleName}`);
 		return null;

@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
+import { Op } from 'sequelize';
 import { Warning } from '@/models/warnings';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
@@ -7,7 +8,6 @@ import { ordinal, sendEventLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
-import { Op } from 'sequelize';
 
 async function warnCommandHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const subcommand = interaction.options.getSubcommand();
@@ -86,16 +86,16 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 				[Op.or]: [{
 					user_id: member.id,
 					expires_at: {
-						[Op.gt]: new Date(),
+						[Op.gt]: new Date()
 					}
 				}, {
 					user_id: member.id,
-					expires_at: null,
-				}],
+					expires_at: null
+				}]
 			}
 		});
 
-		const totalWarnings = count+1;
+		const totalWarnings = count + 1;
 
 		let punishmentEmbed;
 		let isKick;
@@ -280,29 +280,29 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('warn')
 	.setDescription('Warn user(s)')
-	.addSubcommand(subcommand => {
+	.addSubcommand((subcommand) => {
 		return subcommand.setName('user')
 			.setDescription('Warn a user')
-			.addUserOption(option => {
+			.addUserOption((option) => {
 				return option.setName('user')
 					.setDescription('User to warn')
 					.setRequired(true);
 			})
-			.addStringOption(option => {
+			.addStringOption((option) => {
 				return option.setName('reason')
 					.setDescription('Reason for the warning')
 					.setRequired(true);
 			});
 	})
-	.addSubcommand(subcommand => {
+	.addSubcommand((subcommand) => {
 		return subcommand.setName('multiuser')
 			.setDescription('Warn multiple users')
-			.addStringOption(option => {
+			.addStringOption((option) => {
 				return option.setName('users')
 					.setDescription('User(s) to warn')
 					.setRequired(true);
 			})
-			.addStringOption(option => {
+			.addStringOption((option) => {
 				return option.setName('reason')
 					.setDescription('Reason for the warning')
 					.setRequired(true);

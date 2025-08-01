@@ -1,5 +1,5 @@
-import { getDBList } from '@/db';
 import { ModPingSettings } from '@/models/modPingSettings';
+import { getSetting } from '@/models/settings';
 import { getRoleFromSettings } from '@/util';
 import type { Presence } from 'discord.js';
 
@@ -10,30 +10,30 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 
 	const member = newPresence.member;
 	const settings = await ModPingSettings.findOne({
-		where: { 
-			user_id: member.id 
+		where: {
+			user_id: member.id
 		}
 	});
 
 	if (!settings) {
 		return;
 	}
-    
+
 	const { online, idle, dnd, offline } = settings;
-	const role = await getRoleFromSettings(member.guild!, 'roles.mod-ping');
+	const role = await getRoleFromSettings(member.guild!, 'mod-ping');
 
 	if (!role) {
 		console.log('Missing mod-ping role in settings!');
 		return;
 	}
 
-	const allowedRoles = getDBList('roles.mod-ping-allowed');
+	const allowedRoles = await getSetting('roles.mod-ping-allowed');
 	const hasAllowedRole = member.roles.cache.hasAny(...allowedRoles);
 
 	if (!hasAllowedRole) {
 		await ModPingSettings.destroy({
-			where: { 
-				user_id: member.id 
+			where: {
+				user_id: member.id
 			}
 		});
 		await member.roles.remove(role);
@@ -51,8 +51,8 @@ export default async function presenceUpdateHandler(oldPresence: Presence | null
 		shouldHaveRole = true;
 	} else if (newPresence.status === 'offline' && offline) {
 		shouldHaveRole = true;
-	} 
-	
+	}
+
 	if (shouldHaveRole) {
 		await member.roles.add(role);
 	} else {

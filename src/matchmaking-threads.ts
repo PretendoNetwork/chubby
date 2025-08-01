@@ -3,12 +3,12 @@ import { client } from '@/bot';
 import { MatchmakingThread } from '@/models/matchmakingThreads';
 import { User } from '@/models/users';
 import { sendEventLogMessage } from '@/util';
-import { getDB } from '@/db';
 import { notifyUser } from '@/notifications';
+import { getSetting } from '@/models/settings';
 import type { Message } from 'discord.js';
 
 export async function handleMatchmakingThreadMessage(message: Message): Promise<void> {
-	const matchmakingChannelID = getDB().get('channels.matchmaking');
+	const matchmakingChannelID = await getSetting('channel.matchmaking');
 	if (!matchmakingChannelID) {
 		console.log('Missing matchmaking channel!');
 		return;
@@ -25,11 +25,7 @@ export async function handleMatchmakingThreadMessage(message: Message): Promise<
 }
 
 export async function checkMatchmakingThreads(): Promise<void> {
-	let matchmakingLockTimeout = parseInt(getDB().get('matchmaking.lock-timeout-seconds') ?? '0') * 1000;
-	if (!matchmakingLockTimeout) {
-		console.log('Missing matchmaking lock timeout! Defaulting to 1 hour.');
-		matchmakingLockTimeout = 60 * 60 * 1000;
-	}
+	const matchmakingLockTimeout = await getSetting('matchmaking.lock-timeout-seconds') * 1000;
 
 	const now = Date.now();
 	const matchmakingThreads = await MatchmakingThread.findAll();

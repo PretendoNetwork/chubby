@@ -16,9 +16,14 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 		return;
 	}
 
+	const guild = await newMessage.guild?.fetch();
+	const member = await newMessage.member?.fetch();
+
+	if (!guild || !member) {
+		return;
+	}
+
 	if (oldMessage.content !== newMessage.content) {
-		const guild = await newMessage.guild!.fetch();
-		const member = await newMessage.member!.fetch();
 		const user = member.user;
 
 		const oldMessageContent = oldMessage.content.length > 1024 ? oldMessage.content.substring(0, 1023) + '…' : oldMessage.content;
@@ -28,7 +33,7 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 		if (newMessage.channel instanceof BaseGuildTextChannel) {
 			channelName = newMessage.channel.name;
 		}
-	
+
 		const eventLogEmbed = new EmbedBuilder();
 
 		eventLogEmbed.setColor(0xC0C0C0);
@@ -75,7 +80,7 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 		});
 
 		if (previousLogRelationship) {
-			const auditLogChannel = await getChannelFromSettings(guild, 'channels.event-logs');
+			const auditLogChannel = await getChannelFromSettings(guild, 'event-logs');
 			if (auditLogChannel && auditLogChannel.type === ChannelType.GuildText) {
 				const auditMessage = await auditLogChannel.messages.fetch(previousLogRelationship.log_event_id);
 				if (auditMessage) {
@@ -94,7 +99,7 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 			return;
 		}
 
-		await MessageAuditRelationship.create({ 
+		await MessageAuditRelationship.create({
 			message_id: newMessage.id,
 			log_event_id: audit.id
 		});

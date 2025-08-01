@@ -7,7 +7,7 @@ import {
 	TextInputStyle
 } from 'discord.js';
 import { warnHandler } from '@/commands/warn';
-import type { UserContextMenuCommandInteraction, ModalActionRowComponentBuilder} from 'discord.js';
+import type { UserContextMenuCommandInteraction, ModalActionRowComponentBuilder } from 'discord.js';
 
 export async function warnContextMenuHandler(interaction: UserContextMenuCommandInteraction): Promise<void> {
 	const target = interaction.targetUser;

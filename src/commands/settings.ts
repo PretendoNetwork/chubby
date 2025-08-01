@@ -1,78 +1,131 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { getDB } from '@/db';
+import { escapeMarkdown, SlashCommandBuilder } from '@discordjs/builders';
+import { ZodError } from 'zod';
+import { getAllSettings, getSetting, setSetting, settingsDefinitions } from '@/models/settings';
+import type { SettingsKeys } from '@/models/settings';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
-const editableOptions = [
-	'nsfw.enabled',
-	'nsfw.threshold.high',
-	'nsfw.threshold.low',
-	'nsfw.exemption.distance',
-	'roles.muted',
-	'roles.nsfw-punished',
-	'roles.supporter',
-	'roles.trusted',
-	'roles.untrusted',
-	'roles.mod-ping',
-	'roles.mod-ping-allowed',
-	'channels.nsfw-punished',
-	'channels.nsfw-logs',
-	'channels.event-logs',
-	'channels.event-logs.blacklist',
-	'channels.matchmaking',
-	'channels.notifications',
-	'matchmaking.lock-timeout-seconds',
-	'leveling.channels-blacklist',
-	'leveling.xp-required-for-trusted',
-	'leveling.days-required-for-trusted',
-	'leveling.supporter-xp-multiplier',
-	'leveling.message-timeout-seconds'
-];
-
-function verifyInputtedKey(interaction: ChatInputCommandInteraction): string {
-	const key = interaction.options.getString('key', true);
-	if (!editableOptions.includes(key)) {
-		throw new Error('Cannot edit this setting - not a valid setting');
+function verifyInputtedKey(key: string | null): key is SettingsKeys {
+	if (!key) {
+		return false;
 	}
-	return key;
+	return Object.keys(settingsDefinitions).includes(key);
+}
+
+function formatOutput(key: string, value: any): string {
+	if (key.includes('channel')) {
+		if (Array.isArray(value)) {
+			return value.map(v => `<#${v}>`).join(', ') || '<empty>';
+		}
+		if (typeof value === 'string' && value.length > 0) {
+			return `<#${value}>`;
+		}
+		return '<empty>';
+	}
+
+	if (key.includes('role')) {
+		if (Array.isArray(value)) {
+			return value.map(v => `<@&${v}>`).join(', ') || '<empty>';
+		}
+		if (typeof value === 'string' && value.length > 0) {
+			return `<@&${value}>`;
+		}
+		return '<empty>';
+	}
+
+	const stringValue = escapeMarkdown(JSON.stringify(value));
+	if (stringValue.length === 0) {
+		return '<empty>';
+	}
+	return stringValue;
 }
 
 async function settingsHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	if (interaction.options.getSubcommand() === 'get') {
-		const key = verifyInputtedKey(interaction);
-		// this is hellish string concatenation, I know
+		const key = interaction.options.getString('key');
+		const validKey = verifyInputtedKey(key);
+
+		if (!validKey) {
+			await interaction.reply({
+				content: 'Invalid key provided. Use `/settings list` to see valid keys.',
+				ephemeral: true
+			});
+			return;
+		}
+
 		await interaction.reply({
-			content:
-				'```\n' + key + '=' + '\'' + `${getDB().get(key)}` + '\'' + '\n```',
+			content: `\`${key}\` = ${formatOutput(key, await getSetting(key)) ?? '`null`'}`,
 			ephemeral: true,
 			allowedMentions: {
-				parse: [], // dont allow tagging anything
-			},
+				parse: [] // Don't allow tagging anything
+			}
 		});
 		return;
 	}
 
 	if (interaction.options.getSubcommand() === 'set') {
-		const key = verifyInputtedKey(interaction);
-		getDB().set(key, interaction.options.getString('value')!);
+		const key = interaction.options.getString('key');
+		const validKey = verifyInputtedKey(key);
+
+		if (!validKey) {
+			await interaction.reply({
+				content: 'Invalid key provided. Use `/settings list` to see valid keys.',
+				ephemeral: true
+			});
+			return;
+		}
+
+		const value = interaction.options.getString('value');
+		if (value === null || value.length === 0) {
+			await interaction.reply({
+				content: 'Value cannot be empty',
+				ephemeral: true
+			});
+			return;
+		}
+
+		const setResult = await setSetting(key, value);
+
+		if (!setResult.success) {
+			let message = 'Unknown error';
+			if (setResult.error instanceof ZodError) {
+				message = `\n${setResult.error.issues.map(issue => `- ${issue.message}`).join('\n')}`;
+			} else if (setResult.error instanceof Error) {
+				message = setResult.error.message;
+			}
+
+			await interaction.reply({
+				content: `Failed to set \`${key}\`: ${message}`,
+				ephemeral: true
+			});
+			return;
+		}
+
 		await interaction.reply({
-			content: `setting \`${key}\` has been saved successfully`,
-			ephemeral: true,
-			allowedMentions: {
-				parse: [], // dont allow tagging anything
-			},
+			content: `Setting \`${key}\` has been successfully set to ${formatOutput(key, setResult.value)}`,
+			ephemeral: true
 		});
 		return;
 	}
 
-	if (interaction.options.getSubcommand() === 'which') {
+	if (interaction.options.getSubcommand() === 'list') {
+		const allSettings = await getAllSettings();
+		const sortedKeys = Object.keys(allSettings).sort((a, b) => a.localeCompare(b));
+		const settingsOutput = sortedKeys.map(key => `\`${key}\` = ${formatOutput(key, allSettings[key])}`).join('\n');
+
+		const settingWarnings: string[] = [];
+		if (allSettings['leveling.enabled'] === true && !(allSettings['role.trusted'] && allSettings['role.untrusted'])) {
+			settingWarnings.push('Leveling is enabled, but the trusted and untrusted roles are not set. Leveling will not work until these roles are set.');
+		}
+		if (!allSettings['channel.matchmaking']) {
+			settingWarnings.push('The matchmaking channel is not set.');
+		}
+		if (!allSettings['channel.event-logs']) {
+			settingWarnings.push('The event logs channel is not set.');
+		}
+
 		await interaction.reply({
-			content: `**possible settings**:\n${editableOptions
-				.map((v) => `\`${v}\``)
-				.join('\n')}`,
-			ephemeral: true,
-			allowedMentions: {
-				parse: [], // dont allow tagging anything
-			},
+			content: `**Possible settings**:\n${settingsOutput}${settingWarnings.length > 0 ? `\n\n**⚠️ Warnings**:\n${settingWarnings.join('\n')}` : ''}`,
+			ephemeral: true
 		});
 		return;
 	}
@@ -92,6 +145,9 @@ command.addSubcommand((cmd) => {
 		option.setName('key');
 		option.setDescription('Key to modify');
 		option.setRequired(true);
+		option.setChoices(...Object.keys(settingsDefinitions).map((key) => {
+			return { name: key, value: key };
+		}));
 		return option;
 	});
 	cmd.addStringOption((option) => {
@@ -109,13 +165,16 @@ command.addSubcommand((cmd) => {
 		option.setName('key');
 		option.setDescription('Key to modify');
 		option.setRequired(true);
+		option.setChoices(...Object.keys(settingsDefinitions).map((key) => {
+			return { name: key, value: key };
+		}));
 		return option;
 	});
 	return cmd;
 });
 command.addSubcommand((cmd) => {
-	cmd.setName('which');
-	cmd.setDescription('which settings are valid?');
+	cmd.setName('list');
+	cmd.setDescription('List all settings');
 	return cmd;
 });
 
@@ -123,5 +182,5 @@ export default {
 	name: command.name,
 	help: 'Change settings of the bot',
 	handler: settingsHandler,
-	deploy: command.toJSON(),
+	deploy: command.toJSON()
 };

@@ -28,24 +28,24 @@ export async function viewWarnHandler(interaction: CommandInteraction, userId: s
 
 	const { rows } = await Warning.findAndCountAll({
 		where: {
-			user_id: member.id,
+			user_id: member.id
 		}
 	});
-	const userWarnings = rows.map(v=>({
+	const userWarnings = rows.map(v => ({
 		content: v,
-		isExpired: v.expires_at && v.expires_at < new Date(),
+		isExpired: v.expires_at && v.expires_at < new Date()
 	}));
-	const activeWarnings = userWarnings.filter(v=>!v.isExpired);
+	const activeWarnings = userWarnings.filter(v => !v.isExpired);
 
 	const warningListEmbed = new EmbedBuilder();
 	warningListEmbed.setTitle('Warning list :thumbsdown:');
 	warningListEmbed.setColor(0xFFA500);
 	warningListEmbed.setDescription(`Showing warnings for <@${member.user.id}>\nTotal warnings: ${activeWarnings.length}`);
 
-	userWarnings.forEach(warn => {
+	userWarnings.forEach((warn) => {
 		warningListEmbed.addFields({
 			name: `Warning ID: \`${warn.content.id}\`` + (warn.isExpired ? ' - EXPIRED' : ''),
-			value: warn.content.reason + `\n---\nGiven on ${warn.content.timestamp.toLocaleDateString()} by <@${warn.content.admin_user_id}>`,
+			value: warn.content.reason + `\n---\nGiven on ${warn.content.timestamp.toLocaleDateString()} by <@${warn.content.admin_user_id}>`
 		});
 	});
 
@@ -59,7 +59,7 @@ export async function removeWarnHandler(interaction: CommandInteraction, warnId:
 
 	const warning = await Warning.findOne({
 		where: {
-			id: Number(warnId),
+			id: Number(warnId)
 		}
 	});
 
@@ -69,10 +69,10 @@ export async function removeWarnHandler(interaction: CommandInteraction, warnId:
 	}
 
 	const [affectedUpdates] = await Warning.update({
-		expires_at: new Date(),
+		expires_at: new Date()
 	}, {
 		where: {
-			id: Number(warnId),
+			id: Number(warnId)
 		}
 	});
 	if (affectedUpdates < 1) {
@@ -87,19 +87,19 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('manage-warn')
 	.setDescription('Manage warns for users')
-	.addSubcommand(subcommand => {
+	.addSubcommand((subcommand) => {
 		return subcommand.setName('view')
 			.setDescription('View warns of a user')
-			.addUserOption(option => {
+			.addUserOption((option) => {
 				return option.setName('user')
 					.setDescription('User view warns for')
 					.setRequired(true);
 			});
 	})
-	.addSubcommand(subcommand => {
+	.addSubcommand((subcommand) => {
 		return subcommand.setName('remove')
 			.setDescription('Remove a warning')
-			.addStringOption(option => {
+			.addStringOption((option) => {
 				return option.setName('id')
 					.setDescription('Warning to remove')
 					.setRequired(true);

@@ -38,7 +38,7 @@ export async function banHandler(interaction: CommandInteraction | ModalSubmitIn
 	bansListEmbed.setColor(0xFFA500);
 
 	for (const userID of userIDs) {
-		const member = await interaction.guild!.members.fetch(userID);
+		const member = await guild.members.fetch(userID);
 		const user = member.user;
 
 		await untrustUser(member, interaction.createdAt);
@@ -60,11 +60,11 @@ export async function banHandler(interaction: CommandInteraction | ModalSubmitIn
 			},
 			{
 				name: 'Executor',
-				value: `<@${executor!.id}>`
+				value: `<@${executor.id}>`
 			},
 			{
 				name: 'Executor User ID',
-				value: executor!.id
+				value: executor.id
 			},
 			{
 				name: 'Reason',

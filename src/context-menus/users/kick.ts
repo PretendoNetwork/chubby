@@ -7,7 +7,7 @@ import {
 	TextInputStyle
 } from 'discord.js';
 import { kickHandler } from '@/commands/kick';
-import type { UserContextMenuCommandInteraction, ModalActionRowComponentBuilder} from 'discord.js';
+import type { UserContextMenuCommandInteraction, ModalActionRowComponentBuilder } from 'discord.js';
 
 export async function kickContextMenuHandler(interaction: UserContextMenuCommandInteraction): Promise<void> {
 	const target = interaction.targetUser;

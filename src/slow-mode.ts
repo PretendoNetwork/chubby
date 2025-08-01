@@ -22,8 +22,8 @@ export default async function handleSlowMode(client: Client, slowMode: SlowMode)
 	while (slowMode.enabled) {
 		const messages = await channel.awaitMessages({ time: slowMode.window, filter });
 		const messageCount = messages.size;
-		
-		await sequelize.transaction(async transaction => {
+
+		await sequelize.transaction(async (transaction) => {
 			await slowMode.reload({ include: 'stages', transaction });
 
 			// * Calculates the rate of messages per minute

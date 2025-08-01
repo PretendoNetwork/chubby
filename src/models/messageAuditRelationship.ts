@@ -16,7 +16,7 @@ MessageAuditRelationship.init({
 		primaryKey: true
 	},
 	message_id: {
-		type: DataTypes.STRING,
+		type: DataTypes.STRING
 	},
 	log_event_id: {
 		type: DataTypes.STRING,

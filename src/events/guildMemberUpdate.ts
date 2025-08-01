@@ -3,7 +3,7 @@ import { getRoleFromSettings } from '@/util';
 import type { GuildMember, PartialGuildMember } from 'discord.js';
 
 export default async function guildMemberUpdateHandler(oldMember: GuildMember | PartialGuildMember, newMember: GuildMember): Promise<void> {
-	const untrustedRole = await getRoleFromSettings(newMember.guild, 'roles.untrusted');
+	const untrustedRole = await getRoleFromSettings(newMember.guild, 'untrusted');
 	if (!untrustedRole) {
 		return;
 	}

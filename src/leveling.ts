@@ -1,61 +1,51 @@
 import { EmbedBuilder } from 'discord.js';
-import { getDB, getDBList } from '@/db';
 import { User } from '@/models/users';
 import { getRoleFromSettings, sendEventLogMessage } from '@/util';
 import { sequelize } from '@/sequelize-instance';
 import { notifyUser } from '@/notifications';
+import { getSetting } from '@/models/settings';
 import type { GuildMember, Message } from 'discord.js';
 
 export async function handleLeveling(message: Message): Promise<void> {
-	const levelingChannelBlacklist = getDBList('leveling.channels-blacklist');
+	const member = message.member;
+	const messageGuild = message.guild;
+	if (!member || !messageGuild) {
+		return;
+	}
+
+	const levelingChannelBlacklist = await getSetting('leveling.channel-blacklist');
 	if (levelingChannelBlacklist.includes(message.channelId)) {
 		return;
 	}
 
-	const trustedRole = await getRoleFromSettings(message.guild!, 'roles.trusted');
-	if (!trustedRole) {
+	const trustedRole = await getRoleFromSettings(messageGuild, 'trusted');
+	const untrustedRole = await getRoleFromSettings(messageGuild, 'untrusted');
+	if (!trustedRole || !untrustedRole) {
 		return;
 	}
 
-	const untrustedRole = await getRoleFromSettings(message.guild!, 'roles.untrusted');
-	if (!untrustedRole) {
+	// * If the user has the trusted or untrusted role, do not give them XP
+	// * - Untrusted users cannot be trusted, therefore they should not receive XP
+	// * - Trusted users already have the trusted role, therefore they do not need to be given XP
+	if (member.roles.cache.has(trustedRole.id) || member.roles.cache.has(untrustedRole.id)) {
 		return;
 	}
 
-	if (message.member?.roles.cache.has(trustedRole.id) || message.member?.roles.cache.has(untrustedRole.id)) {
-		return;
-	}
+	const supporterRole = await getRoleFromSettings(messageGuild, 'supporter');
 
-	const supporterRole = await getRoleFromSettings(message.guild!, 'roles.supporter');
-	if (!supporterRole) {
-		return;
-	}
+	const xpRequiredForTrusted = await getSetting('leveling.xp-required-for-trusted');
+	const timeRequiredForTrusted = await getSetting('leveling.days-required-for-trusted') * 24 * 60 * 60 * 1000;
 
-	const xpRequiredForTrusted = parseInt(getDB().get('leveling.xp-required-for-trusted') ?? '');
-	if (isNaN(xpRequiredForTrusted)) {
-		console.log('Missing amount of XP required for trusted role!');
-		return;
-	}
-
-	const timeRequiredForTrusted = parseInt(getDB().get('leveling.days-required-for-trusted') ?? '') * 24 * 60 * 60 * 1000;
-	if (isNaN(timeRequiredForTrusted)) {
-		console.log('Missing number of days required for trusted role!');
-		return;
-	}
-
-	let messageTimeout = parseInt(getDB().get('leveling.message-timeout-seconds') ?? '') * 1000;
+	let messageTimeout = await getSetting('leveling.message-timeout-seconds') * 1000;
 	if (isNaN(messageTimeout)) {
 		console.log('Missing leveling message timeout! Defaulting to 1 minute.');
 		messageTimeout = 60 * 1000;
 	}
 
-	let supporterXPMultiplier = parseInt(getDB().get('leveling.supporter-xp-multiplier') ?? '');
-	if (isNaN(supporterXPMultiplier)) {
-		console.log('Missing supporter XP multiplier! Supporters will not earn extra XP.');
-		supporterXPMultiplier = 1;
-	}
+	const messageXP = await getSetting('leveling.message-xp');
+	const supporterXPMultiplier = await getSetting('leveling.supporter-xp-multiplier');
 
-	const joinDate = message.member?.joinedAt;
+	const joinDate = member.joinedAt;
 	if (!joinDate) {
 		// * User has left, no point in tracking their XP
 		return;
@@ -79,22 +69,16 @@ export async function handleLeveling(message: Message): Promise<void> {
 
 	// * Check if this message should give XP
 	if (!user.last_xp_message_sent || message.createdAt.getTime() - user.last_xp_message_sent.getTime() > messageTimeout) {
-		let xp = 1;
-		if (message.member?.roles.cache.has(supporterRole.id)) {
+		let xp = messageXP;
+		if (supporterRole && message.member.roles.cache.has(supporterRole.id)) {
 			xp = supporterXPMultiplier;
 		}
 
-		const transaction = await sequelize.transaction();
-		try {
-			await user.reload({ transaction });
-			user.xp += xp;
-			user.last_xp_message_sent = message.createdAt;
-			await user.save({ transaction });
-			await transaction.commit();
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
+		await sequelize.transaction(async (t) => {
+			await user.increment('xp', { by: xp, transaction: t });
+			await user.update('last_xp_message_sent', message.createdAt, { transaction: t });
+		});
+		await user.reload();
 	}
 
 	// * Check if the user should become trusted
@@ -102,11 +86,11 @@ export async function handleLeveling(message: Message): Promise<void> {
 	if (
 		user.xp >= xpRequiredForTrusted &&
 		timeSinceStartDate > timeRequiredForTrusted &&
-		!message.member?.roles.cache.has(trustedRole.id)
+		!member.roles.cache.has(trustedRole.id)
 	) {
 		await message.member.roles.add(trustedRole, 'User has earned the trusted role through the leveling system.');
 
-		const guild = await message.guild!.fetch();
+		const guild = await messageGuild.fetch();
 
 		let description = `Hello <@${message.author.id}>! You have been given the trusted role in the Pretendo Network Discord server.`;
 		description += '\n\n';
@@ -153,7 +137,7 @@ export async function handleLeveling(message: Message): Promise<void> {
 		);
 		eventLogEmbed.setFooter({
 			text: 'Pretendo Network',
-			iconURL: message.guild!.iconURL()!
+			iconURL: guild.iconURL()!
 		});
 
 		await sendEventLogMessage(guild, null, eventLogEmbed);
@@ -161,7 +145,7 @@ export async function handleLeveling(message: Message): Promise<void> {
 }
 
 export async function untrustUser(member: GuildMember, newStartDate: Date): Promise<void> {
-	const trustedRoleID = await getRoleFromSettings(member.guild, 'roles.trusted');
+	const trustedRoleID = await getRoleFromSettings(member.guild, 'trusted');
 	if (!trustedRoleID) {
 		return;
 	}

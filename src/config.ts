@@ -1,18 +1,20 @@
-import { readFileSync } from 'fs';
-import path from 'path';
+import { createConfig, zodCoercedBoolean, loaders } from '@neato/config';
+import { z } from 'zod';
 
-interface Config {
-	bot_token: string;
-	json_db_path: string;
-	sequelize: {
-		force: boolean;
-		alter: boolean;
-	}
-}
-
-const rawConfigData = readFileSync(path.join(process.cwd(), './config.json'), {
-	encoding: 'utf-8'
+const config = createConfig({
+	envPrefix: 'PN_CHUBBY_',
+	loaders: [
+		loaders.environment(),
+		loaders.file('.env')
+	],
+	schema: z.object({
+		bot_token: z.string(),
+		sequelize: z.object({
+			force: zodCoercedBoolean().default(false),
+			alter: zodCoercedBoolean().default(false),
+			postgres_uri: z.string()
+		})
+	})
 });
-const configData: Config = JSON.parse(rawConfigData);
 
-export default configData;
+export default config;

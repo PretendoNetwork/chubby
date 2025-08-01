@@ -1,6 +1,5 @@
 import { scheduleJob } from 'node-schedule';
 import { setupGuild } from '@/setup-guild';
-import { sequelize } from '@/sequelize-instance';
 import banCommand from '@/commands/ban';
 import kickCommand from '@/commands/kick';
 import settingsCommand from '@/commands/settings';
@@ -13,26 +12,13 @@ import warnContextMenu from '@/context-menus/users/warn';
 import kickContextMenu from '@/context-menus/users/kick';
 import banContextMenu from '@/context-menus/users/ban';
 import { checkMatchmakingThreads } from '@/matchmaking-threads';
-import { loadModel } from '@/check-nsfw';
 import { SlowMode } from '@/models/slow-mode';
 import handleSlowMode from '@/slow-mode';
-import config from '@/config';
-import type { Database } from 'sqlite3';
 import type { Client } from 'discord.js';
-
-export async function bootHandler(): Promise<void> {
-	console.log('Establishing DB connection');
-	await sequelize.sync(config.sequelize);
-	const connection = await sequelize.connectionManager.getConnection({ type: 'write' }) as Database;
-	connection.loadExtension('./lib/phhammdist/phhammdist.so');
-}
 
 export async function readyHandler(client: Client): Promise<void> {
 	console.log('Registering global commands');
 	loadBotHandlersCollection(client);
-
-	console.log('Loading NSFWJS models');
-	await loadModel();
 
 	console.log('Setting up guilds');
 	const guilds = await client.guilds.fetch();
