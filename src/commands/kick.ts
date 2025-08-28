@@ -152,42 +152,6 @@ export async function kickHandler(interaction: CommandInteraction | ModalSubmitI
 
 		await sendEventLogMessage(guild, null, eventLogEmbed);
 
-		if (count > 0) {
-			const pastKicksEmbed = new EmbedBuilder();
-			pastKicksEmbed.setTitle('Past Kicks');
-			pastKicksEmbed.setDescription('For clarifty purposes here is a list of your past kicks');
-			pastKicksEmbed.setColor(0xEF7F31);
-			pastKicksEmbed.setTimestamp(Date.now());
-			pastKicksEmbed.setFooter({
-				text: 'Pretendo Network',
-				iconURL: guild.iconURL()!
-			});
-
-			for (let i = 0; i < rows.length; i++) {
-				const kick = rows[i];
-				const kickedBy = await interaction.client.users.fetch(kick.admin_user_id);
-
-				pastKicksEmbed.addFields(
-					{
-						name: `${ordinal(i + 1)} Kick`,
-						value: kick.reason
-					},
-					{
-						name: 'Punished By',
-						value: kickedBy.tag,
-						inline: true
-					},
-					{
-						name: 'Date',
-						value: kick.timestamp.toLocaleDateString(),
-						inline: true
-					}
-				);
-			}
-
-			sendMemberEmbeds.push(pastKicksEmbed);
-		}
-
 		await notifyUser(guild, user, {
 			embeds: sendMemberEmbeds
 		});

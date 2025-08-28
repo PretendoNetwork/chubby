@@ -111,41 +111,6 @@ export async function banHandler(interaction: CommandInteraction | ModalSubmitIn
 
 		sendMemberEmbeds.push(banEmbed);
 
-		if (count > 0) {
-			const pastBansEmbed = new EmbedBuilder();
-			pastBansEmbed.setTitle('Past Bans');
-			pastBansEmbed.setDescription('For clarity purposes here is a list of your past bans');
-			pastBansEmbed.setColor(0xEF7F31);
-			pastBansEmbed.setTimestamp(Date.now());
-			pastBansEmbed.setFooter({
-				text: 'Pretendo Network',
-				iconURL: guild.iconURL()!
-			});
-
-			for (let i = 0; i < rows.length; i++) {
-				const ban = rows[i];
-				const bannedBy = await interaction.client.users.fetch(ban.admin_user_id);
-
-				pastBansEmbed.addFields(
-					{
-						name: `${ordinal(i + 1)} Ban`,
-						value: ban.reason
-					},
-					{
-						name: 'Punished By',
-						value: bannedBy.tag,
-						inline: true
-					},
-					{
-						name: 'Date',
-						value: ban.timestamp.toLocaleDateString(),
-						inline: true
-					}
-				);
-			}
-
-			sendMemberEmbeds.push(pastBansEmbed);
-		}
 
 		await notifyUser(guild, user, {
 			embeds: sendMemberEmbeds
