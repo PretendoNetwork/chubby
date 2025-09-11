@@ -188,11 +188,6 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 						value: warning.reason
 					},
 					{
-						name: 'Punished By',
-						value: warningBy.tag,
-						inline: true
-					},
-					{
 						name: 'Date',
 						value: warning.timestamp.toLocaleDateString(),
 						inline: true
