@@ -111,10 +111,6 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			punishmentEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
 			punishmentEmbed.setColor(0xEF7F31);
 			punishmentEmbed.setTimestamp(Date.now());
-			punishmentEmbed.setAuthor({
-				name: `Kicked by: ${executor.tag}`,
-				iconURL: executor.avatarURL() ?? undefined
-			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()!
@@ -143,10 +139,6 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			punishmentEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
 			punishmentEmbed.setColor(0xF24E43);
 			punishmentEmbed.setTimestamp(Date.now());
-			punishmentEmbed.setAuthor({
-				name: `Banned by: ${executor.tag}`,
-				iconURL: executor.avatarURL() ?? undefined
-			});
 			punishmentEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()!
@@ -180,7 +172,6 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 
 			for (let i = 0; i < rows.length; i++) {
 				const warning = rows[i];
-				const warningBy = await interaction.client.users.fetch(warning.admin_user_id);
 
 				pastWarningsEmbed.addFields(
 					{
