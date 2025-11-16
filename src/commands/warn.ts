@@ -180,7 +180,6 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 
 			for (let i = 0; i < rows.length; i++) {
 				const warning = rows[i];
-				const warningBy = await interaction.client.users.fetch(warning.admin_user_id);
 
 				pastWarningsEmbed.addFields(
 					{

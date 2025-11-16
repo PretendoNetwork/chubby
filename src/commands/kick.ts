@@ -2,7 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
-import { banMessageDeleteChoices, ordinal, sendEventLogMessage } from '@/util';
+import { banMessageDeleteChoices, sendEventLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
@@ -83,7 +83,7 @@ export async function kickHandler(interaction: CommandInteraction | ModalSubmitI
 			iconURL: guild.iconURL()!
 		});
 
-		const { count, rows } = await Kick.findAndCountAll({
+		const { count } = await Kick.findAndCountAll({
 			where: {
 				user_id: member.id
 			}
