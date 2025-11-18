@@ -2,7 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
-import { banMessageDeleteChoices, ordinal, sendEventLogMessage } from '@/util';
+import { banMessageDeleteChoices, sendEventLogMessage } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
@@ -83,7 +83,7 @@ export async function kickHandler(interaction: CommandInteraction | ModalSubmitI
 			iconURL: guild.iconURL()!
 		});
 
-		const { count, rows } = await Kick.findAndCountAll({
+		const { count } = await Kick.findAndCountAll({
 			where: {
 				user_id: member.id
 			}
@@ -104,10 +104,6 @@ export async function kickHandler(interaction: CommandInteraction | ModalSubmitI
 			banEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
 			banEmbed.setColor(0xF24E43);
 			banEmbed.setTimestamp(Date.now());
-			banEmbed.setAuthor({
-				name: `Banned by: ${executor.tag}`,
-				iconURL: executor.avatarURL() ?? undefined
-			});
 			banEmbed.setFooter({
 				text: 'Pretendo Network',
 				iconURL: guild.iconURL()!
