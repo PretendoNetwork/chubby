@@ -98,7 +98,7 @@ export async function handleLeveling(message: Message): Promise<void> {
 
 		const notificationEmbed = new EmbedBuilder();
 		notificationEmbed.setColor(0x65B540);
-		notificationEmbed.setTitle('Congratulations, you have become trusted in Pretendo!');
+		notificationEmbed.setTitle('Congratulations, you have become Trusted in Pretendo!');
 		notificationEmbed.setDescription(description);
 		notificationEmbed.setFooter({
 			text: 'Pretendo Network',
