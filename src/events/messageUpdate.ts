@@ -46,7 +46,7 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 			},
 			{
 				name: 'User ID',
-				value: user.id
+				value: user.id || 'User ID not found'
 			},
 			{
 				name: 'Channel Tag',
@@ -54,16 +54,16 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 			},
 			{
 				name: 'Channel Name',
-				value: channelName
+				value: channelName || 'No channel name found'
 			},
 			{
 				name: 'Old Message',
-				value: oldMessageContent,
+				value: oldMessageContent || '***Missing Content***',
 				inline: true
 			},
 			{
 				name: 'New Message',
-				value: newMessageContent,
+				value: newMessageContent || '***Missing Content***',
 				inline: true
 			}
 		);
@@ -87,7 +87,7 @@ export default async function messageUpdateHandler(oldMessage: Message | Partial
 					eventLogEmbed.addFields([
 						{
 							name: 'Previous audit event',
-							value: auditMessage.url
+							value: auditMessage.url || 'No URL found'
 						}
 					]);
 				}
