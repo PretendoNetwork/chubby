@@ -94,7 +94,7 @@ export async function handleLeveling(message: Message): Promise<void> {
 
 		let description = `Hello <@${message.author.id}>! You have been given the Trusted role in the Pretendo Network Discord server.`;
 		description += '\n\n';
-		description += 'The Trusted role is automatically given to users who have been active in the server for a while. **You are now allowed to send images, link embeds, and other media in all channels. You are also now allowed access to this server\'s voice channels.**';
+		description += 'The Trusted role is automatically given to users who have been active in the server for a while. **You are now allowed to send images, link embeds, and other media in all channels. You are also now allowed access to the server\'s voice channels.**';
 
 		const notificationEmbed = new EmbedBuilder();
 		notificationEmbed.setColor(0x65B540);
