@@ -4,10 +4,10 @@ import { Op } from 'sequelize';
 import { Warning } from '@/models/warnings';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
-import { ordinal, sendEventLogMessage } from '@/util';
+import { ordinal, sendEventLogMessage, canActOnUserList, createNoPermissionEmbed } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
-import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction, CommandInteraction, GuildMember, ModalSubmitInteraction } from 'discord.js';
 
 async function warnCommandHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const subcommand = interaction.options.getSubcommand();
@@ -19,7 +19,7 @@ async function warnCommandHandler(interaction: ChatInputCommandInteraction): Pro
 		userIDs = [user.id];
 	} else if (subcommand === 'multiuser') {
 		const users = interaction.options.getString('users', true);
-		userIDs = [...new Set(Array.from(users.matchAll(/\d{17,18}/g), match => match[0]))];
+		userIDs = [...new Set(Array.from(users.matchAll(/\d{17,19}/g), match => match[0]))];
 	} else {
 		throw new Error(`Unknown warn subcommand: ${subcommand}`);
 	}
@@ -38,6 +38,16 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 	const warningListEmbed = new EmbedBuilder();
 	warningListEmbed.setTitle('User Warnings :thumbsdown:');
 	warningListEmbed.setColor(0xFFA500);
+
+	const action = await canActOnUserList(interaction.member as GuildMember, userIDs);
+
+	if (!action.permitted) {
+		const actionNotPermittedEmbed = await createNoPermissionEmbed(action);
+
+		await interaction.followUp({ embeds: [actionNotPermittedEmbed], ephemeral: true });
+
+		return;
+	}
 
 	for (const userID of userIDs) {
 		const member = await interaction.guild!.members.fetch(userID);
