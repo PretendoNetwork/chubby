@@ -17,7 +17,7 @@ async function banCommandHandler(interaction: ChatInputCommandInteraction): Prom
 		userIDs = [user.id];
 	} else if (subcommand === 'multiuser') {
 		const users = interaction.options.getString('users', true);
-		userIDs = [...new Set(Array.from(users.matchAll(/\d{17,18}/g), match => match[0]))];
+		userIDs = [...new Set(Array.from(users.matchAll(/\d{17,19}/g), match => match[0]))];
 	} else {
 		throw new Error(`Unknown ban subcommand: ${subcommand}`);
 	}
