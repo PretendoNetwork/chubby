@@ -2,7 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
-import { banMessageDeleteChoices, sendEventLogMessage, isActionPermitted } from '@/util';
+import { banMessageDeleteChoices, sendEventLogMessage, canActOnUserList, createNoPermissionEmbed } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
 import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction, GuildMember } from 'discord.js';
@@ -38,33 +38,12 @@ export async function kickHandler(interaction: CommandInteraction | ModalSubmitI
 	kicksListEmbed.setTitle('User Kicks :thumbsdown:');
 	kicksListEmbed.setColor(0xFFA500);
 
-	// user ids of people the executor can't act upon
-	const peerOrHigher: string[] = [];
+	const action = await canActOnUserList(interaction.member as GuildMember, userIDs);
 
-	// check that the executor has sufficient perms to act upon all the listed users, before running the command
-	for (const userID of userIDs) {
-		const member = await interaction.guild!.members.fetch(userID);
+	if (!action.permitted) {
+		const actionNotPermittedEmbed = await createNoPermissionEmbed(action);
 
-		const permitted = await isActionPermitted(interaction.member as GuildMember, member);
-
-		if (!permitted) {
-			peerOrHigher.push(userID);
-		}
-	}
-
-	if (peerOrHigher.length > 0) {
-		const commandFailedEmbed = new EmbedBuilder();
-		commandFailedEmbed.setTitle('Unable to run command');
-		commandFailedEmbed.setColor(0xFFA500);
-		commandFailedEmbed.setDescription(`${peerOrHigher.length} of the users you tried to act upon ha${peerOrHigher.length === 1 ? 's' : 've'} the same or a higher rank than you.\nThe command has **not** been run.`);
-		peerOrHigher.forEach((p) => {
-			commandFailedEmbed.addFields({
-				name: `ID: \`${p}\``,
-				value: `<@${p}>`
-			});
-		});
-
-		await interaction.followUp({ embeds: [commandFailedEmbed], ephemeral: true });
+		await interaction.followUp({ embeds: [actionNotPermittedEmbed], ephemeral: true });
 
 		return;
 	}

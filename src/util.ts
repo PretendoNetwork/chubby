@@ -1,7 +1,7 @@
-import { ChannelType } from 'discord.js';
+import { ChannelType, EmbedBuilder } from 'discord.js';
 import { getSetting } from '@/models/settings';
 import type { SettingsKeys } from '@/models/settings';
-import type { Channel, EmbedBuilder, Guild, Role, Message, APIApplicationCommandOptionChoice, GuildMember } from 'discord.js';
+import type { Channel, Guild, Role, Message, APIApplicationCommandOptionChoice, GuildMember } from 'discord.js';
 
 const ordinalRules = new Intl.PluralRules('en', {
 	type: 'ordinal'
@@ -81,15 +81,47 @@ export async function getRoleFromSettings(guild: Guild, roleName: RoleKeys): Pro
 	return role;
 }
 
-/**
- * given a pair of guildmembers, determines whether a can act upon b.
- * @param a acting GuildMember
- * @param b GuildMember acted upon
- */
-export async function isActionPermitted(a: GuildMember, b: GuildMember): Promise<boolean> {
-	const roleA = a.roles.highest;
-	const roleB = b.roles.highest;
-	const posDiff = roleA.comparePositionTo(roleB);
+export interface ModerationAction {
+	permitted: boolean;
+	disallowedUsers: string[];
+}
 
-	return posDiff >= 1;
+export async function canActOnUserList(actor: GuildMember, userIDs: string[]): Promise<ModerationAction> {
+	// user ids of people the executor can't act upon
+	const res: ModerationAction = {
+		permitted: true,
+		disallowedUsers: []
+	};
+
+	// check that the executor has sufficient perms to act upon all the listed users, before running the command
+	for (const userID of userIDs) {
+		const acted = await actor.guild.members.fetch(userID);
+		const roleA = actor.roles.highest;
+		const roleB = acted.roles.highest;
+		const posDiff = roleA.comparePositionTo(roleB);
+
+		const permitted = posDiff >= 1;
+
+		if (!permitted) {
+			res.permitted = false;
+			res.disallowedUsers.push(userID);
+		}
+	}
+
+	return res;
+}
+
+export async function createNoPermissionEmbed(modAction: ModerationAction): Promise<EmbedBuilder> {
+	const commandFailedEmbed = new EmbedBuilder();
+	commandFailedEmbed.setTitle('Unable to run command');
+	commandFailedEmbed.setColor(0xFFA500);
+	commandFailedEmbed.setDescription(`${modAction.disallowedUsers.length} of the users you tried to act upon ha${modAction.disallowedUsers.length === 1 ? 's' : 've'} the same or a higher rank than you.\nThe command has **not** been run.`);
+	modAction.disallowedUsers.forEach((p) => {
+		commandFailedEmbed.addFields({
+			name: `ID: \`${p}\``,
+			value: `<@${p}>`
+		});
+	});
+
+	return commandFailedEmbed;
 }
