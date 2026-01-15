@@ -1,4 +1,5 @@
 import { scheduleJob } from 'node-schedule';
+import { PresenceUpdateStatus, ActivityType } from 'discord.js';
 import { setupGuild } from '@/setup-guild';
 import banCommand from '@/commands/ban';
 import kickCommand from '@/commands/kick';
@@ -33,6 +34,8 @@ export async function readyHandler(client: Client): Promise<void> {
 	});
 
 	console.log(`Logged in as ${client.user!.tag}!`);
+
+	client?.user?.setPresence({ activities: [{ name: '#modmail for moderation concerns', type: ActivityType.Listening }], status: PresenceUpdateStatus.Online });
 
 	await checkMatchmakingThreads();
 

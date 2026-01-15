@@ -2,10 +2,10 @@ import { EmbedBuilder } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
-import { banMessageDeleteChoices, sendEventLogMessage } from '@/util';
+import { banMessageDeleteChoices, sendEventLogMessage, canActOnUserList, createNoPermissionEmbed } from '@/util';
 import { untrustUser } from '@/leveling';
 import { notifyUser } from '@/notifications';
-import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction, CommandInteraction, ModalSubmitInteraction, GuildMember } from 'discord.js';
 
 async function kickCommandHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const subcommand = interaction.options.getSubcommand();
@@ -18,7 +18,7 @@ async function kickCommandHandler(interaction: ChatInputCommandInteraction): Pro
 		userIDs = [user.id];
 	} else if (subcommand === 'multiuser') {
 		const users = interaction.options.getString('users', true);
-		userIDs = [...new Set(Array.from(users.matchAll(/\d{17,18}/g), match => match[0]))];
+		userIDs = [...new Set(Array.from(users.matchAll(/\d{17,19}/g), match => match[0]))];
 	} else {
 		throw new Error(`Unknown kick subcommand: ${subcommand}`);
 	}
@@ -37,6 +37,16 @@ export async function kickHandler(interaction: CommandInteraction | ModalSubmitI
 	const kicksListEmbed = new EmbedBuilder();
 	kicksListEmbed.setTitle('User Kicks :thumbsdown:');
 	kicksListEmbed.setColor(0xFFA500);
+
+	const action = await canActOnUserList(interaction.member as GuildMember, userIDs);
+
+	if (!action.permitted) {
+		const actionNotPermittedEmbed = await createNoPermissionEmbed(action);
+
+		await interaction.followUp({ embeds: [actionNotPermittedEmbed], ephemeral: true });
+
+		return;
+	}
 
 	for (const userID of userIDs) {
 		const member = await guild.members.fetch(userID);

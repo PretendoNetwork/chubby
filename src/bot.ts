@@ -30,6 +30,7 @@ process.on('uncaughtException', (error) => {
 export const client = new Client({
 	partials: [
 		Partials.Reaction,
+		Partials.Channel,
 		Partials.Message
 	],
 	intents: [
@@ -39,7 +40,8 @@ export const client = new Client({
 		GatewayIntentBits.GuildMembers,
 		GatewayIntentBits.GuildModeration,
 		GatewayIntentBits.GuildMessageReactions,
-		GatewayIntentBits.GuildPresences
+		GatewayIntentBits.GuildPresences,
+		GatewayIntentBits.DirectMessages
 	]
 });
 
