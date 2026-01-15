@@ -1,7 +1,7 @@
 import { ChannelType } from 'discord.js';
 import { getSetting } from '@/models/settings';
 import type { SettingsKeys } from '@/models/settings';
-import type { Channel, EmbedBuilder, Guild, Role, Message, APIApplicationCommandOptionChoice } from 'discord.js';
+import type { Channel, EmbedBuilder, Guild, Role, Message, APIApplicationCommandOptionChoice, GuildMember } from 'discord.js';
 
 const ordinalRules = new Intl.PluralRules('en', {
 	type: 'ordinal'
@@ -79,4 +79,17 @@ export async function getRoleFromSettings(guild: Guild, roleName: RoleKeys): Pro
 	}
 
 	return role;
+}
+
+/**
+ * given a pair of guildmembers, determines whether a can act upon b.
+ * @param a acting GuildMember
+ * @param b GuildMember acted upon
+ */
+export async function isActionPermitted(a: GuildMember, b: GuildMember): Promise<boolean> {
+	const roleA = a.roles.highest;
+	const roleB = b.roles.highest;
+	const posDiff = roleA.comparePositionTo(roleB);
+
+	return posDiff >= 1;
 }
