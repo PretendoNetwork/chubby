@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Collection, Events, Partials } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, Events, Partials, PresenceUpdateStatus, ActivityType } from 'discord.js';
 import guildAuditLogEntryCreateHandler from '@/events/guildAuditLogEntryCreate';
 import guildMemberRemoveHandler from '@/events/guildMemberRemove';
 import guildMemberUpdateHandler from '@/events/guildMemberUpdate';
@@ -42,7 +42,8 @@ export const client = new Client({
 		GatewayIntentBits.GuildMessageReactions,
 		GatewayIntentBits.GuildPresences,
 		GatewayIntentBits.DirectMessages
-	]
+	],
+	presence: { activities: [{ name: '#modmail for moderation concerns', type: ActivityType.Listening }], status: PresenceUpdateStatus.Online }
 });
 
 client.commands = new Collection<string, ClientCommand>();
