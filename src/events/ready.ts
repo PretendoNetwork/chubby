@@ -1,6 +1,7 @@
 import { scheduleJob } from 'node-schedule';
 import { PresenceUpdateStatus, ActivityType } from 'discord.js';
 import { setupGuild } from '@/setup-guild';
+import getUserInfo from '@/commands/user-info';
 import banCommand from '@/commands/ban';
 import kickCommand from '@/commands/kick';
 import settingsCommand from '@/commands/settings';
@@ -51,6 +52,7 @@ function loadBotHandlersCollection(client: Client): void {
 	client.commands.set(slowModeCommand.name, slowModeCommand);
 	client.commands.set(removeWarnCommand.name, removeWarnCommand);
 	client.commands.set(listWarnsCommand.name, listWarnsCommand);
+	client.commands.set(getUserInfo.name, getUserInfo);
 
 	client.contextMenus.set(messageLogContextMenu.name, messageLogContextMenu);
 	client.contextMenus.set(warnContextMenu.name, warnContextMenu);
