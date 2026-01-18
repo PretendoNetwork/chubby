@@ -1,4 +1,4 @@
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, InteractionContextType } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Warning } from '@/models/warnings';
 import type { ChatInputCommandInteraction } from 'discord.js';
@@ -29,9 +29,11 @@ export async function listWarnsCommandHandler(interaction: ChatInputCommandInter
 	warningListEmbed.setDescription(`Showing warnings for <@${member.user.id}>\nTotal warnings: ${activeWarnings.length}`);
 
 	userWarnings.forEach((warn) => {
+		const t = Math.floor(warn.content.timestamp.getTime() / 1000);
+
 		warningListEmbed.addFields({
 			name: `Warning ID: \`${warn.content.id}\`` + (warn.isExpired ? ' - EXPIRED' : ''),
-			value: warn.content.reason + `\n---\nGiven on ${warn.content.timestamp.toLocaleDateString()} by <@${warn.content.admin_user_id}>`
+			value: warn.content.reason + `\n---\nGiven at <t:${t}:S> by <@${warn.content.admin_user_id}>`
 		});
 	});
 
@@ -42,6 +44,7 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('list-warns')
 	.setDescription('View a user\'s warns')
+	.setContexts([InteractionContextType.Guild])
 	.addUserOption((option) => {
 		return option.setName('user')
 			.setDescription('User whose warn history will be displayed')

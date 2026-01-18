@@ -1,5 +1,6 @@
 import { escapeMarkdown, SlashCommandBuilder } from '@discordjs/builders';
 import { ZodError } from 'zod';
+import { InteractionContextType } from 'discord.js';
 import { getAllSettings, getSetting, setSetting, settingsDefinitions } from '@/models/settings';
 import type { SettingsKeys } from '@/models/settings';
 import type { ChatInputCommandInteraction } from 'discord.js';
@@ -138,6 +139,7 @@ const command = new SlashCommandBuilder();
 command.setDefaultMemberPermissions('0');
 command.setName('settings');
 command.setDescription('Setup the bot');
+command.setContexts([InteractionContextType.Guild]);
 command.addSubcommand((cmd) => {
 	cmd.setName('set');
 	cmd.setDescription('Change a settings key');

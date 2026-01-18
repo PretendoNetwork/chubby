@@ -1,5 +1,7 @@
 import { scheduleJob } from 'node-schedule';
+import { PresenceUpdateStatus, ActivityType, Routes, REST } from 'discord.js';
 import { setupGuild } from '@/setup-guild';
+import getUserInfo from '@/commands/user-info';
 import banCommand from '@/commands/ban';
 import kickCommand from '@/commands/kick';
 import settingsCommand from '@/commands/settings';
@@ -15,18 +17,26 @@ import banContextMenu from '@/context-menus/users/ban';
 import { checkMatchmakingThreads } from '@/matchmaking-threads';
 import { SlowMode } from '@/models/slow-mode';
 import handleSlowMode from '@/slow-mode';
+import config from '@/config';
 import type { Client } from 'discord.js';
 
 export async function readyHandler(client: Client): Promise<void> {
-	console.log('Registering global commands');
+	const rest = new REST({ version: '10' }).setToken(config.bot_token);
+
 	loadBotHandlersCollection(client);
 
 	console.log('Setting up guilds');
 	const guilds = await client.guilds.fetch();
 	for (const id of guilds.keys()) {
 		const guild = await guilds.get(id)!.fetch();
-		await setupGuild(guild);
+		await setupGuild(guild, rest);
 	}
+
+	console.log('Registering global commands');
+	// for global commands
+	await rest.put(Routes.applicationCommands(client.user!.id), { body: [getUserInfo.deploy] })
+		.then(() => console.log('Successfully registered user-info command.'))
+		.catch(console.error);
 
 	scheduleJob('*/10 * * * *', async () => {
 		await checkMatchmakingThreads();
@@ -48,6 +58,7 @@ function loadBotHandlersCollection(client: Client): void {
 	client.commands.set(slowModeCommand.name, slowModeCommand);
 	client.commands.set(removeWarnCommand.name, removeWarnCommand);
 	client.commands.set(listWarnsCommand.name, listWarnsCommand);
+	client.commands.set(getUserInfo.name, getUserInfo);
 
 	client.contextMenus.set(messageLogContextMenu.name, messageLogContextMenu);
 	client.contextMenus.set(warnContextMenu.name, warnContextMenu);

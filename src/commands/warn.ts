@@ -1,4 +1,4 @@
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, InteractionContextType } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Op } from 'sequelize';
 import { Warning } from '@/models/warnings';
@@ -183,6 +183,8 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			for (let i = 0; i < rows.length; i++) {
 				const warning = rows[i];
 
+				const t = warning.timestamp.getTime() / 1000;
+
 				pastWarningsEmbed.addFields(
 					{
 						name: `${ordinal(i + 1)} Warning`,
@@ -190,7 +192,7 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 					},
 					{
 						name: 'Date',
-						value: warning.timestamp.toLocaleDateString(),
+						value: `<t:${t}:d> <t:${t}:t>`,
 						inline: true
 					}
 				);
@@ -276,6 +278,7 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('warn')
 	.setDescription('Warn user(s)')
+	.setContexts([InteractionContextType.Guild])
 	.addSubcommand((subcommand) => {
 		return subcommand.setName('user')
 			.setDescription('Warn a user')
