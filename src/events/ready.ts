@@ -44,8 +44,6 @@ export async function readyHandler(client: Client): Promise<void> {
 
 	console.log(`Logged in as ${client.user!.tag}!`);
 
-	client?.user?.setPresence({ activities: [{ name: '#modmail for moderation concerns', type: ActivityType.Listening }], status: PresenceUpdateStatus.Online });
-
 	await checkMatchmakingThreads();
 
 	await setupSlowMode(client);
