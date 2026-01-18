@@ -29,9 +29,11 @@ export async function listWarnsCommandHandler(interaction: ChatInputCommandInter
 	warningListEmbed.setDescription(`Showing warnings for <@${member.user.id}>\nTotal warnings: ${activeWarnings.length}`);
 
 	userWarnings.forEach((warn) => {
+		const t = warn.content.timestamp.getTime() / 1000;
+
 		warningListEmbed.addFields({
 			name: `Warning ID: \`${warn.content.id}\`` + (warn.isExpired ? ' - EXPIRED' : ''),
-			value: warn.content.reason + `\n---\nGiven on ${warn.content.timestamp.toLocaleDateString()} by <@${warn.content.admin_user_id}>`
+			value: warn.content.reason + `\n---\nGiven on <t:${t}:d> at <t:${t}:t> by <@${warn.content.admin_user_id}>`
 		});
 	});
 

@@ -48,12 +48,15 @@ export async function userInfoCommandHandler(interaction: ChatInputCommandIntera
 	userInfoEmbed.setColor(0x9D6FF3);
 	userInfoEmbed.setAuthor({ name: member.user.username, iconURL: interaction.user.displayAvatarURL() });
 
+	let userInfoDesc = '';
+	const _trustedExplanation = `💡 To earn <@&${trustedRole}>, there are two requirements that both need to be met:\n\n**Experience (XP)**\n• ${minimumXP} XP (${messageXP} XP per message, with ${messageTimeout}sec cooldown between XP earnings; some channels blacklisted).\n\n**Time Earning XP**\n• ${daysRequiredForTrusted} day${daysRequiredForTrusted !== 1 && 's'} since joining the server OR since last untrust event (whichever is more recent).`;
+	const _warningsText = activeWarnings ? `**🔨 Warnings (${activeWarnings.length}):**\n` : '**No active warnings.**';
 	if (!levelingEnabled || !trustedRole) {
-		userInfoEmbed.setDescription(activeWarnings ? `**Warnings (${activeWarnings.length}):**\n` : '**No active warnings.**');
+		userInfoDesc = _warningsText;
 	} else if (untrustedRole && (member.roles as GuildMemberRoleManager).cache.has(untrustedRole)) {
-		userInfoEmbed.setDescription(`You have <@&${untrustedRole}>. You cannot earn XP.\n\n${activeWarnings ? `**Warnings (${activeWarnings.length}):**\n` : '**No active warnings.**'}`);
+		userInfoDesc = `You have <@&${untrustedRole}>. You cannot earn XP.\n\n${_warningsText}`;
 	} else if ((member.roles as GuildMemberRoleManager).cache.has(trustedRole)) {
-		userInfoEmbed.setDescription(`You have <@&${trustedRole}>.\n\n${activeWarnings ? `**Warnings (${activeWarnings.length}):**\n` : '**No active warnings.**'}`);
+		userInfoDesc = `You have <@&${trustedRole}>.\n\n${_warningsText}`;
 	} else if (user.trusted_time_start_date) {
 		let seconds = Math.floor((now.getTime() - user.trusted_time_start_date.getTime()) / 1000);
 
@@ -66,35 +69,18 @@ export async function userInfoCommandHandler(interaction: ChatInputCommandIntera
 		const minutes = Math.floor(seconds / 60) % 60;
 		seconds -= minutes * 60;
 
-		userInfoEmbed.setDescription(`**Experience (XP)**: ${user.xp} / ${minimumXP} XP
-			**Time Earning XP**: ${days}d, ${hours}h, ${minutes}m / ${daysRequiredForTrusted} days
-			
-			Note: to earn <@&${trustedRole}>, there are two requirements that both need to be met:
-
-			**Experience (XP)**
-			• ${minimumXP} XP (${messageXP} XP per message, with ${messageTimeout}sec cooldown between XP earnings; some channels blacklisted)
-
-			**Time Earning XP**
-			• ${daysRequiredForTrusted} day${daysRequiredForTrusted !== 1 && 's'} since joining the server OR since last untrust event (whichever is more recent)
-			
-			${activeWarnings ? `**Warnings (${activeWarnings.length}):**\n` : '**No active warnings.**'}`);
+		userInfoDesc = `**Experience (XP)**: ${user.xp} / ${minimumXP} XP\n**Time Earning XP**: ${days}d, ${hours}h, ${minutes}m / ${daysRequiredForTrusted} days\n\n${_trustedExplanation}\n\n${_warningsText}`;
 	} else {
-		userInfoEmbed.setDescription(`You have not interacted with the community yet.
-			
-			Note: to earn <@&${trustedRole}>, there are two requirements that both need to be met:
-
-			**Experience (XP)**
-			• ${minimumXP} XP (${messageXP} XP per message, with ${messageTimeout}sec cooldown between XP earnings; some channels blacklisted)
-
-			**Time Earning XP**
-			• ${daysRequiredForTrusted} day${daysRequiredForTrusted !== 1 && 's'} since joining the server OR since last untrust event (whichever is more recent)
-			
-			${activeWarnings ? `**Warnings (${activeWarnings.length}):**\n` : '**No active warnings.**'}`);
+		userInfoDesc = `You have not interacted with the community yet.\n\n${_trustedExplanation}\n\n${_warningsText}`;
 	}
 
+	userInfoEmbed.setDescription(userInfoDesc);
+
 	activeWarnings.forEach((warn) => {
+		const t = Math.floor(warn.content.timestamp.getTime() / 1000);
+
 		userInfoEmbed.addFields({
-			name: `${warn.content.timestamp.toLocaleDateString()}: (ID: \`${warn.content.id}\`)` + (warn.isExpired ? ' - EXPIRED' : ''),
+			name: `<t:${t}:d> <t:${t}:t> (ID: \`${warn.content.id}\`):`,
 			value: warn.content.reason
 		});
 	});

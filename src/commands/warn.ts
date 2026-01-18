@@ -183,6 +183,8 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			for (let i = 0; i < rows.length; i++) {
 				const warning = rows[i];
 
+				const t = warning.timestamp.getTime() / 1000;
+
 				pastWarningsEmbed.addFields(
 					{
 						name: `${ordinal(i + 1)} Warning`,
