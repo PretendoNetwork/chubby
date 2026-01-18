@@ -1,4 +1,4 @@
-import { EmbedBuilder, InteractionContextType } from 'discord.js';
+import { EmbedBuilder, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Ban } from '@/models/bans';
 import { banMessageDeleteChoices, sendEventLogMessage, canActOnUserList, createNoPermissionEmbed } from '@/util';
@@ -148,6 +148,7 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('ban')
 	.setDescription('Ban user(s)')
+	.setIntegrationTypes([ApplicationIntegrationType.GuildInstall])
 	.setContexts([InteractionContextType.Guild])
 	.addSubcommand(subcommand =>
 		subcommand.setName('user')

@@ -1,4 +1,4 @@
-import { InteractionContextType } from 'discord.js';
+import { InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ModPingSettings } from '@/models/modPingSettings';
 import { getRoleFromSettings } from '@/util';
@@ -135,47 +135,48 @@ async function interactionHandler(interaction: ChatInputCommandInteraction): Pro
 	});
 }
 
-const command = new SlashCommandBuilder();
-command.setDefaultMemberPermissions('0');
-command.setName('mod-ping');
-command.setDescription('Manage your @Mod-Ping role.');
-command.setContexts([InteractionContextType.Guild]);
-command.addSubcommand(cmd =>
-	cmd.setName('toggle')
-		.setDescription('Manually toggle @Mod-Ping. (Overrides auto-assign, but still auto-assigns when your status changes)')
-);
-command.addSubcommandGroup(group =>
-	group.setName('auto')
-		.setDescription('Automatically assign @Mod-Ping based on your status.')
-		.addSubcommand(cmd =>
-			cmd.setName('assign')
-				.setDescription('Enable auto-assign. (Default: Online/Idle assigns, Offline/DND removes)')
-				.addBooleanOption(option =>
-					option.setName('online')
-						.setDescription('Assign @Mod-Ping while Online. Default: ✅')
-				)
-				.addBooleanOption(option =>
-					option.setName('idle')
-						.setDescription('Assign @Mod-Ping while Idle. Default: ✅')
-				)
-				.addBooleanOption(option =>
-					option.setName('do_not_disturb')
-						.setDescription('Assign @Mod-Ping while in Do Not Disturb. Default: ❌')
-				)
-				.addBooleanOption(option =>
-					option.setName('offline')
-						.setDescription('Assign @Mod-Ping while Offline. Default: ❌')
-				)
-		)
-		.addSubcommand(cmd =>
-			cmd.setName('disable')
-				.setDescription('Disable auto-assign.')
-		)
-		.addSubcommand(cmd =>
-			cmd.setName('current')
-				.setDescription('View your current auto-assign settings.')
-		)
-);
+const command = new SlashCommandBuilder()
+	.setDefaultMemberPermissions('0')
+	.setName('mod-ping')
+	.setDescription('Manage your @Mod-Ping role.')
+	.setIntegrationTypes([ApplicationIntegrationType.GuildInstall])
+	.setContexts([InteractionContextType.Guild])
+	.addSubcommand(cmd =>
+		cmd.setName('toggle')
+			.setDescription('Manually toggle @Mod-Ping. (Overrides auto-assign, but still auto-assigns when your status changes)')
+	)
+	.addSubcommandGroup(group =>
+		group.setName('auto')
+			.setDescription('Automatically assign @Mod-Ping based on your status.')
+			.addSubcommand(cmd =>
+				cmd.setName('assign')
+					.setDescription('Enable auto-assign. (Default: Online/Idle assigns, Offline/DND removes)')
+					.addBooleanOption(option =>
+						option.setName('online')
+							.setDescription('Assign @Mod-Ping while Online. Default: ✅')
+					)
+					.addBooleanOption(option =>
+						option.setName('idle')
+							.setDescription('Assign @Mod-Ping while Idle. Default: ✅')
+					)
+					.addBooleanOption(option =>
+						option.setName('do_not_disturb')
+							.setDescription('Assign @Mod-Ping while in Do Not Disturb. Default: ❌')
+					)
+					.addBooleanOption(option =>
+						option.setName('offline')
+							.setDescription('Assign @Mod-Ping while Offline. Default: ❌')
+					)
+			)
+			.addSubcommand(cmd =>
+				cmd.setName('disable')
+					.setDescription('Disable auto-assign.')
+			)
+			.addSubcommand(cmd =>
+				cmd.setName('current')
+					.setDescription('View your current auto-assign settings.')
+			)
+	);
 
 export default {
 	name: command.name,

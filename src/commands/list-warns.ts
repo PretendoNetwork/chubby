@@ -1,4 +1,4 @@
-import { EmbedBuilder, InteractionContextType } from 'discord.js';
+import { EmbedBuilder, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Warning } from '@/models/warnings';
 import type { ChatInputCommandInteraction } from 'discord.js';
@@ -44,6 +44,7 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('list-warns')
 	.setDescription('View a user\'s warns')
+	.setIntegrationTypes([ApplicationIntegrationType.GuildInstall])
 	.setContexts([InteractionContextType.Guild])
 	.addUserOption((option) => {
 		return option.setName('user')

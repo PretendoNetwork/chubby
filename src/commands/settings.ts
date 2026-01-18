@@ -1,6 +1,6 @@
 import { escapeMarkdown, SlashCommandBuilder } from '@discordjs/builders';
 import { ZodError } from 'zod';
-import { InteractionContextType } from 'discord.js';
+import { InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { getAllSettings, getSetting, setSetting, settingsDefinitions } from '@/models/settings';
 import type { SettingsKeys } from '@/models/settings';
 import type { ChatInputCommandInteraction } from 'discord.js';
@@ -134,51 +134,51 @@ async function settingsHandler(interaction: ChatInputCommandInteraction): Promis
 	throw new Error('unhandled subcommand');
 }
 
-const command = new SlashCommandBuilder();
-
-command.setDefaultMemberPermissions('0');
-command.setName('settings');
-command.setDescription('Setup the bot');
-command.setContexts([InteractionContextType.Guild]);
-command.addSubcommand((cmd) => {
-	cmd.setName('set');
-	cmd.setDescription('Change a settings key');
-	cmd.addStringOption((option) => {
-		option.setName('key');
-		option.setDescription('Key to modify');
-		option.setRequired(true);
-		option.setChoices(...Object.keys(settingsDefinitions).map((key) => {
-			return { name: key, value: key };
-		}));
-		return option;
+const command = new SlashCommandBuilder()
+	.setDefaultMemberPermissions('0')
+	.setName('settings')
+	.setDescription('Setup the bot')
+	.setIntegrationTypes([ApplicationIntegrationType.GuildInstall])
+	.setContexts([InteractionContextType.Guild])
+	.addSubcommand((cmd) => {
+		cmd.setName('set');
+		cmd.setDescription('Change a settings key');
+		cmd.addStringOption((option) => {
+			option.setName('key');
+			option.setDescription('Key to modify');
+			option.setRequired(true);
+			option.setChoices(...Object.keys(settingsDefinitions).map((key) => {
+				return { name: key, value: key };
+			}));
+			return option;
+		});
+		cmd.addStringOption((option) => {
+			option.setName('value');
+			option.setDescription('value to set the setting to');
+			option.setRequired(true);
+			return option;
+		});
+		return cmd;
+	})
+	.addSubcommand((cmd) => {
+		cmd.setName('get');
+		cmd.setDescription('Get value of settings key');
+		cmd.addStringOption((option) => {
+			option.setName('key');
+			option.setDescription('Key to modify');
+			option.setRequired(true);
+			option.setChoices(...Object.keys(settingsDefinitions).map((key) => {
+				return { name: key, value: key };
+			}));
+			return option;
+		});
+		return cmd;
+	})
+	.addSubcommand((cmd) => {
+		cmd.setName('list');
+		cmd.setDescription('List all settings');
+		return cmd;
 	});
-	cmd.addStringOption((option) => {
-		option.setName('value');
-		option.setDescription('value to set the setting to');
-		option.setRequired(true);
-		return option;
-	});
-	return cmd;
-});
-command.addSubcommand((cmd) => {
-	cmd.setName('get');
-	cmd.setDescription('Get value of settings key');
-	cmd.addStringOption((option) => {
-		option.setName('key');
-		option.setDescription('Key to modify');
-		option.setRequired(true);
-		option.setChoices(...Object.keys(settingsDefinitions).map((key) => {
-			return { name: key, value: key };
-		}));
-		return option;
-	});
-	return cmd;
-});
-command.addSubcommand((cmd) => {
-	cmd.setName('list');
-	cmd.setDescription('List all settings');
-	return cmd;
-});
 
 export default {
 	name: command.name,

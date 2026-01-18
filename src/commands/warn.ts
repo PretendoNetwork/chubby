@@ -1,4 +1,4 @@
-import { EmbedBuilder, InteractionContextType } from 'discord.js';
+import { EmbedBuilder, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Op } from 'sequelize';
 import { Warning } from '@/models/warnings';
@@ -278,6 +278,7 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('warn')
 	.setDescription('Warn user(s)')
+	.setIntegrationTypes([ApplicationIntegrationType.GuildInstall])
 	.setContexts([InteractionContextType.Guild])
 	.addSubcommand((subcommand) => {
 		return subcommand.setName('user')

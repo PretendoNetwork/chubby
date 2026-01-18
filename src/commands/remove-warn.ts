@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { InteractionContextType } from 'discord.js';
+import { InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { Warning } from '@/models/warnings';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
@@ -40,6 +40,7 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('remove-warn')
 	.setDescription('Remove a warn')
+	.setIntegrationTypes([ApplicationIntegrationType.GuildInstall])
 	.setContexts([InteractionContextType.Guild])
 	.addStringOption((option) => {
 		return option.setName('id')

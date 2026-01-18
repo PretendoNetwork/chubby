@@ -1,4 +1,4 @@
-import { EmbedBuilder, InteractionContextType } from 'discord.js';
+import { EmbedBuilder, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Kick } from '@/models/kicks';
 import { Ban } from '@/models/bans';
@@ -206,6 +206,7 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('kick')
 	.setDescription('Kick user(s)')
+	.setIntegrationTypes([ApplicationIntegrationType.GuildInstall])
 	.setContexts([InteractionContextType.Guild])
 	.addSubcommand(subcommand =>
 		subcommand.setName('user')

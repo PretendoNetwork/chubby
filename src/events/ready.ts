@@ -1,5 +1,5 @@
 import { scheduleJob } from 'node-schedule';
-import { PresenceUpdateStatus, ActivityType, Routes, REST } from 'discord.js';
+import { Routes, REST } from 'discord.js';
 import { setupGuild } from '@/setup-guild';
 import getUserInfo from '@/commands/user-info';
 import banCommand from '@/commands/ban';
@@ -25,18 +25,20 @@ export async function readyHandler(client: Client): Promise<void> {
 
 	loadBotHandlersCollection(client);
 
-	console.log('Setting up guilds');
+	console.log('Setting up guilds:');
 	const guilds = await client.guilds.fetch();
 	for (const id of guilds.keys()) {
 		const guild = await guilds.get(id)!.fetch();
 		await setupGuild(guild, rest);
 	}
 
-	console.log('Registering global commands');
+	console.log('Registering global commands:');
 	// for global commands
 	await rest.put(Routes.applicationCommands(client.user!.id), { body: [getUserInfo.deploy] })
-		.then(() => console.log('Successfully registered user-info command.'))
-		.catch(console.error);
+		.then(() => console.log('- successfully registered /user-info command'))
+		.catch((error) => {
+			console.error(`- failed to register /user-info command`, error);
+		});
 
 	scheduleJob('*/10 * * * *', async () => {
 		await checkMatchmakingThreads();

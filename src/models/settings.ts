@@ -41,7 +41,8 @@ const settingsDefaults = {
 	'leveling.xp-required-for-trusted': 1000,
 	'leveling.days-required-for-trusted': 30,
 	'leveling.supporter-xp-multiplier': 1,
-	'leveling.message-timeout-seconds': 60
+	'leveling.message-timeout-seconds': 60,
+	'guild.id': '408718485913468928'
 } as const satisfies Record<string, any>;
 
 export const settingsDefinitions = {
@@ -62,7 +63,8 @@ export const settingsDefinitions = {
 	'leveling.xp-required-for-trusted': { schema: z.coerce.number().min(1).default(settingsDefaults['leveling.xp-required-for-trusted']) },
 	'leveling.days-required-for-trusted': { schema: z.coerce.number().min(0).default(settingsDefaults['leveling.days-required-for-trusted']) },
 	'leveling.supporter-xp-multiplier': { schema: z.coerce.number().min(1).default(settingsDefaults['leveling.supporter-xp-multiplier']) },
-	'leveling.message-timeout-seconds': { schema: z.coerce.number().min(1).default(settingsDefaults['leveling.message-timeout-seconds']) }
+	'leveling.message-timeout-seconds': { schema: z.coerce.number().min(1).default(settingsDefaults['leveling.message-timeout-seconds']) },
+	'guild.id': { schema: snowflakeSchema.default(settingsDefaults['guild.id']) }
 } satisfies Record<string, SettingSchema>;
 
 export type SettingsDefinitions = typeof settingsDefinitions;

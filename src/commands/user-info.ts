@@ -18,6 +18,7 @@ export async function userInfoCommandHandler(interaction: ChatInputCommandIntera
 		}
 	});
 	const inDMs = !member || interaction.context === InteractionContextType.BotDM;
+	const inPretendoGuild = interaction.guildId === await getSetting('guild.id');
 
 	const { rows } = await Warning.findAndCountAll({
 		where: {
@@ -48,14 +49,14 @@ export async function userInfoCommandHandler(interaction: ChatInputCommandIntera
 	let userInfoDesc = '';
 	const _warningsText = activeWarnings.length > 0 ? `**<:mod:1462244578118729952> Warnings (${activeWarnings.length}):**\n` : '**<:mod:1462244578118729952> No warnings.**';
 
-	if (inDMs) {
+	if (inDMs || !inPretendoGuild) {
 		userInfoDesc = _warningsText;
-		userInfoEmbed.setFooter({ text: 'Note: to see your current XP, run this command in the server.' });
+		userInfoEmbed.setFooter({ text: 'Note: to see your current XP, run this command in the Pretendo Network server.' });
 	} else if (!levelingEnabled || !trustedRole) {
 		userInfoDesc = _warningsText;
-	} else if (untrustedRole && (member.roles as GuildMemberRoleManager).cache.has(untrustedRole)) {
+	} else if (untrustedRole && (member.roles as GuildMemberRoleManager).cache?.has(untrustedRole)) {
 		userInfoDesc = `You have <@&${untrustedRole}>. You cannot earn XP.\n\n${_warningsText}`;
-	} else if ((member.roles as GuildMemberRoleManager).cache.has(trustedRole)) {
+	} else if ((member.roles as GuildMemberRoleManager).cache?.has(trustedRole)) {
 		userInfoDesc = `<:trusted:1462263739670728798> You have <@&${trustedRole}>.\n\n${_warningsText}`;
 	} else if (dbUser.trusted_time_start_date) {
 		let seconds = Math.floor((now.getTime() - dbUser.trusted_time_start_date.getTime()) / 1000);

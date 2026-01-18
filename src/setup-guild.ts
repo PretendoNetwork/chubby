@@ -7,9 +7,10 @@ export async function setupGuild(guild: Guild, rest: REST): Promise<void> {
 
 	try {
 		// * Setup commands
+		console.log(`- deploying commands for guild ${guild.id}`);
 		await deployCommands(guild, rest);
 	} catch (error) {
-		console.error(`Failed to deploy commands for guild ${guild.id}:`, error);
+		console.error(`- failed to deploy commands for guild ${guild.id}:`, error);
 	}
 }
 

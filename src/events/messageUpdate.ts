@@ -4,16 +4,16 @@ import { MessageAuditRelationship } from '@/models/messageAuditRelationship';
 import type { Message, PartialMessage } from 'discord.js';
 
 export default async function messageUpdateHandler(oldMessage: Message | PartialMessage, newMessage: Message | PartialMessage): Promise<void> {
+	if (!newMessage.guildId || newMessage.author?.bot) {
+		return;
+	}
+
 	if (oldMessage.partial) {
 		oldMessage = await oldMessage.fetch();
 	}
 
 	if (newMessage.partial) {
 		newMessage = await newMessage.fetch();
-	}
-
-	if (newMessage.author.bot) {
-		return;
 	}
 
 	const guild = await newMessage.guild?.fetch();
