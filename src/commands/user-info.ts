@@ -1,4 +1,4 @@
-import { EmbedBuilder } from 'discord.js';
+import { ApplicationIntegrationType, EmbedBuilder, InteractionContextType } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { User } from '@/models/users';
 import { Warning } from '@/models/warnings';
@@ -11,14 +11,17 @@ export async function userInfoCommandHandler(interaction: ChatInputCommandIntera
 	});
 
 	const member = interaction.member;
-
-	if (!member || !interaction.guild) {
-		return;
-	}
+	const user = interaction.user;
+	const [dbUser] = await User.findOrCreate({
+		where: {
+			user_id: user.id
+		}
+	});
+	const inDMs = !member || interaction.context === InteractionContextType.BotDM;
 
 	const { rows } = await Warning.findAndCountAll({
 		where: {
-			user_id: member.user.id
+			user_id: user.id
 		}
 	});
 	const userWarnings = rows.map(v => ({
@@ -26,12 +29,6 @@ export async function userInfoCommandHandler(interaction: ChatInputCommandIntera
 		isExpired: v.expires_at && v.expires_at < new Date()
 	}));
 	const activeWarnings = userWarnings.filter(v => !v.isExpired);
-
-	const [user] = await User.findOrCreate({
-		where: {
-			user_id: member.user.id
-		}
-	});
 
 	const levelingEnabled = await getSetting('leveling.enabled');
 	const minimumXP = await getSetting('leveling.xp-required-for-trusted');
@@ -46,19 +43,22 @@ export async function userInfoCommandHandler(interaction: ChatInputCommandIntera
 	const userInfoEmbed = new EmbedBuilder();
 	userInfoEmbed.setTitle('User info');
 	userInfoEmbed.setColor(0x9D6FF3);
-	userInfoEmbed.setAuthor({ name: member.user.username, iconURL: interaction.user.displayAvatarURL() });
+	userInfoEmbed.setAuthor({ name: user.username, iconURL: interaction.user.displayAvatarURL() });
 
 	let userInfoDesc = '';
-	const _trustedExplanation = `💡 To earn <@&${trustedRole}>, there are two requirements that both need to be met:\n\n**Experience (XP)**\n• ${minimumXP} XP (${messageXP} XP per message, with ${messageTimeout}sec cooldown between XP earnings; some channels blacklisted).\n\n**Time Earning XP**\n• ${daysRequiredForTrusted} day${daysRequiredForTrusted !== 1 && 's'} since joining the server OR since last untrust event (whichever is more recent).`;
-	const _warningsText = activeWarnings ? `**🔨 Warnings (${activeWarnings.length}):**\n` : '**No active warnings.**';
-	if (!levelingEnabled || !trustedRole) {
+	const _warningsText = activeWarnings.length > 0 ? `**<:mod:1462244578118729952> Warnings (${activeWarnings.length}):**\n` : '**<:mod:1462244578118729952> No warnings.**';
+
+	if (inDMs) {
+		userInfoDesc = _warningsText;
+		userInfoEmbed.setFooter({ text: 'Note: to see your current XP, run this command in the server.' });
+	} else if (!levelingEnabled || !trustedRole) {
 		userInfoDesc = _warningsText;
 	} else if (untrustedRole && (member.roles as GuildMemberRoleManager).cache.has(untrustedRole)) {
 		userInfoDesc = `You have <@&${untrustedRole}>. You cannot earn XP.\n\n${_warningsText}`;
 	} else if ((member.roles as GuildMemberRoleManager).cache.has(trustedRole)) {
-		userInfoDesc = `You have <@&${trustedRole}>.\n\n${_warningsText}`;
-	} else if (user.trusted_time_start_date) {
-		let seconds = Math.floor((now.getTime() - user.trusted_time_start_date.getTime()) / 1000);
+		userInfoDesc = `<:trusted:1462263739670728798> You have <@&${trustedRole}>.\n\n${_warningsText}`;
+	} else if (dbUser.trusted_time_start_date) {
+		let seconds = Math.floor((now.getTime() - dbUser.trusted_time_start_date.getTime()) / 1000);
 
 		const days = Math.floor(seconds / 86400);
 		seconds -= days * 86400;
@@ -69,9 +69,9 @@ export async function userInfoCommandHandler(interaction: ChatInputCommandIntera
 		const minutes = Math.floor(seconds / 60) % 60;
 		seconds -= minutes * 60;
 
-		userInfoDesc = `**Experience (XP)**: ${user.xp} / ${minimumXP} XP\n**Time Earning XP**: ${days}d, ${hours}h, ${minutes}m / ${daysRequiredForTrusted} days\n\n${_trustedExplanation}\n\n${_warningsText}`;
+		userInfoDesc = `You currently don't have <@&${trustedRole}>. You must meet both requirements:\n\n${dbUser.xp < minimumXP ? '<:disallow:1462263736902488064>' : '<:allow:1462263738353586197>'} **${dbUser.xp}** / ${minimumXP} XP\n-# (${messageXP} XP / msg, ${messageTimeout}s cooldown between msgs, some channels blacklisted)\n${Math.floor((now.getTime() - dbUser.trusted_time_start_date.getTime()) / 1000) < daysRequiredForTrusted * 24 * 60 * 60 ? '<:disallow:1462263736902488064>' : '<:allow:1462263738353586197>'} In server for **${days}d ${hours}h ${minutes}m** / ${daysRequiredForTrusted} days\n-# (after joining / having Trusted removed)\n\n${_warningsText}`;
 	} else {
-		userInfoDesc = `You have not interacted with the community yet.\n\n${_trustedExplanation}\n\n${_warningsText}`;
+		userInfoDesc = `You have not interacted with the community yet.\n\n${_warningsText}`;
 	}
 
 	userInfoEmbed.setDescription(userInfoDesc);
@@ -80,7 +80,7 @@ export async function userInfoCommandHandler(interaction: ChatInputCommandIntera
 		const t = Math.floor(warn.content.timestamp.getTime() / 1000);
 
 		userInfoEmbed.addFields({
-			name: `<t:${t}:d> <t:${t}:t> (ID: \`${warn.content.id}\`):`,
+			name: `<t:${t}:S> (ID: \`${warn.content.id}\`):`,
 			value: warn.content.reason
 		});
 	});
@@ -89,8 +89,9 @@ export async function userInfoCommandHandler(interaction: ChatInputCommandIntera
 }
 
 const command = new SlashCommandBuilder()
-	.setDefaultMemberPermissions('0')
 	.setName('user-info')
+	.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild])
+	.setIntegrationTypes([ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall])
 	.setDescription('View moderation info about yourself');
 
 export default {

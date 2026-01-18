@@ -1,3 +1,4 @@
+import { InteractionContextType } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ModPingSettings } from '@/models/modPingSettings';
 import { getRoleFromSettings } from '@/util';
@@ -138,6 +139,7 @@ const command = new SlashCommandBuilder();
 command.setDefaultMemberPermissions('0');
 command.setName('mod-ping');
 command.setDescription('Manage your @Mod-Ping role.');
+command.setContexts([InteractionContextType.Guild]);
 command.addSubcommand(cmd =>
 	cmd.setName('toggle')
 		.setDescription('Manually toggle @Mod-Ping. (Overrides auto-assign, but still auto-assigns when your status changes)')

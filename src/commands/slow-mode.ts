@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { ChannelType, EmbedBuilder } from 'discord.js';
+import { ChannelType, EmbedBuilder, InteractionContextType } from 'discord.js';
 import { SlowMode, SlowModeStage } from '@/models/slow-mode';
 import handleSlowMode from '@/slow-mode';
 import { sendEventLogMessage } from '@/util';
@@ -539,6 +539,7 @@ const command = new SlashCommandBuilder()
 	.setDefaultMemberPermissions('0')
 	.setName('slow-mode')
 	.setDescription('Configure slow mode for a channel')
+	.setContexts([InteractionContextType.Guild])
 	.addSubcommandGroup((group) => {
 		group.setName('enable')
 			.setDescription('Enable slow mode for a channel')
