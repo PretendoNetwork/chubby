@@ -43,7 +43,7 @@ export const client = new Client({
 		GatewayIntentBits.GuildPresences,
 		GatewayIntentBits.DirectMessages
 	],
-	presence: { activities: [{ name: '#modmail for moderation concerns', type: ActivityType.Listening }], status: PresenceUpdateStatus.Online }
+	presence: { activities: [{ name: '#modmail for moderation concerns', type: ActivityType.Custom }], status: PresenceUpdateStatus.Online }
 });
 
 client.commands = new Collection<string, ClientCommand>();
