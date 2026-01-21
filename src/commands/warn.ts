@@ -118,7 +118,7 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			punishmentEmbed = new EmbedBuilder();
 
 			punishmentEmbed.setTitle('Punishment Details');
-			punishmentEmbed.setDescription('You have been kicked from the Pretendo Network server. You may rejoin after reviewing the details of the kick below');
+			punishmentEmbed.setDescription('You have been kicked from the Pretendo Network Discord server. You may rejoin after reviewing the details of the kick below:');
 			punishmentEmbed.setColor(0xEF7F31);
 			punishmentEmbed.setTimestamp(Date.now());
 			punishmentEmbed.setFooter({
@@ -146,7 +146,7 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			punishmentEmbed = new EmbedBuilder();
 
 			punishmentEmbed.setTitle('Punishment Details');
-			punishmentEmbed.setDescription('You have been banned from the Pretendo Network server. You may not rejoin at this time, and an appeal may not be possible\nYou may review the details of your ban below');
+			punishmentEmbed.setDescription('You have been banned from the Pretendo Network Discord server. You may not rejoin at this time. Bans may be appealed at <https://preten.do/ban-appeal>, but there is no guarantee that you will be unbanned.\nYou may review the details of your ban below:');
 			punishmentEmbed.setColor(0xF24E43);
 			punishmentEmbed.setTimestamp(Date.now());
 			punishmentEmbed.setFooter({
@@ -229,7 +229,7 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			punishmentEmbed = new EmbedBuilder();
 
 			punishmentEmbed.setTitle('Warning');
-			punishmentEmbed.setDescription('You have been issued a warning.\nYou may review the details of your warning below');
+			punishmentEmbed.setDescription('You have been issued a warning.\nYou may review the details of your warning below:');
 			punishmentEmbed.setColor(0xF24E43);
 			punishmentEmbed.setTimestamp(Date.now());
 			punishmentEmbed.setFooter({
