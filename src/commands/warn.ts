@@ -172,7 +172,7 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 		if (punishmentEmbed) {
 			const pastWarningsEmbed = new EmbedBuilder();
 			pastWarningsEmbed.setTitle('Past Warnings');
-			pastWarningsEmbed.setDescription('For clarifty purposes here is a list of your past warnings');
+			pastWarningsEmbed.setDescription('For clarity, here is a list of your past warnings');
 			pastWarningsEmbed.setColor(0xEF7F31);
 			pastWarningsEmbed.setTimestamp(Date.now());
 			pastWarningsEmbed.setFooter({
@@ -183,7 +183,7 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 			for (let i = 0; i < rows.length; i++) {
 				const warning = rows[i];
 
-				const t = warning.timestamp.getTime() / 1000;
+				const t = Math.floor(warning.timestamp.getTime() / 1000);
 
 				pastWarningsEmbed.addFields(
 					{
@@ -192,7 +192,7 @@ export async function warnHandler(interaction: CommandInteraction | ModalSubmitI
 					},
 					{
 						name: 'Date',
-						value: `<t:${t}:d> <t:${t}:t>`,
+						value: `<t:${t}:S>`,
 						inline: true
 					}
 				);
