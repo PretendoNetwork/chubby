@@ -1,6 +1,6 @@
 import { AuditLogEvent, EmbedBuilder } from 'discord.js';
 import { sendEventLogMessage } from '@/util';
-import type { Guild, User, GuildAuditLogsEntry } from 'discord.js';
+import type { Guild, User, GuildAuditLogsEntry, PartialUser } from 'discord.js';
 
 export default async function guildAuditLogEntryCreateHandler(auditLogEntry: GuildAuditLogsEntry, guild: Guild): Promise<void> {
 	if (logIsForEvent(auditLogEntry, AuditLogEvent.MemberUpdate)) {
@@ -37,7 +37,7 @@ export default async function guildAuditLogEntryCreateHandler(auditLogEntry: Gui
 	}
 }
 
-async function handleMemberTimedOut(guild: Guild, user: User, executor: User, reason: string | null, timeout: Date): Promise<void> {
+async function handleMemberTimedOut(guild: Guild, user: User | PartialUser, executor: User | PartialUser, reason: string | null, timeout: Date): Promise<void> {
 	const embed = new EmbedBuilder();
 
 	embed.setColor(0xC0C0C0);
@@ -79,7 +79,7 @@ async function handleMemberTimedOut(guild: Guild, user: User, executor: User, re
 	await sendEventLogMessage(guild, null, embed);
 }
 
-async function handleMemberNicknameChange(guild: Guild, user: User, oldName?: string, newName?: string): Promise<void> {
+async function handleMemberNicknameChange(guild: Guild, user: User | PartialUser, oldName?: string, newName?: string): Promise<void> {
 	const embed = new EmbedBuilder();
 
 	embed.setColor(0xC0C0C0);
