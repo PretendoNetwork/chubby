@@ -3,6 +3,9 @@
 	"version": "1.0.0",
 	"description": "",
 	"main": "./dist/bot.js",
+	"engines": {
+		"node": "^24.22.1"
+	},
 	"scripts": {
 		"dev": "tsup --watch --onSuccess \"node dist/bot.js\"",
 		"lint": "eslint .",
