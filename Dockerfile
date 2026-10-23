@@ -3,7 +3,7 @@
 ARG app_dir="/home/node/app"
 
 # * Base Node.js image
-FROM node:20-slim AS base
+FROM node:24-slim AS base
 ARG app_dir
 WORKDIR ${app_dir}
 RUN apt-get update && apt-get install -y python3 python3-pip make gcc g++
